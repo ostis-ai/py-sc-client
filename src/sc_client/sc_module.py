@@ -1,3 +1,9 @@
+"""
+This source file is part of an OSTIS project. For the latest info, see https://github.com/ostis-ai
+Distributed under the MIT License
+(See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT)
+"""
+
 from abc import ABC
 from typing import List
 
