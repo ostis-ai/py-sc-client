@@ -30,26 +30,34 @@ from sc_client.sc_module import unregister_sc_modules
 logger = get_default_logger(__name__)
 
 
-class ScClient:
+class _ScClient:
     responses_dict = {}
     events_dict = {}
     command_id = 0
     ws_app = None
 
+    @classmethod
+    def clear(cls):
+        cls.ws_app = None
+        cls.responses_dict = {}
+        cls.events_dict = {}
+        cls.command_id = 0
+
 
 def disconnect():
     unregister_sc_modules()
-    ScClient.ws_app.close()
-    ScClient.ws_app = None
+    _ScClient.ws_app.close()
+    _ScClient.ws_app = None
     logger.debug("Disconnected")
 
 
 def _on_message(ws: websocket.WebSocketApp, response: str) -> None:
+    logger.debug(f"Receive: {str(response)[:LOGGING_MAX_SIZE]}")
     response = json.loads(response, object_hook=Response)
     if response.get(common.EVENT):
         threading.Thread(target=_emit_callback, args=(response.get(common.ID), response.get(common.PAYLOAD))).start()
     else:
-        ScClient.responses_dict[response.get(common.ID)] = response
+        _ScClient.responses_dict[response.get(common.ID)] = response
 
 
 def _on_error(ws: websocket.WebSocketApp, error: Exception) -> None:
@@ -64,12 +72,12 @@ def _on_close(ws: websocket.WebSocketApp, close_status_code, close_msg):
 
 def connect(url: str) -> None:
     def run_in_thread(url_for_ws_app: str):
-        ScClient.ws_app = websocket.WebSocketApp(
+        _ScClient.ws_app = websocket.WebSocketApp(
             url_for_ws_app,
             on_message=_on_message,
             on_error=_on_error,
         )
-        ScClient.ws_app.run_forever()
+        _ScClient.ws_app.run_forever()
 
     client_thread = threading.Thread(target=run_in_thread, args=(url,), name="sc-client-thread")
     client_thread.start()
@@ -78,13 +86,13 @@ def connect(url: str) -> None:
 
 
 def is_connected() -> bool:
-    return bool(ScClient.ws_app)
+    return bool(_ScClient.ws_app)
 
 
 def _receive_response(command_id: int) -> Response:
     response = None
     while not response:
-        response = ScClient.responses_dict.get(command_id)
+        response = _ScClient.responses_dict.get(command_id)
         time.sleep(SERVER_ANSWER_CHECK_TIME)
     return response
 
@@ -96,17 +104,16 @@ def _send_message(request_type: str, payload: Any) -> Response:
     response = {}
     if is_connected():
         with lock_instance:
-            ScClient.command_id += 1
-            command_id = ScClient.command_id
+            _ScClient.command_id += 1
+            command_id = _ScClient.command_id
         data = json.dumps({
             common.ID: command_id,
             common.TYPE: request_type,
             common.PAYLOAD: payload
         })
-        ScClient.ws_app.send(data)
+        _ScClient.ws_app.send(data)
         logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
         response = _receive_response(command_id)
-        logger.debug(f"Receive: {str(response)[:LOGGING_MAX_SIZE]}")
     return response
 
 
@@ -122,12 +129,10 @@ def create_elements(constr: ScConstruction) -> List[ScAddr]:
     payload = []
     for command in constr.commands:
         if command.el_type.is_node():
-            # fmt: off
             payload_part = {
                 common.ELEMENT: common.Elements.NODE,
                 common.TYPE: command.el_type.value
             }
-            # fmt: on
             payload.append(payload_part)
 
         elif command.el_type.is_edge():
@@ -310,7 +315,7 @@ def events_create(events: List[ScEventParams]) -> List[ScEvent]:
     for count, event in enumerate(events):
         command_id = response.get(common.PAYLOAD)[count]
         sc_event = ScEvent(command_id, event.event_type, event.callback)
-        ScClient.events_dict[command_id] = sc_event
+        _ScClient.events_dict[command_id] = sc_event
         result.append(sc_event)
     return result
 
@@ -319,15 +324,15 @@ def events_destroy(events: List[ScEvent]) -> bool:
     payload = {common.CommandTypes.DELETE: [event.id for event in events]}
     response = _send_message(common.RequestTypes.EVENTS, payload)
     for event in events:
-        del ScClient.events_dict[event.id]
+        del _ScClient.events_dict[event.id]
     return response.get(common.STATUS)
 
 
 def _emit_callback(event_id: int, elems: List[int]) -> None:
-    event = ScClient.events_dict.get(event_id)
+    event = _ScClient.events_dict.get(event_id)
     if event:
         event.callback(*[ScAddr(addr) for addr in elems])
 
 
 def is_event_valid(event: ScEvent) -> bool:
-    return ScClient.events_dict.get(event.id)
+    return _ScClient.events_dict.get(event.id)
