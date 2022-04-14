@@ -8,7 +8,6 @@ from __future__ import annotations
 
 from sc_client.constants.exceptions import InvalidValueError
 
-
 SC_TYPE_NODE = 0x1
 SC_TYPE_LINK = 0x2
 SC_TYPE_UEDGE_COMMON = 0x4

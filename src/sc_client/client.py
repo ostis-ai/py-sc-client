@@ -6,19 +6,12 @@ Distributed under the MIT License
 
 from __future__ import annotations
 
-import json
-import threading
-import time
-from typing import Any, Dict, List, Union
+from typing import List, Union
 
-import websocket
-from log import get_default_logger
-
+from sc_client import session
 from sc_client.constants import common
-from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ANSWER_CHECK_TIME, SERVER_ESTABLISH_CONNECTION_TIME
 from sc_client.constants.sc_types import ScType
 from sc_client.models import (
-    Response,
     ScAddr,
     ScConstruction,
     ScEvent,
@@ -29,105 +22,28 @@ from sc_client.models import (
     ScTemplate,
     ScTemplateGenParams,
     ScTemplateResult,
-    ScTemplateValue,
 )
-from sc_client.sc_module import unregister_sc_modules
-
-logger = get_default_logger(__name__)
-
-
-class _ScClient:
-    responses_dict = {}
-    events_dict = {}
-    command_id = 0
-    ws_app = None
-
-    @classmethod
-    def clear(cls):
-        cls.ws_app = None
-        cls.responses_dict = {}
-        cls.events_dict = {}
-        cls.command_id = 0
-
-
-def disconnect():
-    unregister_sc_modules()
-    _ScClient.ws_app.close()
-    _ScClient.ws_app = None
-    logger.debug("Disconnected")
-
-
-def _on_message(ws: websocket.WebSocketApp, response: str) -> None:
-    logger.debug(f"Receive: {str(response)[:LOGGING_MAX_SIZE]}")
-    response = json.loads(response, object_hook=Response)
-    if response.get(common.EVENT):
-        threading.Thread(target=_emit_callback, args=(response.get(common.ID), response.get(common.PAYLOAD))).start()
-    else:
-        _ScClient.responses_dict[response.get(common.ID)] = response
-
-
-def _on_error(ws: websocket.WebSocketApp, error: Exception) -> None:
-    disconnect()
-    logger.error(f"{error}. Close connection")
-
-
-def _on_close(ws: websocket.WebSocketApp, close_status_code, close_msg):
-    disconnect()
-    logger.info(f"{close_status_code}: {close_msg}")
+from sc_client.session import get_event, drop_event, set_event
+from sc_client.utils import process_triple_item
 
 
 def connect(url: str) -> None:
-    def run_in_thread(url_for_ws_app: str):
-        _ScClient.ws_app = websocket.WebSocketApp(
-            url_for_ws_app,
-            on_message=_on_message,
-            on_error=_on_error,
-        )
-        _ScClient.ws_app.run_forever()
-
-    client_thread = threading.Thread(target=run_in_thread, args=(url,), name="sc-client-thread")
-    client_thread.start()
-    logger.debug("Connected")
-    time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
+    session.set_connection(url)
 
 
 def is_connected() -> bool:
-    return bool(_ScClient.ws_app)
+    return session.is_connection_established()
 
 
-def _receive_response(command_id: int) -> Response:
-    response = None
-    while not response:
-        response = _ScClient.responses_dict.get(command_id)
-        time.sleep(SERVER_ANSWER_CHECK_TIME)
-    return response
-
-
-lock_instance = threading.Lock()
-
-
-def _send_message(request_type: str, payload: Any) -> Response:
-    response = {}
-    if is_connected():
-        with lock_instance:
-            _ScClient.command_id += 1
-            command_id = _ScClient.command_id
-        data = json.dumps({
-            common.ID: command_id,
-            common.TYPE: request_type,
-            common.PAYLOAD: payload
-        })
-        _ScClient.ws_app.send(data)
-        logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
-        response = _receive_response(command_id)
-    return response
+def disconnect() -> None:
+    session.close_connection()
 
 
 def check_elements(addrs: List[ScAddr]) -> List[ScType]:
     if not addrs:
         return []
     addr_values = [addr.value for addr in addrs]
-    response = _send_message(common.RequestTypes.CHECK_ELEMENTS, addr_values)
+    response = session.send_message(common.RequestTypes.CHECK_ELEMENTS, addr_values)
     return [ScType(type_value) for type_value in response.get(common.PAYLOAD)]
 
 
@@ -164,13 +80,13 @@ def create_elements(constr: ScConstruction) -> List[ScAddr]:
                 common.CONTENT_TYPE: command.data.get(common.TYPE),
             }
             payload.append(payload_part)
-    response = _send_message(common.RequestTypes.CREATE_ELEMENTS, payload)
+    response = session.send_message(common.RequestTypes.CREATE_ELEMENTS, payload)
     return [ScAddr(addr_value) for addr_value in response.get(common.PAYLOAD)]
 
 
 def delete_elements(addrs: List[ScAddr]) -> bool:
     addr_values = [addr.value for addr in addrs]
-    response = _send_message(common.RequestTypes.DELETE_ELEMENTS, addr_values)
+    response = session.send_message(common.RequestTypes.DELETE_ELEMENTS, addr_values)
     return response.get(common.STATUS)
 
 
@@ -184,7 +100,7 @@ def set_link_contents(contents: List[ScLinkContent]) -> bool:
         }
         for content in contents
     ]
-    response = _send_message(common.RequestTypes.CONTENT, payload)
+    response = session.send_message(common.RequestTypes.CONTENT, payload)
     return response.get(common.STATUS)
 
 
@@ -193,7 +109,7 @@ def get_link_content(addr: ScAddr) -> ScLinkContent:
         common.COMMAND: common.CommandTypes.GET,
         common.ADDR: addr.value,
     }
-    response = _send_message(common.RequestTypes.CONTENT, [payload])
+    response = session.send_message(common.RequestTypes.CONTENT, [payload])
     response_payload = response.get(common.PAYLOAD)[0]
     str_type = response_payload.get(common.TYPE)
     content_type = 0
@@ -222,7 +138,7 @@ def get_link_by_content(contents: List[ScLinkContent | str | int]) -> List[List[
         }
         for content in link_contents
     ]
-    response = _send_message(common.RequestTypes.CONTENT, payload)
+    response = session.send_message(common.RequestTypes.CONTENT, payload)
     response_payload = response.get(common.PAYLOAD)
     if response_payload:
         return [[ScAddr(addr_value) for addr_value in addr_list] for addr_list in response_payload]
@@ -245,26 +161,11 @@ def resolve_keynodes(params: List[ScIdtfResolveParams]) -> List[ScAddr]:
                 common.IDTF: idtf_param.get(common.IDTF),
             }
         payloads_list.append(payload)
-    response = _send_message(common.RequestTypes.KEYNODES, payloads_list)
+    response = session.send_message(common.RequestTypes.KEYNODES, payloads_list)
     response_payload = response.get(common.PAYLOAD)
     if response_payload:
         return [ScAddr(addr_value) for addr_value in response_payload]
     return response_payload
-
-
-def _process_triple_item(item: ScTemplateValue) -> Dict:
-    item_value = item.get(common.VALUE)
-    item_alias = item.get(common.ALIAS)
-    if isinstance(item_value, ScAddr):
-        result = {common.TYPE: common.Types.ADDR, common.VALUE: item_value.value}
-    elif isinstance(item_value, ScType):
-        result = {common.TYPE: common.Types.TYPE, common.VALUE: item_value.value}
-    else:
-        result = {common.TYPE: common.Types.ALIAS, common.VALUE: item_value}
-
-    if item_alias:
-        result[common.ALIAS] = item_alias
-    return result
 
 
 def template_search(template: Union[ScTemplate, str]) -> List[ScTemplateResult]:
@@ -274,13 +175,13 @@ def template_search(template: Union[ScTemplate, str]) -> List[ScTemplateResult]:
     else:
         for triple in template.triple_list:
             items = [triple.get(common.SOURCE), triple.get(common.EDGE), triple.get(common.TARGET)]
-            payload_triple = [_process_triple_item(item) for item in items]
+            payload_triple = [process_triple_item(item) for item in items]
             is_required = triple.get(common.IS_REQUIRED)
             if not is_required:
                 payload_triple.append({common.IS_REQUIRED: is_required})
             payload.append(payload_triple)
 
-    response = _send_message(common.RequestTypes.SEARCH_TEMPLATE, payload)
+    response = session.send_message(common.RequestTypes.SEARCH_TEMPLATE, payload)
     result = []
     if response.get(common.STATUS):
         response_payload = response.get(common.PAYLOAD)
@@ -299,10 +200,10 @@ def template_generate(template: Union[ScTemplate, str], params: ScTemplateGenPar
     else:
         for triple in template.triple_list:
             items = [triple.get(common.SOURCE), triple.get(common.EDGE), triple.get(common.TARGET)]
-            payload_template.append([_process_triple_item(item) for item in items])
+            payload_template.append([process_triple_item(item) for item in items])
     payload_params = {alias: addr.value for alias, addr in params.items()}
     payload = {common.TEMPLATE: payload_template, common.PARAMS: payload_params}
-    response = _send_message(common.RequestTypes.GENERATE_TEMPLATE, payload)
+    response = session.send_message(common.RequestTypes.GENERATE_TEMPLATE, payload)
     result = None
     if response.get(common.STATUS):
         response_payload = response.get(common.PAYLOAD)
@@ -316,29 +217,23 @@ def template_generate(template: Union[ScTemplate, str], params: ScTemplateGenPar
 def events_create(events: List[ScEventParams]) -> List[ScEvent]:
     payload_create = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
     payload = {common.CommandTypes.CREATE: payload_create}
-    response = _send_message(common.RequestTypes.EVENTS, payload)
+    response = session.send_message(common.RequestTypes.EVENTS, payload)
     result = []
     for count, event in enumerate(events):
         command_id = response.get(common.PAYLOAD)[count]
         sc_event = ScEvent(command_id, event.event_type, event.callback)
-        _ScClient.events_dict[command_id] = sc_event
+        set_event(sc_event)
         result.append(sc_event)
     return result
 
 
 def events_destroy(events: List[ScEvent]) -> bool:
     payload = {common.CommandTypes.DELETE: [event.id for event in events]}
-    response = _send_message(common.RequestTypes.EVENTS, payload)
+    response = session.send_message(common.RequestTypes.EVENTS, payload)
     for event in events:
-        del _ScClient.events_dict[event.id]
+        drop_event(event.id)
     return response.get(common.STATUS)
 
 
-def _emit_callback(event_id: int, elems: List[int]) -> None:
-    event = _ScClient.events_dict.get(event_id)
-    if event:
-        event.callback(*[ScAddr(addr) for addr in elems])
-
-
 def is_event_valid(event: ScEvent) -> bool:
-    return _ScClient.events_dict.get(event.id)
+    return bool(get_event(event.id))

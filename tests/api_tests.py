@@ -8,6 +8,7 @@ import time
 import unittest
 from unittest.mock import Mock, patch
 
+import sc_client.session
 from sc_client import client
 from sc_client.constants import common, sc_types
 from sc_client.constants.exceptions import LinkContentOversizeError
@@ -25,17 +26,17 @@ from sc_client.models import (
 
 class ScTest(unittest.TestCase):
     def setUp(self) -> None:
-        self._mock_ws_app_patcher = patch('sc_client.client._ScClient.ws_app')
+        self._mock_ws_app_patcher = patch('sc_client.session._ScClientSession.ws_app')
         self.mock_ws_app = self._mock_ws_app_patcher.start()
         self.mock_ws_app.return_value = Mock()
 
     def tearDown(self) -> None:
         self._mock_ws_app_patcher.stop()
-        client._ScClient.clear()
+        sc_client.session._ScClientSession.clear()
 
     @staticmethod
     def get_server_message(response: str):
-        client._on_message(client._ScClient.ws_app, response)
+        sc_client.session._on_message(sc_client.session._ScClientSession.ws_app, response)
 
 
 class ClientTestCreateElements(ScTest):
@@ -265,7 +266,7 @@ class ClientTestEvent(ScTest):
 
         self.get_server_message('{"id": 2, "event": false, "status": true, "payload": []}')
         client.events_destroy([sc_event])
-        self.assertIsNone(client.is_event_valid(sc_event))
+        self.assertFalse(client.is_event_valid(sc_event))
 
         time.sleep(0.1)
         self.get_server_message('{"id": 19, "event": true, "status": true, "payload": [1183238, 0, 0]}')
