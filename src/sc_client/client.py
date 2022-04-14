@@ -23,8 +23,7 @@ from sc_client.models import (
     ScTemplateGenParams,
     ScTemplateResult,
 )
-from sc_client.session import get_event, drop_event, set_event
-from sc_client.utils import process_triple_item
+from sc_client._internal_utils import process_triple_item
 
 
 def connect(url: str) -> None:
@@ -222,7 +221,7 @@ def events_create(events: List[ScEventParams]) -> List[ScEvent]:
     for count, event in enumerate(events):
         command_id = response.get(common.PAYLOAD)[count]
         sc_event = ScEvent(command_id, event.event_type, event.callback)
-        set_event(sc_event)
+        session.set_event(sc_event)
         result.append(sc_event)
     return result
 
@@ -231,9 +230,9 @@ def events_destroy(events: List[ScEvent]) -> bool:
     payload = {common.CommandTypes.DELETE: [event.id for event in events]}
     response = session.send_message(common.RequestTypes.EVENTS, payload)
     for event in events:
-        drop_event(event.id)
+        session.drop_event(event.id)
     return response.get(common.STATUS)
 
 
 def is_event_valid(event: ScEvent) -> bool:
-    return bool(get_event(event.id))
+    return bool(session.get_event(event.id))

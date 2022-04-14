@@ -1,18 +1,18 @@
 from __future__ import annotations
 
 import json
+import logging
 import threading
 import time
 from typing import Any, List, Optional
 
 import websocket
 
-from log import get_default_logger
 from sc_client.constants import common
 from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ESTABLISH_CONNECTION_TIME, SERVER_ANSWER_CHECK_TIME
 from sc_client.models import Response, ScAddr, ScEvent
 
-logger = get_default_logger(__name__)
+logger = logging.getLogger(__name__)
 
 
 class _ScClientSession:
@@ -47,7 +47,7 @@ def _emit_callback(event_id: int, elems: List[int]) -> None:
 
 def _on_error(_, error: Exception) -> None:
     close_connection()
-    logger.error(f"{error}. Close connection")
+    logger.error(f"{error}")
 
 
 def _on_close(_, close_status_code, close_msg) -> None:
@@ -83,7 +83,10 @@ def establish_connection(url) -> None:
 
 
 def close_connection() -> None:
-    _ScClientSession.ws_app.close()
+    try:
+        _ScClientSession.ws_app.close()
+    except AttributeError:
+        pass
     _ScClientSession.ws_app = None
     logger.debug("Disconnected")
 
