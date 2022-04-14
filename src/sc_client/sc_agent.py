@@ -7,7 +7,7 @@ Distributed under the MIT License
 from abc import ABC, abstractmethod
 
 from sc_client import client
-from sc_client.dataclass import ScAddr, ScEvent
+from sc_client.models import ScAddr, ScEvent
 from sc_client.sc_keynodes import ScKeynodes
 
 

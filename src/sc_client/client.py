@@ -17,7 +17,7 @@ from log import get_default_logger
 from sc_client.constants import common
 from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ANSWER_CHECK_TIME, SERVER_ESTABLISH_CONNECTION_TIME
 from sc_client.constants.sc_types import ScType
-from sc_client.dataclass import (
+from sc_client.models import (
     Response,
     ScAddr,
     ScConstruction,

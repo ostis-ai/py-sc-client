@@ -12,7 +12,7 @@ from sc_client import client
 from sc_client.constants import common, sc_types
 from sc_client.constants.exceptions import LinkContentOversizeError
 from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
-from sc_client.dataclass import (
+from sc_client.models import (
     ScAddr,
     ScConstruction,
     ScEventParams,

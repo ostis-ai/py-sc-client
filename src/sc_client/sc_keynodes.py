@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from sc_client import client
 from sc_client.constants.sc_types import ScType
-from sc_client.dataclass import ScAddr, ScIdtfResolveParams
+from sc_client.models import ScAddr, ScIdtfResolveParams
 
 
 class ScKeynodes(dict):
