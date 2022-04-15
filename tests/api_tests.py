@@ -1,7 +1,7 @@
 """
 This source file is part of an OSTIS project. For the latest info, see https://github.com/ostis-ai
 Distributed under the MIT License
-(See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT)
+(See an accompanying file LICENSE or a copy at http://opensource.org/licenses/MIT)
 """
 
 import time
@@ -138,7 +138,7 @@ class ClientTestLinkContent(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[]]}')
         test_str = "that line nor in KB"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING.value)
-        content = client.get_link_by_content(link_content)
+        content = client.get_links_by_content(link_content)
         self.assertTrue(content)
         self.assertFalse(content[0])
 
@@ -146,7 +146,7 @@ class ClientTestLinkContent(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179679, 46368, 1181734]]}')
         test_str = "testing search by link content"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING.value)
-        content = client.get_link_by_content(link_content)
+        content = client.get_links_by_content(link_content)
         self.assertTrue(content)
         link_addr = ScAddr(46368)
         for item in zip([link_addr], content):
@@ -155,7 +155,7 @@ class ClientTestLinkContent(ScTest):
     def test_get_link_by_content_str(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}')
         test_str = "testing search by link content as string"
-        content = client.get_link_by_content(test_str)
+        content = client.get_links_by_content(test_str)
         self.assertTrue(content)
         link_addr = ScAddr(1180550)
         for item in zip([link_addr], content):
@@ -167,7 +167,7 @@ class ClientTestLinkContent(ScTest):
         test_str_1 = "testing search by link content as string in multiple content"
         test_str_2 = "testing search by link content as casual in multiple content"
         link_content_2 = ScLinkContent(test_str_2, ScLinkContentType.STRING.value)
-        content = client.get_link_by_content(test_str_1, link_content_2)
+        content = client.get_links_by_content(test_str_1, link_content_2)
         addr_list = [ScAddr(46368), ScAddr(46400)]
         self.assertTrue(content)
         for item in zip(addr_list, content):

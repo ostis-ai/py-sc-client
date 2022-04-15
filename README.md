@@ -1,17 +1,17 @@
 # **py-sc-client** #
 
-Python implementation of client for [communication with sc-server](http://ostis-dev.github.io/sc-machine/http/websocket/). This module is tested on Python 3.8+.
+The python implementation of the client for [communication with sc-server](http://ostis-dev.github.io/sc-machine/http/websocket/). This module is tested on Python 3.8+.
 
-Require *websocket-client* library.
+Require the *websocket-client* library.
 ```sh
 pip3 install websocket-client
 ```
 
+
 ## connect
-Connect to server by url. Run client in another thread. Can be stopped only by interrupt
+Connect to the server by the URL. Run the client in another thread.
 
-*Parametrs*: url of sc-server.
-
+*Parameters*: URL of the sc-server as a string.
 
 ```py
 from sc_client import client
@@ -20,91 +20,117 @@ client.connect("ws://localhost:8090/ws_json")
 ```
 
 
-
-## check_elements
-Check type of given elements.
-
-*Parametrs*: list of ScAddr.
-*Returns*: ScType of elements.
+## disconnect
+Close the connection with the sc-server.
 
 ```py
-    elem_types = client.check_elements([node_addr, edge_addr, link_addr])
-    elem_types[0].is_node() #True
-    elem_types[1].is_edge() #True
-    elem_types[2].is_link() #True
+from sc_client import client
+
+client.disconnect()
+```
+
+
+## is_connected
+Check the state of the connection with the sc-server.
+
+*Returns*: The boolean value (true if a connection is established).
+
+```py
+from sc_client import client
+
+client.is_connected() # True
+```
+
+
+## check_elements
+Check the type of given elements.
+
+*Parameters*: ScAddr class objects.
+*Returns*: A list of ScType class objects.
+
+```py
+elem_types = client.check_elements(node_addr, edge_addr, link_addr)
+elem_types[0].is_node() #True
+elem_types[1].is_edge() #True
+elem_types[2].is_link() #True
 ```
 
 
 ## create_elements
-Create given construction in KB memory.
+Create a given construction in the KB memory.
 
-*Parametrs*: ScConstruction.
-*Returns*: ScAddr list of construction elements.
+*Parameters*: An ScConstruction class object.
+*Returns*: A list of ScAddr class objects.
 
 ```py
-    const = ScConstruction()
-    const.create_node(sc_types.NODE_CONST, 'node')
-    link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
-    const.create_link(sc_types.LINK, link_content, 'link')
-    const.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
-    addr_list = client.create_elements(const)
-    addr_list # [node_addr, link_addr, edge_addr]
+const = ScConstruction()
+const.create_node(sc_types.NODE_CONST, 'node')
+link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
+const.create_link(sc_types.LINK, link_content, 'link')
+const.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
+addr_list = client.create_elements(const)
+addr_list # [node_addr, link_addr, edge_addr]
 ```
 
 
 ## delete_elements
-Delete elements from KB memory.
+Delete elements from the KB memory.
 
-*Parametrs*: list of ScAddr.
-*Returns*: True if elements were deleted.
+*Parameters*: ScAddr class objects.
+*Returns*: A boolean value (true if elements were deleted).
 
 ```py
-status = client.delete_elements([node_addr, edge_addr, link_addr])
+status = client.delete_elements(node_addr, edge_addr, link_addr)
 status #True
 ```
 
-## set_link_contents
-Set new content to given link.
 
-*Parametrs*: list of ScLinkContent.
-*Returns*: True if set link content.
+## set_link_contents
+Set new contents to corresponding links.
+
+*Parameters*: ScLinkContent class objects.
+*Returns*: A boolean value (true if the link content is set).
 
 ```py
 link_content = ScLinkContent("Hello world!", ScLinkContentType.STRING.value)
 link_content.addr = link_addr
-status = client.set_link_contents([link_content])
+status = client.set_link_contents(link_content)
 status # True
 ```
 
-## get_link_content
-Get content of given link.
 
-*Parametrs*: ScAddr of link.
-*Returns*: ScLinkContent object. 
+## get_link_content
+Get the content of the given link.
+
+*Parameters*: An ScAddr class object.
+*Returns*: An ScLinkContent class object. 
 
 ```py
-link_content = client.get_link_content(addr_list[0])
+link_content = client.get_link_content(link_addr)
 link_content.data # link content
 link_content.addr # link addr
 ```
 
-## get_link_by_content
-Get link from KB by content.
 
-*Parametrs*: List of ScLinkContent or list of string as link content, or .
-*Returns*: List of lists of ScAddrs. 
+## get_links_by_content
+Get links from the KB with content.
+
+*Parameters*: ScLinkContent class objects, strings.
+*Returns*: A list of lists of ScAddr class objects.
 
 ```py
-content = client.get_link_by_content(["testing search by link content as string", "no content"])
-content[0] # get list of link ScAddrs with given content
-content[1] # get empty list if no link with given content in memory
+content = client.get_links_by_content("testing search by the link content as a string", "no content")
+content[0]  # get a list of ScAddrs links with given content
+content[1]  # get an empty list if there is no link with given content in the memory
 ```
 
-## resolve_keynodes
-Get keynode from KB memory by idtf and ScType. If it doesn't exist, then create new one. If ScType is None, tries to find element by system identifier.
 
-*Parametrs*: ScIdtfResolveParams.
-*Returns*: ScAddr of keynode. 
+## resolve_keynodes
+Get a keynode from the KB memory by identifier and type. If it doesn't exist, then create a new one. 
+If ScType is None, try to find an element by the system identifier.
+
+*Parameters*: An ScIdtfResolveParams class object.
+*Returns*: An ScAddr class object. 
 
 ```py
 params = ScIdtfResolveParams(idtf='my_new_keynode_that_not_exist', type=sc_types.NODE_CONST)
@@ -126,10 +152,10 @@ addr # keynode addr
 
 
 ## template_search
-Search in KB memory by template. 
+Search in the KB memory by a template. 
 
-*Parametrs*: ScTemplate or scs-temlate as string.
-*Returns*: ScTemplateResult list. 
+*Parameters*: An ScTemplate class object or an scs-template as a string.
+*Returns*: A list of ScTemplateResult class objects. 
 
 ```py
 templ = ScTemplate()
@@ -140,20 +166,21 @@ templ.triple(node_addr, edge_addr, sc_types.NODE_VAR, is_required=False) # ffa, 
 search_results = client.template_search(templ)
 search_result = search_results[0]
 
-search_result.size() # count of elements in result construction
-search_result.get(0).value # get element from result by index
-search_result.get('_class_node').value # get element from result by alias
+search_result.size() # count of elements in the resulting construction
+search_result.get(0).value # get an element from the result by index
+search_result.get('_class_node').value # get an element from the result by alias
 
 def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
     ...
-search_result.for_each_triple(for_each_tripple_func) # call function for each triple in result
+search_result.for_each_triple(for_each_tripple_func) # call a function for each triple in the result
 ```
 
-## template_generate
-Generate construction in KB memory by template.
 
-*Parametrs*: ScTemplate or scs-temlate as string & ScTemplateGenParams.
-*Returns*: ScTemplateResult object. 
+## template_generate
+Generate a construction in the KB memory by a template.
+
+*Parameters*: An ScTemplate class object or an scs-template as a string, an ScTemplateGenParams class object.
+*Returns*: An ScTemplateResult class object. 
 
 ```py
 templ = ScTemplate()
@@ -175,10 +202,10 @@ gen_result = client.template_generate(templ, gen_params)
 
 
 ## events_create
-Create an ScEvent in KB memory.
+Create an event in the KB memory.
 
-*Parametrs*: list of ScEventParams.
-*Returns*: list of ScEvent. 
+*Parameters*: ScEventParams class objects.
+*Returns*: A list of ScEvent class objects. 
 
 ```py
 def event_callback(src: ScAddr, edge: ScAddr, trg: ScAddr):
@@ -186,44 +213,47 @@ def event_callback(src: ScAddr, edge: ScAddr, trg: ScAddr):
 
 event_type = common.ScEventType.ADD_OUTGOING_EDGE
 event_params = ScEventParams(bounded_elem_addr, event_type, event_callback)
-sc_event = client.events_create([event_params])
+sc_event = client.events_create(event_params)
 ```
 
-## is_event_valid
-Check is ScEvent active or not.
 
-*Parametrs*: ScEvent.
-*Returns*: True if event valid. 
+## is_event_valid
+Check is an event active or not.
+
+*Parameters*: An ScEvent class object.
+*Returns*: The boolean value (true if an event is valid). 
 
 ```py
 status = client.is_event_valid(sc_event)
 status # True
 ```
 
-## events_destroy
-Destroy ScEvent in KB memory.
 
-*Parametrs*: list of ScEvent.
-*Returns*: True if event was destroyed. 
+## events_destroy
+Destroy an event in the KB memory.
+
+*Parameters*: ScEvent class objects.
+*Returns*: The boolean value (true if event was destroyed).
 
 ```py
-status = client.events_destroy([sc_event])
+status = client.events_destroy(sc_event)
 status # true
 ```
 
+
 # Classes
+The library contains the python implementation of useful classes and functions to work with the sc-memory.
 
-Python library contains python implementation of useful classes and functions to work with sc-memory.
-
-There are a list of classes:
+There is a list of classes:
 
  - ScKeynodes
  - ScAgent
  - ScModule
 
+
 ## ScKeynodes
-Singleton dictinary object which provide possibility to cache identifiers and addrs of keynodes stored in KB.
-Create an instanse of ScKeynodes class to get access to cache:
+A singleton dictionary object which provides the ability to cache identifier and ScAddr of keynodes stored in the KB.
+Create an instance of ScKeynodes class to get access to the cache:
 
 ```py
 keynodes = ScKeynodes()
@@ -231,8 +261,8 @@ keynodes = ScKeynodes()
 
 Get provided identifier:
 ```py
-keynodes["identifier_of_keynode"] # returns ScAddr of given identifier
-keynodes["not_stored_in_kb"] # returns invalid ScAddr if identifier does not exist in memory
+keynodes["identifier_of_keynode"] # returns an ScAddr of the given identifier
+keynodes["not_stored_in_kb"] # returns an invalid ScAddr if an identifier does not exist in the memory
 ```
 
 Use _resolve_identifiers()_ to upload identifiers from _Enum_ classes:
@@ -251,8 +281,9 @@ class QuestionStatus(Enum):
 keynodes.resolve_identifiers([QuestionStatus, CommonIdentifiers])
 ```
 
+
 ## ScAgent
-Class for handling single ScEvent. Define your agents like this:
+A class for handling a single ScEvent. Define your agents like this:
 ```py
 class MyAgent(ScAgent):
     action = "Identifier_of_action_class"
@@ -265,7 +296,7 @@ class MyAgent(ScAgent):
             MyAgent.run_impl
         ]
         event_params = ScEventParams(*params)
-        sc_event = client.events_create([event_params])
+        sc_event = client.events_create(event_params)
         return sc_event[0]
     
     @staticmethod
@@ -275,8 +306,9 @@ class MyAgent(ScAgent):
 
 ```
 
+
 ## ScModule
-Class for handling multiple ScAgent. Define your modules like this:
+A class for handling multiple ScAgent. Define your modules like this:
 ```py 
 class MyModule(ScModule):
     def __init__(self) -> None:

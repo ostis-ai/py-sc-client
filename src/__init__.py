@@ -1,4 +1,4 @@
-"""Python implementation of client for communication with sc-server by websocket protocol.
+""" The Python implementation of the client for communication with the sc-server by websocket protocol.
 Import the `client` module and connect with sc-server:
     >>> from sc_client import client
     >>> client.connect("sc-server URL")

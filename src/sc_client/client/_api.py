@@ -1,7 +1,7 @@
 """
 This source file is part of an OSTIS project. For the latest info, see https://github.com/ostis-ai
 Distributed under the MIT License
-(See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT)
+(See an accompanying file LICENSE or a copy at http://opensource.org/licenses/MIT)
 """
 
 from __future__ import annotations
@@ -123,7 +123,7 @@ def get_link_content(addr: ScAddr) -> ScLinkContent:
     return ScLinkContent(response_payload.get(common.VALUE), content_type, addr)
 
 
-def get_link_by_content(*contents: ScLinkContent | str | int) -> List[List[ScAddr]]:
+def get_links_by_content(*contents: ScLinkContent | str | int) -> List[List[ScAddr]]:
     link_contents = []
     for content in contents:
         if isinstance(content, str):

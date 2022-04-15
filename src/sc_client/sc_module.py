@@ -1,7 +1,7 @@
 """
 This source file is part of an OSTIS project. For the latest info, see https://github.com/ostis-ai
 Distributed under the MIT License
-(See accompanying file LICENSE or copy at http://opensource.org/licenses/MIT)
+(See an accompanying file LICENSE or a copy at http://opensource.org/licenses/MIT)
 """
 
 from abc import ABC
@@ -19,14 +19,14 @@ class ScModule(ABC):
             self._agents = [agent() for agent in agents]
             _current_modules.append(self)
         else:
-            raise RuntimeError("Cannot register agents: connection to sc-server is not established")
+            raise RuntimeError("Cannot register agents: connection to the sc-server is not established")
 
     def _get_agents(self):
         return self._agents
 
     def _set_agents(self, value: List[ScAgent]):
         if not all(isinstance(agent, ScAgent) for agent in value):
-            raise TypeError("All elements of module agents list must be an agents")
+            raise TypeError("All elements of the module agents list must be agents")
         self._agents = value
 
     agents = property(_get_agents, _set_agents)
