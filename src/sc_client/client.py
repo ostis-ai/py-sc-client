@@ -38,7 +38,7 @@ def disconnect() -> None:
     session.close_connection()
 
 
-def check_elements(addrs: List[ScAddr]) -> List[ScType]:
+def check_elements(*addrs: ScAddr) -> List[ScType]:
     if not addrs:
         return []
     addr_values = [addr.value for addr in addrs]
@@ -83,13 +83,13 @@ def create_elements(constr: ScConstruction) -> List[ScAddr]:
     return [ScAddr(addr_value) for addr_value in response.get(common.PAYLOAD)]
 
 
-def delete_elements(addrs: List[ScAddr]) -> bool:
+def delete_elements(*addrs: ScAddr) -> bool:
     addr_values = [addr.value for addr in addrs]
     response = session.send_message(common.RequestTypes.DELETE_ELEMENTS, addr_values)
     return response.get(common.STATUS)
 
 
-def set_link_contents(contents: List[ScLinkContent]) -> bool:
+def set_link_contents(*contents: ScLinkContent) -> bool:
     payload = [
         {
             common.COMMAND: common.CommandTypes.SET,
@@ -123,7 +123,7 @@ def get_link_content(addr: ScAddr) -> ScLinkContent:
     return ScLinkContent(response_payload.get(common.VALUE), content_type, addr)
 
 
-def get_link_by_content(contents: List[ScLinkContent | str | int]) -> List[List[ScAddr]]:
+def get_link_by_content(*contents: ScLinkContent | str | int) -> List[List[ScAddr]]:
     link_contents = []
     for content in contents:
         if isinstance(content, str):
@@ -144,7 +144,7 @@ def get_link_by_content(contents: List[ScLinkContent | str | int]) -> List[List[
     return response_payload
 
 
-def resolve_keynodes(params: List[ScIdtfResolveParams]) -> List[ScAddr]:
+def resolve_keynodes(*params: ScIdtfResolveParams) -> List[ScAddr]:
     payloads_list = []
     for idtf_param in params:
         keynode_type = idtf_param.get(common.TYPE)
@@ -213,7 +213,7 @@ def template_generate(template: Union[ScTemplate, str], params: ScTemplateGenPar
     return result
 
 
-def events_create(events: List[ScEventParams]) -> List[ScEvent]:
+def events_create(*events: ScEventParams) -> List[ScEvent]:
     payload_create = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
     payload = {common.CommandTypes.CREATE: payload_create}
     response = session.send_message(common.RequestTypes.EVENTS, payload)
@@ -226,7 +226,7 @@ def events_create(events: List[ScEventParams]) -> List[ScEvent]:
     return result
 
 
-def events_destroy(events: List[ScEvent]) -> bool:
+def events_destroy(*events: ScEvent) -> bool:
     payload = {common.CommandTypes.DELETE: [event.id for event in events]}
     response = session.send_message(common.RequestTypes.EVENTS, payload)
     for event in events:

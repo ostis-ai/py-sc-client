@@ -76,21 +76,20 @@ class ClientTestCheckElements(ScTest):
     def test_check_node(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33]}')
         node_addr = ScAddr(0)
-        elem_types = client.check_elements([node_addr])
+        elem_types = client.check_elements(node_addr)
         self.assertEqual(len(elem_types), 1)
         self.assertTrue(elem_types[0].is_node())
 
     def test_check_link(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [34]}')
         link_addr = ScAddr(0)
-        elem_type = client.check_elements([link_addr])
+        elem_type = client.check_elements(link_addr)
         self.assertEqual(len(elem_type), 1)
         self.assertTrue(elem_type[0].is_link())
 
     def test_check_elements_list(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
-        addr_list = [ScAddr(0), ScAddr(0), ScAddr(0)]
-        elem_type_list = client.check_elements(addr_list)
+        elem_type_list = client.check_elements(ScAddr(0), ScAddr(0), ScAddr(0))
         self.assertEqual(len(elem_type_list), 3)
         self.assertTrue(elem_type_list[0].is_node())
         self.assertTrue(elem_type_list[1].is_link())
@@ -100,19 +99,18 @@ class ClientTestCheckElements(ScTest):
 class ClientTestDeleteElements(ScTest):
     def test_delete_empty(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
-        status = client.delete_elements([])
+        status = client.delete_elements()
         self.assertTrue(status)
 
     def test_delete_node(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
         node_addr = ScAddr(0)
-        status = client.delete_elements([node_addr])
+        status = client.delete_elements(node_addr)
         self.assertTrue(status)
 
     def test_delete_elements_list(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
-        addr_list = [ScAddr(0), ScAddr(0), ScAddr(0)]
-        status = client.delete_elements(addr_list)
+        status = client.delete_elements(ScAddr(0), ScAddr(0), ScAddr(0))
         self.assertTrue(status)
 
 
@@ -121,7 +119,7 @@ class ClientTestLinkContent(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [true]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
         link_content.addr = ScAddr(0)
-        status = client.set_link_contents([link_content])
+        status = client.set_link_contents(link_content)
         self.assertTrue(status)
 
     def test_set_link_max_content(self):
@@ -140,7 +138,7 @@ class ClientTestLinkContent(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[]]}')
         test_str = "that line nor in KB"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING.value)
-        content = client.get_link_by_content([link_content])
+        content = client.get_link_by_content(link_content)
         self.assertTrue(content)
         self.assertFalse(content[0])
 
@@ -148,7 +146,7 @@ class ClientTestLinkContent(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179679, 46368, 1181734]]}')
         test_str = "testing search by link content"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING.value)
-        content = client.get_link_by_content([link_content])
+        content = client.get_link_by_content(link_content)
         self.assertTrue(content)
         link_addr = ScAddr(46368)
         for item in zip([link_addr], content):
@@ -157,7 +155,7 @@ class ClientTestLinkContent(ScTest):
     def test_get_link_by_content_str(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}')
         test_str = "testing search by link content as string"
-        content = client.get_link_by_content([test_str])
+        content = client.get_link_by_content(test_str)
         self.assertTrue(content)
         link_addr = ScAddr(1180550)
         for item in zip([link_addr], content):
@@ -169,7 +167,7 @@ class ClientTestLinkContent(ScTest):
         test_str_1 = "testing search by link content as string in multiple content"
         test_str_2 = "testing search by link content as casual in multiple content"
         link_content_2 = ScLinkContent(test_str_2, ScLinkContentType.STRING.value)
-        content = client.get_link_by_content([test_str_1, link_content_2])
+        content = client.get_link_by_content(test_str_1, link_content_2)
         addr_list = [ScAddr(46368), ScAddr(46400)]
         self.assertTrue(content)
         for item in zip(addr_list, content):
@@ -180,25 +178,25 @@ class ClientTestResolveElements(ScTest):
     def test_resolve_keynode_not_exist(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238]}')
         params = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
-        addr = client.resolve_keynodes([params])
+        addr = client.resolve_keynodes(params)
         self.assertNotEqual(addr[0].value, 0)
 
     def test_resolve_keynode_exist(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [337259]}')
         params = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_types.NODE_CONST)
-        addr = client.resolve_keynodes([params])
+        addr = client.resolve_keynodes(params)
         self.assertNotEqual(addr[0].value, 0)
 
     def test_find_keynode_not_exist(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
         params = ScIdtfResolveParams(idtf="my_another_keynode_that_not_exist", type=None)
-        addr = client.resolve_keynodes([params])
+        addr = client.resolve_keynodes(params)
         self.assertEqual(addr[0].value, 0)
 
     def test_find_keynode_exist(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [900]}')
         params = ScIdtfResolveParams(idtf="nrel_format", type=None)
-        addr = client.resolve_keynodes([params])
+        addr = client.resolve_keynodes(params)
         self.assertNotEqual(addr[0].value, 0)
 
     def test_resolve_keynodes_list(self):
@@ -206,7 +204,7 @@ class ClientTestResolveElements(ScTest):
         param1 = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
         param2 = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_types.NODE_CONST)
         param3 = ScIdtfResolveParams(idtf="my_another_keynode_that_not_exist", type=None)
-        addrs = client.resolve_keynodes([param1, param2, param3])
+        addrs = client.resolve_keynodes(param1, param2, param3)
         self.assertEqual(len(addrs), 3)
         self.assertNotEqual(addrs[0].value, 0)
         self.assertNotEqual(addrs[1].value, 0)
@@ -217,7 +215,7 @@ class ClientTestEvent(ScTest):
     def _create_event(self, server_message: str, addr_value: int, callback: ScEventCallbackFunc) -> ScEvent:
         self.get_server_message(server_message)
         event_params = ScEventParams(ScAddr(addr_value), common.ScEventType.REMOVE_ELEMENT, callback)
-        sc_event = client.events_create([event_params])
+        sc_event = client.events_create(event_params)
         self.assertTrue(client.is_event_valid(sc_event[0]))
         return sc_event[0]
 
@@ -265,7 +263,7 @@ class ClientTestEvent(ScTest):
         sc_event = self._create_event(server_message, addr_value, test_callback)
 
         self.get_server_message('{"id": 2, "event": false, "status": true, "payload": []}')
-        client.events_destroy([sc_event])
+        client.events_destroy(sc_event)
         self.assertFalse(client.is_event_valid(sc_event))
 
         time.sleep(0.1)
