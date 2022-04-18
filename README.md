@@ -1,6 +1,7 @@
 # **py-sc-client** #
 
-The python implementation of the client for [communication with sc-server](http://ostis-dev.github.io/sc-machine/http/websocket/). This module is tested on Python 3.8+.
+The python implementation of the client for [communication with sc-server](https://github.com/ostis-ai/sc-machine/blob/main/docs/http/websocket.md).
+This module is compatible with 0.6.0 version of [sc-machine](https://github.com/ostis-ai/sc-machine). Module is tested on Python 3.8+.
 
 Require the *websocket-client* library.
 ```sh
@@ -11,7 +12,7 @@ pip3 install websocket-client
 ## connect
 Connect to the server by the URL. Run the client in another thread.
 
-*Parameters*: URL of the sc-server as a string.
+*Parameters*: A URL of the sc-server as a string.
 
 ```py
 from sc_client import client
@@ -77,7 +78,7 @@ addr_list # [node_addr, link_addr, edge_addr]
 Delete elements from the KB memory.
 
 *Parameters*: ScAddr class objects.
-*Returns*: A boolean value (true if elements were deleted).
+*Returns*: The boolean value (true if elements were deleted).
 
 ```py
 status = client.delete_elements(node_addr, edge_addr, link_addr)
@@ -86,10 +87,10 @@ status #True
 
 
 ## set_link_contents
-Set new contents to corresponding links.
+Set the new content to corresponding links.
 
 *Parameters*: ScLinkContent class objects.
-*Returns*: A boolean value (true if the link content is set).
+*Returns*: The boolean value (true if the link content is set).
 
 ```py
 link_content = ScLinkContent("Hello world!", ScLinkContentType.STRING.value)
@@ -120,8 +121,8 @@ Get links from the KB with content.
 
 ```py
 content = client.get_links_by_content("testing search by the link content as a string", "no content")
-content[0]  # get a list of ScAddrs links with given content
-content[1]  # get an empty list if there is no link with given content in the memory
+content[0]  # get a list of ScAddrs links with the given content
+content[1]  # get an empty list if there is no link with the given content in the memory
 ```
 
 
@@ -152,7 +153,7 @@ addr # keynode addr
 
 
 ## template_search
-Search in the KB memory by a template. 
+Search in the KB memory by template. 
 
 *Parameters*: An ScTemplate class object or an scs-template as a string.
 *Returns*: A list of ScTemplateResult class objects. 
@@ -177,7 +178,7 @@ search_result.for_each_triple(for_each_tripple_func) # call a function for each 
 
 
 ## template_generate
-Generate a construction in the KB memory by a template.
+Generate a construction in the KB memory by template.
 
 *Parameters*: An ScTemplate class object or an scs-template as a string, an ScTemplateGenParams class object.
 *Returns*: An ScTemplateResult class object. 
@@ -218,7 +219,7 @@ sc_event = client.events_create(event_params)
 
 
 ## is_event_valid
-Check is an event active or not.
+Check whether an event is active or not.
 
 *Parameters*: An ScEvent class object.
 *Returns*: The boolean value (true if an event is valid). 
@@ -233,7 +234,7 @@ status # True
 Destroy an event in the KB memory.
 
 *Parameters*: ScEvent class objects.
-*Returns*: The boolean value (true if event was destroyed).
+*Returns*: The boolean value (true if an event was destroyed).
 
 ```py
 status = client.events_destroy(sc_event)
@@ -252,14 +253,14 @@ There is a list of classes:
 
 
 ## ScKeynodes
-A singleton dictionary object which provides the ability to cache identifier and ScAddr of keynodes stored in the KB.
-Create an instance of ScKeynodes class to get access to the cache:
+A singleton dictionary object which provides the ability to cache the identifier and ScAddr of keynodes stored in the KB.
+Create an instance of the ScKeynodes class to get access to the cache:
 
 ```py
 keynodes = ScKeynodes()
 ```
 
-Get provided identifier:
+Get the provided identifier:
 ```py
 keynodes["identifier_of_keynode"] # returns an ScAddr of the given identifier
 keynodes["not_stored_in_kb"] # returns an invalid ScAddr if an identifier does not exist in the memory
@@ -289,7 +290,7 @@ class MyAgent(ScAgent):
     action = "Identifier_of_action_class"
     
     def register(self) -> ScEvent:
-        # override method, must return ScEvent instance
+        # override method, must return an ScEvent instance
         params = [
             MyAgent.keynodes["action_initiated"],
             common.ScEventType.ADD_OUTGOING_EDGE,
@@ -308,7 +309,7 @@ class MyAgent(ScAgent):
 
 
 ## ScModule
-A class for handling multiple ScAgent. Define your modules like this:
+A class for handling a multiple ScAgent. Define your modules like this:
 ```py 
 class MyModule(ScModule):
     def __init__(self) -> None:

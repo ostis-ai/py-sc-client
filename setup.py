@@ -4,13 +4,13 @@ from setuptools import setup, find_packages
 DIRECTORY_PATH = Path(__file__).parent
 README = (DIRECTORY_PATH / "README.md").read_text()
 
-VERSION = '1.0.0'
+VERSION = '0.1.0'
 INSTALL_REQUIRES = ['websocket-client>=1.0.1']
 
 setup(
     name='py-sc-client',
     version=VERSION,
-    description='Python implementation of client for communication with sc-server',
+    description='The Python implementation of the client for communication with the sc-server',
     long_description=README,
     long_description_content_type="text/markdown",
     url='https://github.com/ostis-ai/py-sc-client',
