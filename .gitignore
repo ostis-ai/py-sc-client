@@ -13,6 +13,7 @@ requests.egg-info/
 *.pyc
 *.swp
 *.egg
+*.egg-info
 env/
 .venv/
 .eggs/

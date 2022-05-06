@@ -5,9 +5,19 @@ Distributed under the MIT License
 """
 
 from sc_client.client._api import (
-    connect, disconnect, is_connected,
-    create_elements, check_elements, delete_elements,
-    set_link_contents, get_link_content, get_links_by_content,
-    resolve_keynodes, template_search, template_generate,
-    events_create, events_destroy, is_event_valid
+    check_elements,
+    connect,
+    create_elements,
+    delete_elements,
+    disconnect,
+    events_create,
+    events_destroy,
+    get_link_content,
+    get_links_by_content,
+    is_connected,
+    is_event_valid,
+    resolve_keynodes,
+    set_link_contents,
+    template_generate,
+    template_search,
 )

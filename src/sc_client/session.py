@@ -10,12 +10,14 @@ import json
 import logging
 import threading
 import time
-from typing import Any, List, Optional
+from typing import Any
 
 import websocket
 
+from sc_client.client._executor import Executor
 from sc_client.constants import common
-from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ESTABLISH_CONNECTION_TIME, SERVER_ANSWER_CHECK_TIME
+from sc_client.constants.common import ClientCommand
+from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ANSWER_CHECK_TIME, SERVER_ESTABLISH_CONNECTION_TIME
 from sc_client.models import Response, ScAddr, ScEvent
 
 logger = logging.getLogger(__name__)
@@ -26,6 +28,7 @@ class _ScClientSession:
     responses_dict = {}
     events_dict = {}
     command_id = 0
+    executor = Executor()
     ws_app = None
 
     @classmethod
@@ -40,12 +43,15 @@ def _on_message(_, response: str) -> None:
     logger.debug(f"Receive: {str(response)[:LOGGING_MAX_SIZE]}")
     response = json.loads(response, object_hook=Response)
     if response.get(common.EVENT):
-        threading.Thread(target=_emit_callback, args=(response.get(common.ID), response.get(common.PAYLOAD))).start()
+        threading.Thread(
+            target=_emit_callback,
+            args=(response.get(common.ID), response.get(common.PAYLOAD)),
+        ).start()
     else:
         _ScClientSession.responses_dict[response.get(common.ID)] = response
 
 
-def _emit_callback(event_id: int, elems: List[int]) -> None:
+def _emit_callback(event_id: int, elems: list[int]) -> None:
     event = _ScClientSession.events_dict.get(event_id)
     if event:
         event.callback(*[ScAddr(addr) for addr in elems])
@@ -105,24 +111,30 @@ def receive_message(command_id: int) -> Response:
     return response
 
 
-def send_message(request_type: str, payload: Any) -> Response:
+def _send_message(data: str) -> None:
+    _ScClientSession.ws_app.send(data)
+    logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
+
+
+def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
     if not is_connection_established():
         raise BrokenPipeError
     with _ScClientSession.lock_instance:
         _ScClientSession.command_id += 1
         command_id = _ScClientSession.command_id
-    data = json.dumps({
-        common.ID: command_id,
-        common.TYPE: request_type,
-        common.PAYLOAD: payload
-    })
-    _ScClientSession.ws_app.send(data)
-    logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
+    data = json.dumps(
+        {
+            common.ID: command_id,
+            common.TYPE: request_type.value,
+            common.PAYLOAD: payload,
+        }
+    )
+    _send_message(data)
     response = receive_message(command_id)
     return response
 
 
-def get_event(event_id: int) -> Optional[ScEvent]:
+def get_event(event_id: int) -> ScEvent | None:
     return _ScClientSession.events_dict.get(event_id)
 
 
@@ -132,3 +144,7 @@ def drop_event(event_id: int):
 
 def set_event(sc_event: ScEvent) -> None:
     _ScClientSession.events_dict[sc_event.id] = sc_event
+
+
+def execute(request_type: ClientCommand, *args):
+    return _ScClientSession.executor.run(request_type, *args)

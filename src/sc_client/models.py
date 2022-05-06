@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, TypedDict, Union
+from typing import Any, Callable, Dict, List, TypedDict, Union
 
 from sc_client.constants import common
 from sc_client.constants.exceptions import InvalidValueError, LinkContentOversizeError
@@ -52,7 +52,7 @@ ScTemplateGenParams = Dict[str, ScAddr]
 
 class ScTemplateValue(TypedDict):
     value: ScTemplateParamValue
-    alias: Optional[str]
+    alias: str | None
 
 
 class ScTemplateTriple(TypedDict):
@@ -67,23 +67,23 @@ class ScTemplate:
         self.triple_list = []
 
     def triple(
-            self,
-            param1: ScTemplateParam,
-            param2: ScTemplateParam,
-            param3: ScTemplateParam,
-            is_required=True
+        self,
+        param1: ScTemplateParam,
+        param2: ScTemplateParam,
+        param3: ScTemplateParam,
+        is_required=True,
     ) -> None:
         p1, p2, p3 = tuple(map(self._split_template_param, [param1, param2, param3]))
 
         self.triple_list.append(ScTemplateTriple(src=p1, edge=p2, trg=p3, is_required=is_required))
 
     def triple_with_relation(
-            self,
-            param1: ScTemplateParam,
-            param2: ScTemplateParam,
-            param3: ScTemplateParam,
-            param4: ScTemplateParam,
-            param5: ScTemplateParam,
+        self,
+        param1: ScTemplateParam,
+        param2: ScTemplateParam,
+        param3: ScTemplateParam,
+        param4: ScTemplateParam,
+        param5: ScTemplateParam,
     ) -> None:
         template_value = self._split_template_param(param2)
         alias = template_value.get(common.ALIAS)
@@ -106,14 +106,14 @@ class ScTemplate:
 
 
 class ScTemplateResult:
-    def __init__(self, addrs: List[ScAddr], aliases: List[str]) -> None:
+    def __init__(self, addrs: list[ScAddr], aliases: list[str]) -> None:
         self.addrs = addrs
         self.indecies = aliases
 
     def size(self) -> int:
         return len(self.addrs)
 
-    def get(self, alias_or_index: Union[str, int]) -> ScAddr:
+    def get(self, alias_or_index: str | int) -> ScAddr:
         if isinstance(alias_or_index, str):
             return self.addrs[self.indecies[alias_or_index]]
         return self.addrs[alias_or_index]
@@ -125,7 +125,7 @@ class ScTemplateResult:
 
 class ScIdtfResolveParams(TypedDict):
     idtf: str
-    type: Optional[ScType]
+    type: ScType | None
 
 
 class ScLinkContentType(Enum):
@@ -137,7 +137,7 @@ class ScLinkContentType(Enum):
 
 @dataclass
 class ScLinkContent:
-    data: Union[str, int]
+    data: str | int
     content_type: ScLinkContentType
     addr: ScAddr = None
 
@@ -174,7 +174,13 @@ class ScConstruction:
             self.aliases[alias] = len(self.commands)
         self.commands.append(cmd)
 
-    def create_edge(self, sc_type: ScType, src: Union[str, ScAddr], trg: Union[str, ScAddr], alias: str = None) -> None:
+    def create_edge(
+        self,
+        sc_type: ScType,
+        src: str | ScAddr,
+        trg: str | ScAddr,
+        alias: str = None,
+    ) -> None:
         if not sc_type.is_edge():
             raise InvalidValueError("You should pass the edge type here")
         cmd = ScConstructionCommand(sc_type, {common.SOURCE: src, common.TARGET: trg})
