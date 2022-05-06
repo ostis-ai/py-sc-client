@@ -1,0 +1,35 @@
+ci:
+  autoupdate_branch: "0.1.x"
+  autoupdate_schedule: monthly
+repos:
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v2.32.0
+    hooks:
+      - id: pyupgrade
+        args: [ "--py38-plus" ]
+
+  - repo: https://github.com/pycqa/isort
+    rev: 5.10.1
+    hooks:
+        - id: isort
+          name: isort
+          args: [--line-length=120]
+
+  - repo: https://github.com/ambv/black
+    rev: 22.3.0
+    hooks:
+        - id: black
+          name: black
+          args: [--line-length=120]
+
+  - repo: https://github.com/pycqa/pylint
+    rev: v2.12.2
+    hooks:
+      - id: pylint
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.2.0
+    hooks:
+      - id: fix-byte-order-marker
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
