@@ -1,13 +1,7 @@
 # **py-sc-client** #
 
 The python implementation of the client for [communication with sc-server](https://github.com/ostis-ai/sc-machine/blob/main/docs/http/websocket.md).
-This module is compatible with 0.6.0 version of [sc-machine](https://github.com/ostis-ai/sc-machine). Module is tested on Python 3.8+.
-
-Require the *websocket-client* library.
-```sh
-pip3 install websocket-client
-```
-
+This module is compatible with 0.6.0 - 0.6.1 versions of [sc-machine](https://github.com/ostis-ai/sc-machine). Module is tested on Python 3.8+.
 
 ## connect
 Connect to the server by the URL. Run the client in another thread.
@@ -104,7 +98,7 @@ status # True
 Get the content of the given link.
 
 *Parameters*: An ScAddr class object.
-*Returns*: An ScLinkContent class object. 
+*Returns*: An ScLinkContent class object.
 
 ```py
 link_content = client.get_link_content(link_addr)
@@ -127,11 +121,11 @@ content[1]  # get an empty list if there is no link with the given content in th
 
 
 ## resolve_keynodes
-Get a keynode from the KB memory by identifier and type. If it doesn't exist, then create a new one. 
+Get a keynode from the KB memory by identifier and type. If it doesn't exist, then create a new one.
 If ScType is None, try to find an element by the system identifier.
 
 *Parameters*: An ScIdtfResolveParams class object.
-*Returns*: An ScAddr class object. 
+*Returns*: An ScAddr class object.
 
 ```py
 params = ScIdtfResolveParams(idtf='my_new_keynode_that_not_exist', type=sc_types.NODE_CONST)
@@ -153,10 +147,10 @@ addr # keynode addr
 
 
 ## template_search
-Search in the KB memory by template. 
+Search in the KB memory by template.
 
 *Parameters*: An ScTemplate class object or an scs-template as a string.
-*Returns*: A list of ScTemplateResult class objects. 
+*Returns*: A list of ScTemplateResult class objects.
 
 ```py
 templ = ScTemplate()
@@ -181,7 +175,7 @@ search_result.for_each_triple(for_each_tripple_func) # call a function for each 
 Generate a construction in the KB memory by template.
 
 *Parameters*: An ScTemplate class object or an scs-template as a string, an ScTemplateGenParams class object.
-*Returns*: An ScTemplateResult class object. 
+*Returns*: An ScTemplateResult class object.
 
 ```py
 templ = ScTemplate()
@@ -206,7 +200,7 @@ gen_result = client.template_generate(templ, gen_params)
 Create an event in the KB memory.
 
 *Parameters*: ScEventParams class objects.
-*Returns*: A list of ScEvent class objects. 
+*Returns*: A list of ScEvent class objects.
 
 ```py
 def event_callback(src: ScAddr, edge: ScAddr, trg: ScAddr):
@@ -222,7 +216,7 @@ sc_event = client.events_create(event_params)
 Check whether an event is active or not.
 
 *Parameters*: An ScEvent class object.
-*Returns*: The boolean value (true if an event is valid). 
+*Returns*: The boolean value (true if an event is valid).
 
 ```py
 status = client.is_event_valid(sc_event)
@@ -278,7 +272,7 @@ class QuestionStatus(Enum):
     QUESTION_FINISHED = "question_finished"
     QUESTION_FINISHED_SUCCESSFULLY = "question_finished_successfully"
     QUESTION_FINISHED_UNSUCCESSFULLY = "question_finished_unsuccessfully"
-    
+
 keynodes.resolve_identifiers([QuestionStatus, CommonIdentifiers])
 ```
 
@@ -288,7 +282,7 @@ A class for handling a single ScEvent. Define your agents like this:
 ```py
 class MyAgent(ScAgent):
     action = "Identifier_of_action_class"
-    
+
     def register(self) -> ScEvent:
         # override method, must return an ScEvent instance
         params = [
@@ -299,7 +293,7 @@ class MyAgent(ScAgent):
         event_params = ScEventParams(*params)
         sc_event = client.events_create(event_params)
         return sc_event[0]
-    
+
     @staticmethod
     def run_impl(action_class: ScAddr, edge: ScAddr, action_node: ScAddr) -> None:
         # override method, must have 3 args and be static
@@ -310,7 +304,7 @@ class MyAgent(ScAgent):
 
 ## ScModule
 A class for handling a multiple ScAgent. Define your modules like this:
-```py 
+```py
 class MyModule(ScModule):
     def __init__(self) -> None:
         agents_to_register = [MyAgent1, MyAgent2] # list of agent classes
