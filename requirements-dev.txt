@@ -2,6 +2,7 @@ wheel
 tox
 pre-commit
 pytest
+websocket-client>=1.0.1
 isort==5.7.0
 coverage==5.5
 pylint==2.7.4
