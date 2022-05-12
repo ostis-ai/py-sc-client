@@ -31,7 +31,7 @@ jobs:
 
     - name: Checking with black
       run: |
-        black --diff --color --line-length 120 src
+        black --check --color --line-length 120 src
 
     - name: Linting with pylint
       run: |
