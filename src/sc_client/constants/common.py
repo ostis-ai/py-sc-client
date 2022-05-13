@@ -4,10 +4,10 @@ Distributed under the MIT License
 (See an accompanying file LICENSE or a copy at http://opensource.org/licenses/MIT)
 """
 
-from enum import Enum
+from enum import Enum, auto
 
 
-class RequestTypes:
+class RequestType(Enum):
     CHECK_ELEMENTS = "check_elements"
     CREATE_ELEMENTS = "create_elements"
     DELETE_ELEMENTS = "delete_elements"
@@ -16,6 +16,20 @@ class RequestTypes:
     SEARCH_TEMPLATE = "search_template"
     GENERATE_TEMPLATE = "generate_template"
     EVENTS = "events"
+
+
+class ClientCommand(Enum):
+    CHECK_ELEMENTS = auto()
+    CREATE_ELEMENTS = auto()
+    DELETE_ELEMENTS = auto()
+    SET_LINK_CONTENTS = auto()
+    GET_LINK_CONTENT = auto()
+    GET_LINKS_BY_CONTENT = auto()
+    KEYNODES = auto()
+    SEARCH_TEMPLATE = auto()
+    GENERATE_TEMPLATE = auto()
+    EVENTS_CREATE = auto()
+    EVENTS_DESTROY = auto()
 
 
 BINARY = "binary"

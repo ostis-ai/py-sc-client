@@ -16,7 +16,7 @@ class InvalidValueError(CommonError):
     def __init__(self, msg: str = None):
         message = CommonErrorMessages.INVALID_VALUE.value
         if msg:
-            message = ': '.join([message, msg])
+            message = ": ".join([message, msg])
         super().__init__(message)
 
 
@@ -24,7 +24,7 @@ class InvalidStateError(CommonError):
     def __init__(self, msg: str = None):
         message = CommonErrorMessages.INVALID_STATE.value
         if msg:
-            message = ': '.join([message, msg])
+            message = ": ".join([message, msg])
         super().__init__(message)
 
 
@@ -32,7 +32,7 @@ class LinkContentOversizeError(CommonError):
     def __init__(self, msg: str = None):
         message = CommonErrorMessages.LINK_OVERSIZE.value
         if msg:
-            message = ': '.join([message, msg])
+            message = ": ".join([message, msg])
         super().__init__(message)
 
 

@@ -1,0 +1,8 @@
+wheel
+tox
+pre-commit
+pytest
+websocket-client>=1.0.1
+isort==5.10.1
+pylint==2.13.7
+black==22.3.0
