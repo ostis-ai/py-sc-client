@@ -1,25 +1,20 @@
-## Installation
-
-Install all project:
-
-```sh
-git clone https://github.com/ostis-ai/py-sc-client.git
-cd py-sc-client
-pip3 install -r requirements-dev.txt
-```
-
-Install pre-commit:
-
-```sh
-pre-commit install
-```
-
-Run tests:
-```sh
-tox -e py38
-```
-
 ### Workflow
+When contributing code, you'll want to follow this checklist:
+
+1. Fork the repository on GitHub.
+2. Run the tests to confirm they all pass on your system. If they don't, you'll
+   need to investigate why they fail. If you're unable to diagnose this
+   yourself, raise it as a bug report by following the guidelines in this
+   document: [bug-reports](https://github.com/ostis-ai/py-sc-client/blob/572f26638e4152bb075f026a4533f0d6485e1483/.github/ISSUE_TEMPLATE/bug_report.md).
+3. Write tests that demonstrate your bug or feature. Ensure that they fail.
+4. Make your change.
+5. Run the entire test suite again, confirming that all tests pass *including
+   the ones you just added*.
+6. Send a GitHub Pull Request to the main repository's ``develop`` branch.
+   GitHub Pull Requests are the expected method of code collaboration on this
+   project.
+
+
 This project uses [Git-Flow](https://www.gitkraken.com/learn/git/git-flow),
 [git-flow tool](https://github.com/nvie/gitflow) can be used.
 

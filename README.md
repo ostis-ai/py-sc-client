@@ -1,9 +1,17 @@
-# **py-sc-client** #
+# **Py-sc-client** #
 
 The python implementation of the client for [communication with sc-server](https://github.com/ostis-ai/sc-machine/blob/main/docs/http/websocket.md).
 This module is compatible with 0.6.0 - 0.6.1 versions of [sc-machine](https://github.com/ostis-ai/sc-machine). Module is tested on Python 3.8+.
 
-## connect
+## Installing Requests and Supported Versions
+Py-sc-client is available on PyPI:
+
+$ python -m pip install py-sc-client
+Py-sc-client officially supports Python 3.8+.
+
+## API Reference
+
+### connect
 Connect to the server by the URL. Run the client in another thread.
 
 *Parameters*: A URL of the sc-server as a string.
@@ -15,7 +23,7 @@ client.connect("ws://localhost:8090/ws_json")
 ```
 
 
-## disconnect
+### disconnect
 Close the connection with the sc-server.
 
 ```py
@@ -25,7 +33,7 @@ client.disconnect()
 ```
 
 
-## is_connected
+### is_connected
 Check the state of the connection with the sc-server.
 
 *Returns*: The boolean value (true if a connection is established).
@@ -37,7 +45,7 @@ client.is_connected() # True
 ```
 
 
-## check_elements
+### check_elements
 Check the type of given elements.
 
 *Parameters*: ScAddr class objects.
@@ -51,7 +59,7 @@ elem_types[2].is_link() #True
 ```
 
 
-## create_elements
+### create_elements
 Create a given construction in the KB memory.
 
 *Parameters*: An ScConstruction class object.
@@ -68,7 +76,7 @@ addr_list # [node_addr, link_addr, edge_addr]
 ```
 
 
-## delete_elements
+### delete_elements
 Delete elements from the KB memory.
 
 *Parameters*: ScAddr class objects.
@@ -80,7 +88,7 @@ status #True
 ```
 
 
-## set_link_contents
+### set_link_contents
 Set the new content to corresponding links.
 
 *Parameters*: ScLinkContent class objects.
@@ -94,7 +102,7 @@ status # True
 ```
 
 
-## get_link_content
+### get_link_content
 Get the content of the given link.
 
 *Parameters*: An ScAddr class object.
@@ -107,7 +115,7 @@ link_content.addr # link addr
 ```
 
 
-## get_links_by_content
+### get_links_by_content
 Get links from the KB with content.
 
 *Parameters*: ScLinkContent class objects, strings.
@@ -120,7 +128,7 @@ content[1]  # get an empty list if there is no link with the given content in th
 ```
 
 
-## resolve_keynodes
+### resolve_keynodes
 Get a keynode from the KB memory by identifier and type. If it doesn't exist, then create a new one.
 If ScType is None, try to find an element by the system identifier.
 
@@ -146,7 +154,7 @@ addr # keynode addr
 ```
 
 
-## template_search
+### template_search
 Search in the KB memory by template.
 
 *Parameters*: An ScTemplate class object or an scs-template as a string.
@@ -171,7 +179,7 @@ search_result.for_each_triple(for_each_tripple_func) # call a function for each 
 ```
 
 
-## template_generate
+### template_generate
 Generate a construction in the KB memory by template.
 
 *Parameters*: An ScTemplate class object or an scs-template as a string, an ScTemplateGenParams class object.
@@ -196,7 +204,7 @@ gen_result = client.template_generate(templ, gen_params)
 ```
 
 
-## events_create
+### events_create
 Create an event in the KB memory.
 
 *Parameters*: ScEventParams class objects.
@@ -212,7 +220,7 @@ sc_event = client.events_create(event_params)
 ```
 
 
-## is_event_valid
+### is_event_valid
 Check whether an event is active or not.
 
 *Parameters*: An ScEvent class object.
@@ -224,7 +232,7 @@ status # True
 ```
 
 
-## events_destroy
+### events_destroy
 Destroy an event in the KB memory.
 
 *Parameters*: ScEvent class objects.
@@ -236,7 +244,7 @@ status # true
 ```
 
 
-# Classes
+## Classes
 The library contains the python implementation of useful classes and functions to work with the sc-memory.
 
 There is a list of classes:
@@ -246,7 +254,7 @@ There is a list of classes:
  - ScModule
 
 
-## ScKeynodes
+### ScKeynodes
 A singleton dictionary object which provides the ability to cache the identifier and ScAddr of keynodes stored in the KB.
 Create an instance of the ScKeynodes class to get access to the cache:
 
@@ -277,7 +285,7 @@ keynodes.resolve_identifiers([QuestionStatus, CommonIdentifiers])
 ```
 
 
-## ScAgent
+### ScAgent
 A class for handling a single ScEvent. Define your agents like this:
 ```py
 class MyAgent(ScAgent):
@@ -302,7 +310,7 @@ class MyAgent(ScAgent):
 ```
 
 
-## ScModule
+### ScModule
 A class for handling a multiple ScAgent. Define your modules like this:
 ```py
 class MyModule(ScModule):
