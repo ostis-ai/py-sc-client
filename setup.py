@@ -29,7 +29,7 @@ if CURRENT_PYTHON < REQUIRED_PYTHON:
 
 
 setup(
-    name="py-sc-client",
+    name="Py-sc-client",
     version=VERSION,
     description="The Python implementation of the client for communication with the sc-server",
     long_description=README,

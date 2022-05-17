@@ -10,7 +10,7 @@ This module is compatible with 0.6.0 - 0.6.1 versions of [sc-machine](https://gi
 Py-sc-client is available on PyPI:
 
 ```sh
-$ python -m pip install py-sc-client
+$ python -m pip install Py-sc-client
 ```
 
 Py-sc-client officially supports Python 3.8+.
