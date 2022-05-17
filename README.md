@@ -6,11 +6,11 @@
 The python implementation of the client for [communication with sc-server](https://github.com/ostis-ai/sc-machine/blob/main/docs/http/websocket.md).
 This module is compatible with 0.6.0 - 0.6.1 versions of [sc-machine](https://github.com/ostis-ai/sc-machine).
 
-## Installing Requests and Supported Versions
+## Installing py-sc-client
 py-sc-client is available on PyPI:
 
 ```sh
-$ python -m pip install py-sc-client
+$ pip install py-sc-client
 ```
 
 py-sc-client officially supports Python 3.8+.
