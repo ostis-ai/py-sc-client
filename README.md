@@ -1,7 +1,7 @@
 # **Py-sc-client** #
 
-<img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/run-tests.yml/badge.svg?branch=main">
-<img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/push-CI.yml/badge.svg?branch=main">
+<img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/tests.yml/badge.svg?branch=main">
+<img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/push.yml/badge.svg?branch=main">
 
 The python implementation of the client for [communication with sc-server](https://github.com/ostis-ai/sc-machine/blob/main/docs/http/websocket.md).
 This module is compatible with 0.6.0 - 0.6.1 versions of [sc-machine](https://github.com/ostis-ai/sc-machine).
