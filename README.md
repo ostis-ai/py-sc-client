@@ -1,4 +1,4 @@
-# **Py-sc-client** #
+# **py-sc-client** #
 
 <img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/tests.yml/badge.svg?branch=main">
 <img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/push.yml/badge.svg?branch=main">
@@ -7,13 +7,13 @@ The python implementation of the client for [communication with sc-server](https
 This module is compatible with 0.6.0 - 0.6.1 versions of [sc-machine](https://github.com/ostis-ai/sc-machine).
 
 ## Installing Requests and Supported Versions
-Py-sc-client is available on PyPI:
+py-sc-client is available on PyPI:
 
 ```sh
-$ python -m pip install Py-sc-client
+$ python -m pip install py-sc-client
 ```
 
-Py-sc-client officially supports Python 3.8+.
+py-sc-client officially supports Python 3.8+.
 
 ## API Reference
 
