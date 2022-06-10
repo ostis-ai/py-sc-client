@@ -75,7 +75,7 @@ Create a given construction in the KB memory.
 const = ScConstruction()
 const.create_node(sc_types.NODE_CONST, 'node')
 link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
-const.create_link(sc_types.LINK, link_content, 'link')
+const.create_link(sc_types.LINK_CONST, link_content, 'link')
 const.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
 addr_list = client.create_elements(const)
 addr_list # [node_addr, link_addr, edge_addr]
@@ -196,7 +196,7 @@ templ = ScTemplate()
 templ.triple_with_relation( # faaaf
     [main_node, '_main_node'],
     sc_types.EDGE_D_COMMON_VAR,
-    [sc_types.LINK, '_link'],
+    [sc_types.LINK_VAR, '_link'],
     sc_types.EDGE_ACCESS_VAR_POS_PERM,
     relation_node,
 )
