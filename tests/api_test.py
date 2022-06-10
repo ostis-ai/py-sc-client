@@ -62,7 +62,7 @@ class TestClientCreateElements(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1182470]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
         const = ScConstruction()
-        const.create_link(sc_types.LINK, link_content)
+        const.create_link(sc_types.LINK_CONST, link_content)
         addr = client.create_elements(const)
         assert len(addr) == 1
 
@@ -71,7 +71,7 @@ class TestClientCreateElements(ScTest):
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
         const = ScConstruction()
         const.create_node(sc_types.NODE_CONST, "node")
-        const.create_link(sc_types.LINK, link_content, "link")
+        const.create_link(sc_types.LINK_CONST, link_content, "link")
         const.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, "node", "link")
         addr_list = client.create_elements(const)
         assert len(addr_list) == 3
@@ -197,7 +197,6 @@ class TestClientResolveElements(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
         params = ScIdtfResolveParams(idtf="my_another_keynode_that_not_exist", type=None)
         addr = client.resolve_keynodes(params)
-        print(addr)
         assert addr[0].is_valid() is False
 
     def test_find_keynode_exist(self):
@@ -313,7 +312,7 @@ class TestClientTemplate(ScTest):
         templ.triple_with_relation(
             [ScAddr(0), "_main_node"],
             sc_types.EDGE_D_COMMON_VAR,
-            [sc_types.LINK, "_link"],
+            [sc_types.LINK_VAR, "_link"],
             sc_types.EDGE_ACCESS_VAR_POS_PERM,
             ScAddr(0),
         )
