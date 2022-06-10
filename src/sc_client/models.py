@@ -59,7 +59,6 @@ class ScTemplateTriple(TypedDict):
     src: ScTemplateValue
     edge: ScTemplateValue
     trg: ScTemplateValue
-    is_required: bool
 
 
 class ScTemplate:
@@ -71,11 +70,10 @@ class ScTemplate:
         param1: ScTemplateParam,
         param2: ScTemplateParam,
         param3: ScTemplateParam,
-        is_required=True,
     ) -> None:
         p1, p2, p3 = tuple(map(self._split_template_param, [param1, param2, param3]))
 
-        self.triple_list.append(ScTemplateTriple(src=p1, edge=p2, trg=p3, is_required=is_required))
+        self.triple_list.append(ScTemplateTriple(src=p1, edge=p2, trg=p3))
 
     def triple_with_relation(
         self,

@@ -171,7 +171,7 @@ templ = ScTemplate()
 templ.triple([class_node_addr, '_class_node'], sc_types.EDGE_ACCESS_VAR_POS_PERM, node_addr) # faf
 templ.triple('_class_node', sc_types.EDGE_ACCESS_VAR_POS_TEMP, link_addr) # faf
 templ.triple('_class_node', edge_addr, sc_types.NODE_VAR) # ffa
-templ.triple(node_addr, edge_addr, sc_types.NODE_VAR, is_required=False) # ffa, can be empty
+templ.triple(node_addr, edge_addr, sc_types.NODE_VAR) # ffa
 search_results = client.template_search(templ)
 search_result = search_results[0]
 

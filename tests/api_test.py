@@ -293,7 +293,7 @@ class TestClientTemplate(ScTest):
         templ.triple([ScAddr(0), "_class_node"], sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
         templ.triple("_class_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, ScAddr(0))
         templ.triple("_class_node", ScAddr(0), sc_types.NODE_VAR)
-        templ.triple(ScAddr(0), ScAddr(0), sc_types.NODE_VAR, is_required=False)
+        templ.triple(ScAddr(0), ScAddr(0), sc_types.NODE_VAR)
         search_result_list = client.template_search(templ)
 
         assert len(search_result_list) != 0
