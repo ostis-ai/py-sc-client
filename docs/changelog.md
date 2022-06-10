@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Removed
  - Remove opportunity to not search some triples in sc-template, remove is_required flag,
    deprecated by [ostis-ai/sc-machine@49c5406](https://github.com/ostis-ai/sc-machine/commit/49c540646ba795ca2e6879ec3d3c2f1aa94f79ca)
+### Changed
+ - Specify link const types in tests and docs
 
 ## [0.1.2]
 ### Changed
