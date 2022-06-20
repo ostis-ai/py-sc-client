@@ -139,24 +139,24 @@ Get a keynode from the KB memory by identifier and type. If it doesn't exist, th
 If ScType is None, try to find an element by the system identifier.
 
 *Parameters*: An ScIdtfResolveParams class object.
-*Returns*: An ScAddr class object.
+*Returns*: A list of ScAddr class objects.
 
 ```py
 params = ScIdtfResolveParams(idtf='my_new_keynode_that_not_exist', type=sc_types.NODE_CONST)
 addr = client.resolve_keynodes([params])
-addr # new keynode addr
+addr # list with new keynode addr
 
 params = ScIdtfResolveParams(idtf='technology_OSTIS', type=sc_types.NODE_CONST)
 addr = client.resolve_keynodes([params])
-addr # keynode addr
+addr # list with keynode addr
 
 params = ScIdtfResolveParams(idtf='my_another_keynode_that_not_exist', type=None)
 addr = client.resolve_keynodes([params])
-addr # None
+addr # list with invalid addr
 
 params = ScIdtfResolveParams(idtf='nrel_format', type=None)
 addr = client.resolve_keynodes([params])
-addr # keynode addr
+addr # list with keynode addr
 ```
 
 
