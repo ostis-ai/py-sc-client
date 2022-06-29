@@ -6,6 +6,7 @@ Distributed under the MIT License
 
 import time
 import unittest
+from enum import Enum
 from unittest.mock import Mock, patch
 
 import pytest
@@ -28,6 +29,9 @@ from sc_client.models import (
 
 
 # pylint: disable=W0212
+from sc_client.sc_keynodes import ScKeynodes
+
+
 class ScTest(unittest.TestCase):
     def setUp(self) -> None:
         self._mock_ws_app_patcher = patch("sc_client.session._ScClientSession.ws_app")
@@ -321,6 +325,27 @@ class TestClientTemplate(ScTest):
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(templ, gen_params)
         assert gen_result.size() == 9
+
+
+class TestScKeynodes(ScTest):
+
+    class TestEnum(Enum):
+        IDTF_1 = 'idtf_1'
+        IDTF_2 = 'idtf_2'
+
+
+    def test_should_get_keynode(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238]}')
+        keynodes = ScKeynodes()
+        result = keynodes["SYS_IDTF"]
+        assert result.value == 1183238
+
+    def test_should_get_keynodes_by_enum(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238, 2]}')
+        keynodes = ScKeynodes()
+        keynodes.resolve_identifiers([self.TestEnum])
+        assert keynodes[self.TestEnum.IDTF_1.value].value == 1183238
+        assert keynodes[self.TestEnum.IDTF_2.value].value == 2
 
 
 client_test_cases = (
