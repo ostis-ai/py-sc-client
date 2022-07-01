@@ -32,7 +32,7 @@ class ScKeynodes(dict):
         idtf_list = []
         for idtf_class in identifiers:
             idtf_list.extend([idtf.value for idtf in idtf_class])
-        idtf_list = set(idtf_list)
+        idtf_list = list(set(idtf_list))
         params_list = [ScIdtfResolveParams(idtf=idtf, type=None) for idtf in idtf_list]
         addrs = client.resolve_keynodes(*params_list)
         self._instance.update(zip(idtf_list, addrs))

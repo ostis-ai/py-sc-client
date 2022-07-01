@@ -347,6 +347,12 @@ class TestScKeynodes(ScTest):
         assert keynodes[self.TestEnum.IDTF_1.value].value == 1183238
         assert keynodes[self.TestEnum.IDTF_2.value].value == 2
 
+    def test_should_get_unknown_idtf(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
+        keynodes = ScKeynodes()
+        result = keynodes['UNKNOWN_IDTF']
+        assert not result.is_valid()
+
 
 client_test_cases = (
     TestClientCreateElements,
@@ -356,4 +362,5 @@ client_test_cases = (
     TestClientLinkContent,
     TestClientTemplate,
     TestClientEvent,
+    TestScKeynodes,
 )
