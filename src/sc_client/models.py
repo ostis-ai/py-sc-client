@@ -26,6 +26,12 @@ class ScAddr:
     def is_equal(self, other: ScAddr) -> bool:
         return self.value is other.value
 
+    def __bool__(self) -> bool:
+        return self.is_valid()
+
+    def __repr__(self) -> str:
+        return f"ScAddr({self.value})"
+
 
 ScTripleCallback = Callable[[ScAddr, ScAddr, ScAddr], None]
 ScEventCallbackFunc = ScTripleCallback
