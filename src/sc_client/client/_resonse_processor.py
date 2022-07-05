@@ -35,19 +35,22 @@ class SetLinkContentResponseProcessor(BaseResponseProcessor):
 
 
 class GetLinkContentResponseProcessor(BaseResponseProcessor):
-    def __call__(self, response: Response, *_) -> ScLinkContent:
-        response_payload = response.get(common.PAYLOAD)[0]
-        str_type = response_payload.get(common.TYPE)
-        content_type = 0
-        if str_type == common.STRING:
-            content_type = ScLinkContentType.STRING.value
-        elif str_type == common.INT:
-            content_type = ScLinkContentType.INT.value
-        elif str_type == common.BINARY:
-            content_type = ScLinkContentType.BINARY.value
-        elif str_type == common.FLOAT:
-            content_type = ScLinkContentType.FLOAT.value
-        return ScLinkContent(response_payload.get(common.VALUE), content_type)
+    def __call__(self, response: Response, *_) -> list[ScLinkContent]:
+        response_payload = response.get(common.PAYLOAD)
+        result = []
+        for link in response_payload:
+            str_type = link.get(common.TYPE)
+            content_type = 0
+            if str_type == common.STRING:
+                content_type = ScLinkContentType.STRING.value
+            elif str_type == common.INT:
+                content_type = ScLinkContentType.INT.value
+            elif str_type == common.BINARY:
+                content_type = ScLinkContentType.BINARY.value
+            elif str_type == common.FLOAT:
+                content_type = ScLinkContentType.FLOAT.value
+            result.append(ScLinkContent(link.get(common.VALUE), content_type))
+        return result
 
 
 class GetLinksByContentResponseProcessor(BaseResponseProcessor):

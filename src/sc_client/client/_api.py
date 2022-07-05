@@ -50,8 +50,8 @@ def set_link_contents(*contents: ScLinkContent) -> bool:
     return session.execute(common.ClientCommand.SET_LINK_CONTENTS, *contents)
 
 
-def get_link_content(addr: ScAddr) -> ScLinkContent:
-    return session.execute(common.ClientCommand.GET_LINK_CONTENT, addr)
+def get_link_content(*addr: ScAddr) -> list[ScLinkContent]:
+    return session.execute(common.ClientCommand.GET_LINK_CONTENT, *addr)
 
 
 def get_links_by_content(*contents: ScLinkContent | str | int) -> list[list[ScAddr]]:

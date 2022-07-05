@@ -140,7 +140,7 @@ class TestClientLinkContent(ScTest):
         msg = '{"id": 1, "event": false, "status": true, "payload": [{"value": "Hi!", "type": "string"}]}'
         self.get_server_message(msg)
         link_addr = ScAddr(0)
-        content = client.get_link_content(link_addr)
+        content = client.get_link_content(link_addr)[0]
         assert content.content_type
         assert content.data
         assert content.addr is None

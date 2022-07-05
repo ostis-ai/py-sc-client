@@ -112,12 +112,12 @@ status # True
 Get the content of the given link.
 
 *Parameters*: An ScAddr class object.
-*Returns*: An ScLinkContent class object.
+*Returns*: A list of ScLinkContent class objects.
 
 ```py
 link_content = client.get_link_content(link_addr)
-link_content.data # link content
-link_content.addr # link addr
+link_content[0].data # link content
+link_content[0].addr # link addr
 ```
 
 
