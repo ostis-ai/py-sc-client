@@ -88,11 +88,14 @@ class SetLinkContentPayloadCreator(BasePayloadCreator):
 
 
 class GetLinkContentPayloadCreator(BasePayloadCreator):
-    def __call__(self, addr: ScAddr, *_):
-        payload = {
-            common.COMMAND: common.CommandTypes.GET,
-            common.ADDR: addr.value,
-        }
+    def __call__(self, *addrs: ScAddr):
+        payload = [
+            {
+                common.COMMAND: common.CommandTypes.GET,
+                common.ADDR: addr.value,
+            }
+            for addr in addrs
+        ]
         return payload
 
 
