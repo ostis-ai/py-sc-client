@@ -53,7 +53,8 @@ class ScEvent:
 
 ScTemplateParamValue = Union[str, ScAddr, ScType]
 ScTemplateParam = Union[List[ScTemplateParamValue], ScTemplateParamValue]
-ScTemplateGenParams = Dict[str, ScAddr]
+ScTemplateParams = Dict[str, Union[ScAddr, str]]
+ScTemplateIdtf = str
 
 
 class ScTemplateValue(TypedDict):

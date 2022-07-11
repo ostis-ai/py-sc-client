@@ -27,7 +27,6 @@ from sc_client.models import (
     ScTemplate,
 )
 
-
 # pylint: disable=W0212
 from sc_client.sc_keynodes import ScKeynodes
 
@@ -297,12 +296,42 @@ class TestClientTemplate(ScTest):
         templ.triple("_class_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, ScAddr(0))
         templ.triple("_class_node", ScAddr(0), sc_types.NODE_VAR)
         templ.triple(ScAddr(0), ScAddr(0), sc_types.NODE_VAR)
-        search_result_list = client.template_search(templ)
+        search_result_list = client.template_search(templ, {})
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
         assert search_result.size() == 12
         assert search_result.get("_class_node").value == search_result.get(0).value
+        search_result.for_each_triple(for_each_tripple_func)
+
+    def test_template_search_by_idtf(self):
+        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
+            for addr in [src, edge, trg]:
+                assert isinstance(addr, ScAddr)
+
+        payload = '{"aliases": {"_class_node": 0}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        params = {"_class_node": "my_class"}
+        search_result_list = client.template_search("my_template", params)
+
+        assert len(search_result_list) != 0
+        search_result = search_result_list[0]
+        assert search_result.size() == 6
+        assert search_result.get("_class_node").value == search_result.get(0).value
+        search_result.for_each_triple(for_each_tripple_func)
+
+    def test_template_search_by_addr(self):
+        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
+            for addr in [src, edge, trg]:
+                assert isinstance(addr, ScAddr)
+
+        payload = '{"aliases": {}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        search_result_list = client.template_search(ScAddr(154454))
+
+        assert len(search_result_list) != 0
+        search_result = search_result_list[0]
+        assert search_result.size() == 6
         search_result.for_each_triple(for_each_tripple_func)
 
     def test_template_generate(self):
@@ -326,13 +355,29 @@ class TestClientTemplate(ScTest):
         gen_result = client.template_generate(templ, gen_params)
         assert gen_result.size() == 9
 
+    def test_template_generate_by_idtf(self):
+        payload = '{"aliases": {}, "addrs": [1245352, 1245449, 1245384, 1245352, 1245513, 1245288]}'
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+
+        gen_result = client.template_generate("my_template")
+        assert gen_result.size() == 6
+
+    def test_template_generate_by_addr(self):
+        payload = (
+            '{"aliases": {"_link": 2, "_main_node": 0, "_var_node": 8, "edge_1_0": 1}, '
+            '"addrs": [1245352, 1245449, 1245384, 1245320, 1245481, 1245449, 1245352, 1245513, 1245288]}'
+        )
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+
+        gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
+        gen_result = client.template_generate(ScAddr(0), gen_params)
+        assert gen_result.size() == 9
+
 
 class TestScKeynodes(ScTest):
-
     class TestEnum(Enum):
-        IDTF_1 = 'idtf_1'
-        IDTF_2 = 'idtf_2'
-
+        IDTF_1 = "idtf_1"
+        IDTF_2 = "idtf_2"
 
     def test_should_get_keynode(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238]}')
@@ -350,7 +395,7 @@ class TestScKeynodes(ScTest):
     def test_should_get_unknown_idtf(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
         keynodes = ScKeynodes()
-        result = keynodes['UNKNOWN_IDTF']
+        result = keynodes["UNKNOWN_IDTF"]
         assert not result.is_valid()
 
 
