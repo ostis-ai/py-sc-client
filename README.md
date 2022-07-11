@@ -163,8 +163,10 @@ addr # list with keynode addr
 ### template_search
 Search in the KB memory by template.
 
-*Parameters*: An ScTemplate class object or an scs-template as a string.
+*Parameters*: An ScTemplate class object or a scs-template as a string, an ScTemplateParams class object.
 *Returns*: A list of ScTemplateResult class objects.
+
+ScTemplateParams may contain addresses of sc-elements or system identifiers of them.
 
 ```py
 templ = ScTemplate()
@@ -172,7 +174,9 @@ templ.triple([class_node_addr, '_class_node'], sc_types.EDGE_ACCESS_VAR_POS_PERM
 templ.triple('_class_node', sc_types.EDGE_ACCESS_VAR_POS_TEMP, link_addr) # faf
 templ.triple('_class_node', edge_addr, sc_types.NODE_VAR) # ffa
 templ.triple(node_addr, edge_addr, sc_types.NODE_VAR) # ffa
-search_results = client.template_search(templ)
+
+search_params = {'_link': link_node, '_var_node': 'node_idtf'} # value element can be ScAddr or str
+search_results = client.template_search(templ, search_params) # templ can be ScTemplate or ScTemplateIdtf or ScAddr
 search_result = search_results[0]
 
 search_result.size() # count of elements in the resulting construction
@@ -184,11 +188,36 @@ def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
 search_result.for_each_triple(for_each_tripple_func) # call a function for each triple in the result
 ```
 
+Search by sc-template address.
+```py
+template = keynodes['my_template']
+search_results = client.template_search(template)
+search_result = search_results[0]
+
+search_result.size()
+```
+
+Search by sc-template system identifier.
+```py
+search_params = {'_link': link_node, '_var_node': 'node_idtf'}
+search_results = client.template_search('my_template', search_params)
+search_result = search_results[0]
+
+search_result.size()
+```
+
+Search by scs sc-template.
+```py
+search_results = client.template_search('class _-> _node;;')
+search_result = search_results[0]
+
+search_result.size()
+```
 
 ### template_generate
 Generate a construction in the KB memory by template.
 
-*Parameters*: An ScTemplate class object or an scs-template as a string, an ScTemplateGenParams class object.
+*Parameters*: An ScTemplate class object or a scs-template as a string, an ScTemplateParams class object.
 *Returns*: An ScTemplateResult class object.
 
 ```py
@@ -205,10 +234,11 @@ templ.triple( # faa
     sc_types.EDGE_ACCESS_VAR_POS_TEMP,
     [sc_types.NODE_VAR, '_var_node']
 )
-gen_params = {'_link': link_node, '_var_node': var_node}
+gen_params = {'_link': link_node, '_var_node': 'node_idtf'}
 gen_result = client.template_generate(templ, gen_params)
 ```
 
+Also, you can generate a construction by template address or its system identifier or scs-template as well as search constructions.
 
 ### events_create
 Create an event in the KB memory.
