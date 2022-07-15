@@ -17,7 +17,8 @@ from sc_client.models import (
     ScIdtfResolveParams,
     ScLinkContent,
     ScTemplate,
-    ScTemplateGenParams,
+    ScTemplateIdtf,
+    ScTemplateParams,
     ScTemplateResult,
 )
 
@@ -62,11 +63,15 @@ def resolve_keynodes(*params: ScIdtfResolveParams) -> list[ScAddr]:
     return session.execute(common.ClientCommand.KEYNODES, *params)
 
 
-def template_search(template: ScTemplate | str) -> list[ScTemplateResult]:
-    return session.execute(common.ClientCommand.SEARCH_TEMPLATE, template)
+def template_search(
+    template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
+) -> list[ScTemplateResult]:
+    return session.execute(common.ClientCommand.SEARCH_TEMPLATE, template, params)
 
 
-def template_generate(template: ScTemplate | str, params: ScTemplateGenParams) -> ScTemplateResult:
+def template_generate(
+    template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
+) -> ScTemplateResult:
     return session.execute(common.ClientCommand.GENERATE_TEMPLATE, template, params)
 
 

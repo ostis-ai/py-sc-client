@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from sc_client._internal_utils import process_triple_item
 from sc_client.constants import common
 from sc_client.models import (
@@ -11,7 +13,8 @@ from sc_client.models import (
     ScLinkContent,
     ScLinkContentType,
     ScTemplate,
-    ScTemplateGenParams,
+    ScTemplateIdtf,
+    ScTemplateParams,
 )
 
 
@@ -137,42 +140,36 @@ class ResolveKeynodesPayloadCreator(BasePayloadCreator):
         return payload
 
 
-class TemplateSearchPayloadCreator(BasePayloadCreator):
-    def __call__(self, template: ScTemplate | str, *_):
-        payload = []
-        if isinstance(template, str):
-            payload = template
-        else:
-            for triple in template.triple_list:
-                items = [
-                    triple.get(common.SOURCE),
-                    triple.get(common.EDGE),
-                    triple.get(common.TARGET),
-                ]
-                payload_triple = [process_triple_item(item) for item in items]
-                is_required = triple.get(common.IS_REQUIRED)
-                if not is_required:
-                    payload_triple.append({common.IS_REQUIRED: is_required})
-                payload.append(payload_triple)
-        return payload
-
-
-class TemplateGeneratePayloadCreator(BasePayloadCreator):
-    def __call__(self, template: ScTemplate | str, params: ScTemplateGenParams, *_):
-        payload_template = []
-        if isinstance(template, str):
+class TemplatePayloadCreator(BasePayloadCreator):
+    def __call__(self, template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams, *_):
+        if isinstance(template, ScAddr):
+            payload_template = {common.TYPE: common.Types.ADDR, common.VALUE: template.value}
+        elif isinstance(template, str) and re.match("^([a-z]|\\d|_)+", template):
+            payload_template = {common.TYPE: common.Types.IDTF, common.VALUE: template}
+        elif isinstance(template, str):
             payload_template = template
         else:
-            for triple in template.triple_list:
-                items = [
-                    triple.get(common.SOURCE),
-                    triple.get(common.EDGE),
-                    triple.get(common.TARGET),
-                ]
-                payload_template.append([process_triple_item(item) for item in items])
-        payload_params = {alias: addr.value for alias, addr in params.items()}
-        payload = {common.TEMPLATE: payload_template, common.PARAMS: payload_params}
-        return payload
+            payload_template = self._process_template(template)
+
+        payload_params = {}
+        if params is not None:
+            for alias, addr in params.items():
+                if isinstance(addr, ScAddr):
+                    payload_params.update({alias: addr.value})
+                else:
+                    payload_params.update({alias: str(addr)})
+        return {common.TEMPLATE: payload_template, common.PARAMS: payload_params}
+
+    def _process_template(self, template: ScTemplate):
+        payload_template = []
+        for triple in template.triple_list:
+            items = [
+                triple.get(common.SOURCE),
+                triple.get(common.EDGE),
+                triple.get(common.TARGET),
+            ]
+            payload_template.append([process_triple_item(item) for item in items])
+        return payload_template
 
 
 class EventsCreatePayloadCreator(BasePayloadCreator):
@@ -199,8 +196,8 @@ class PayloadFactory:
         common.ClientCommand.SET_LINK_CONTENTS: SetLinkContentPayloadCreator(),
         common.ClientCommand.EVENTS_CREATE: EventsCreatePayloadCreator(),
         common.ClientCommand.EVENTS_DESTROY: EventsDestroyPayloadCreator(),
-        common.ClientCommand.GENERATE_TEMPLATE: TemplateGeneratePayloadCreator(),
-        common.ClientCommand.SEARCH_TEMPLATE: TemplateSearchPayloadCreator(),
+        common.ClientCommand.GENERATE_TEMPLATE: TemplatePayloadCreator(),
+        common.ClientCommand.SEARCH_TEMPLATE: TemplatePayloadCreator(),
     }
 
     def run(self, request_type: common.ClientCommand, *args, **kwargs):

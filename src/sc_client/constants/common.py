@@ -71,6 +71,7 @@ class Types:
     TYPE = "type"
     ALIAS = "alias"
     REF = "ref"
+    IDTF = "idtf"
 
 
 COMMAND = "command"
