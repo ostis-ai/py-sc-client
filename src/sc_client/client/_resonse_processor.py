@@ -61,6 +61,10 @@ class GetLinksByContentResponseProcessor(BaseResponseProcessor):
         return response_payload
 
 
+class GetLinksByContentSubstringResponseProcessor(GetLinksByContentResponseProcessor):
+    pass
+
+
 class ResolveKeynodesResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[ScAddr]:
         response_payload = response.get(common.PAYLOAD)
@@ -120,6 +124,7 @@ class ResponseProcessor:
         common.ClientCommand.KEYNODES: ResolveKeynodesResponseProcessor(),
         common.ClientCommand.GET_LINK_CONTENT: GetLinkContentResponseProcessor(),
         common.ClientCommand.GET_LINKS_BY_CONTENT: GetLinksByContentResponseProcessor(),
+        common.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringResponseProcessor(),
         common.ClientCommand.SET_LINK_CONTENTS: SetLinkContentResponseProcessor(),
         common.ClientCommand.EVENTS_CREATE: EventsCreateResponseProcessor(),
         common.ClientCommand.EVENTS_DESTROY: EventsDestroyResponseProcessor(),

@@ -108,16 +108,28 @@ class GetLinksByContentPayloadCreator(BasePayloadCreator):
         for content in contents:
             if isinstance(content, str):
                 link_contents.append(ScLinkContent(content, ScLinkContentType.STRING.value))
+            elif isinstance(content, int):
+                link_contents.append(ScLinkContent(content, ScLinkContentType.INT.value))
             else:
                 link_contents.append(content)
-        payload = [
-            {
-                common.COMMAND: common.CommandTypes.FIND,
-                common.DATA: content.data,
-            }
-            for content in link_contents
-        ]
+        payload = []
+        for content in link_contents:
+            payload.append(self._form_payload_content(content))
         return payload
+
+    def _form_payload_content(self, content):
+        return {
+            common.COMMAND: common.CommandTypes.FIND,
+            common.DATA: content.data,
+        }
+
+
+class GetLinksByContentSubstringPayloadCreator(GetLinksByContentPayloadCreator):
+    def _form_payload_content(self, content):
+        return {
+            common.COMMAND: common.CommandTypes.FIND_BY_SUBSTRING,
+            common.DATA: content.data,
+        }
 
 
 class ResolveKeynodesPayloadCreator(BasePayloadCreator):
@@ -193,6 +205,7 @@ class PayloadFactory:
         common.ClientCommand.KEYNODES: ResolveKeynodesPayloadCreator(),
         common.ClientCommand.GET_LINK_CONTENT: GetLinkContentPayloadCreator(),
         common.ClientCommand.GET_LINKS_BY_CONTENT: GetLinksByContentPayloadCreator(),
+        common.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringPayloadCreator(),
         common.ClientCommand.SET_LINK_CONTENTS: SetLinkContentPayloadCreator(),
         common.ClientCommand.EVENTS_CREATE: EventsCreatePayloadCreator(),
         common.ClientCommand.EVENTS_DESTROY: EventsDestroyPayloadCreator(),
