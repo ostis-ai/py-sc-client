@@ -12,6 +12,7 @@ class Executor:
         ClientCommand.KEYNODES: RequestType.KEYNODES,
         ClientCommand.GET_LINK_CONTENT: RequestType.CONTENT,
         ClientCommand.GET_LINKS_BY_CONTENT: RequestType.CONTENT,
+        ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: RequestType.CONTENT,
         ClientCommand.SET_LINK_CONTENTS: RequestType.CONTENT,
         ClientCommand.EVENTS_CREATE: RequestType.EVENTS,
         ClientCommand.EVENTS_DESTROY: RequestType.EVENTS,
