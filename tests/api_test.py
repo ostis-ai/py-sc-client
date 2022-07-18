@@ -182,6 +182,15 @@ class TestClientLinkContent(ScTest):
         for item in zip(addr_list, content):
             assert item[0].value in [addr.value for addr in item[1]]
 
+    def test_get_link_by_content_substring_str(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}')
+        test_str = "testing search by"
+        content = client.get_links_by_content_substring(test_str)
+        assert content
+        link_addr = ScAddr(1180550)
+        for item in zip([link_addr], content):
+            assert item[0].value in [addr.value for addr in item[1]]
+
 
 class TestClientResolveElements(ScTest):
     def test_resolve_keynode_not_exist(self):
