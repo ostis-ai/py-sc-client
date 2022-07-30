@@ -10,6 +10,7 @@ from enum import Enum, auto
 class RequestType(Enum):
     CHECK_ELEMENTS = "check_elements"
     CREATE_ELEMENTS = "create_elements"
+    CREATE_ELEMENTS_BY_SCS = "create_elements_by_scs"
     DELETE_ELEMENTS = "delete_elements"
     CONTENT = "content"
     KEYNODES = "keynodes"
@@ -21,6 +22,7 @@ class RequestType(Enum):
 class ClientCommand(Enum):
     CHECK_ELEMENTS = auto()
     CREATE_ELEMENTS = auto()
+    CREATE_ELEMENTS_BY_SCS = auto()
     DELETE_ELEMENTS = auto()
     SET_LINK_CONTENTS = auto()
     GET_LINK_CONTENT = auto()

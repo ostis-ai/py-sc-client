@@ -12,6 +12,7 @@ from sc_client.models import (
     ScIdtfResolveParams,
     ScLinkContent,
     ScLinkContentType,
+    SCsText,
     ScTemplate,
     ScTemplateIdtf,
     ScTemplateParams,
@@ -64,6 +65,11 @@ class CreateElementsPayloadCreator(BasePayloadCreator):
                 }
                 payload.append(payload_part)
         return payload
+
+
+class CreateElementsBySCsPayloadCreator(BasePayloadCreator):
+    def __call__(self, scs: SCsText, *_):
+        return scs
 
 
 class CheckElementsPayloadCreator(BasePayloadCreator):
@@ -200,6 +206,7 @@ class EventsDestroyPayloadCreator(BasePayloadCreator):
 class PayloadFactory:
     _payload_request_mapper = {
         common.ClientCommand.CREATE_ELEMENTS: CreateElementsPayloadCreator(),
+        common.ClientCommand.CREATE_ELEMENTS_BY_SCS: CreateElementsBySCsPayloadCreator(),
         common.ClientCommand.CHECK_ELEMENTS: CheckElementsPayloadCreator(),
         common.ClientCommand.DELETE_ELEMENTS: DeleteElementsPayloadCreator(),
         common.ClientCommand.KEYNODES: ResolveKeynodesPayloadCreator(),
