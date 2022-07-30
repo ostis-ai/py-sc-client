@@ -8,6 +8,7 @@ from sc_client.client._api import (
     check_elements,
     connect,
     create_elements,
+    create_elements_by_scs,
     delete_elements,
     disconnect,
     events_create,

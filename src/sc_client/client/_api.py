@@ -16,6 +16,7 @@ from sc_client.models import (
     ScEventParams,
     ScIdtfResolveParams,
     ScLinkContent,
+    SCsText,
     ScTemplate,
     ScTemplateIdtf,
     ScTemplateParams,
@@ -41,6 +42,10 @@ def check_elements(*addrs: ScAddr) -> list[ScType]:
 
 def create_elements(constr: ScConstruction) -> list[ScAddr]:
     return session.execute(common.ClientCommand.CREATE_ELEMENTS, constr)
+
+
+def create_elements_by_scs(text: SCsText) -> list[bool]:
+    return session.execute(common.ClientCommand.CREATE_ELEMENTS_BY_SCS, text)
 
 
 def delete_elements(*addrs: ScAddr) -> bool:

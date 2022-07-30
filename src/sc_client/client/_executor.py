@@ -7,6 +7,7 @@ from sc_client.constants.common import ClientCommand, RequestType
 class Executor:
     _executor_mapper = {
         ClientCommand.CREATE_ELEMENTS: RequestType.CREATE_ELEMENTS,
+        ClientCommand.CREATE_ELEMENTS_BY_SCS: RequestType.CREATE_ELEMENTS_BY_SCS,
         ClientCommand.CHECK_ELEMENTS: RequestType.CHECK_ELEMENTS,
         ClientCommand.DELETE_ELEMENTS: RequestType.DELETE_ELEMENTS,
         ClientCommand.KEYNODES: RequestType.KEYNODES,

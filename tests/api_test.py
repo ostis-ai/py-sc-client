@@ -80,6 +80,25 @@ class TestClientCreateElements(ScTest):
         assert len(addr_list) == 3
 
 
+class TestClientCreateElementsBySCs(ScTest):
+    def test_create_empty_scs_list(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": []}')
+        results = client.create_elements_by_scs([])
+        assert results == []
+
+    def test_create_by_scs(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1]}')
+        results = client.create_elements_by_scs(["concept1 -> node1;;"])
+        assert len(results) == 1
+        assert results[0] is True
+
+    def test_create_by_wrong_scs(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
+        results = client.create_elements_by_scs(["concept1 -> ;;"])
+        assert len(results) == 1
+        assert results[0] is False
+
+
 class TestClientCheckElements(ScTest):
     def test_check_node(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33]}')
