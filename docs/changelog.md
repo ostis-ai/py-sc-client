@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0]
 ### Added
+ - Add opportunity to create elements by scs
  - Add opportunity to find links by substring
  - Add params for search
  - Add opportunity to pass template and params by addr and idtf

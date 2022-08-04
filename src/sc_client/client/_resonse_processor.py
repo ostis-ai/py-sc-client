@@ -19,6 +19,11 @@ class CreateElementsResponseProcessor(BaseResponseProcessor):
         return [ScAddr(addr_value) for addr_value in response.get(common.PAYLOAD)]
 
 
+class CreateElementsBySCsResponseProcessor(BaseResponseProcessor):
+    def __call__(self, response: Response, *_) -> list[bool]:
+        return [bool(result) for result in response.get(common.PAYLOAD)]
+
+
 class CheckElementsResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[ScType]:
         return [ScType(type_value) for type_value in response.get(common.PAYLOAD)]
@@ -119,6 +124,7 @@ class EventsDestroyResponseProcessor(BaseResponseProcessor):
 class ResponseProcessor:
     _response_request_mapper = {
         common.ClientCommand.CREATE_ELEMENTS: CreateElementsResponseProcessor(),
+        common.ClientCommand.CREATE_ELEMENTS_BY_SCS: CreateElementsBySCsResponseProcessor(),
         common.ClientCommand.CHECK_ELEMENTS: CheckElementsResponseProcessor(),
         common.ClientCommand.DELETE_ELEMENTS: DeleteElementsResponseProcessor(),
         common.ClientCommand.KEYNODES: ResolveKeynodesResponseProcessor(),

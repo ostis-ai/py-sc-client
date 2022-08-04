@@ -205,6 +205,9 @@ class ScConstruction:
         return self.aliases[alias]
 
 
+SCsText = List[str]
+
+
 class Response(TypedDict):
     id: int
     status: bool

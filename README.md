@@ -82,6 +82,18 @@ addr_list # [node_addr, link_addr, edge_addr]
 ```
 
 
+### create_elements_by_scs
+Create elements by scs texts in the KB memory.
+
+*Parameters*: A list of scs (str).
+*Returns*: A list of bool scs translation results.
+
+```py
+results = client.create_elements_by_scs(["concept1 -> node1;;", "concept1 -> ;;"])
+results # [True, False]
+```
+
+
 ### delete_elements
 Delete elements from the KB memory.
 
