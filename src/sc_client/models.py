@@ -78,9 +78,18 @@ class ScTemplate:
         param2: ScTemplateParam,
         param3: ScTemplateParam,
     ) -> None:
+        for param in (param1, param2, param3):
+            if isinstance(param, List):
+                self._is_var_type(param[0])
+            else:
+                self._is_var_type(param)
         p1, p2, p3 = tuple(map(self._split_template_param, [param1, param2, param3]))
 
         self.triple_list.append(ScTemplateTriple(src=p1, edge=p2, trg=p3))
+
+    def _is_var_type(self, param: ScTemplateParam):
+        if isinstance(param, ScType) and param.is_const():
+            raise InvalidValueError("You should to use variable types in template")
 
     def triple_with_relation(
         self,
