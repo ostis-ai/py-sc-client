@@ -11,7 +11,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, TypedDict, Union
 
 from sc_client.constants import common
-from sc_client.constants.exceptions import InvalidValueError, LinkContentOversizeError
+from sc_client.constants.exceptions import InvalidTypeError, InvalidValueError, LinkContentOversizeError
 from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
 from sc_client.constants.sc_types import ScType
 
@@ -78,9 +78,18 @@ class ScTemplate:
         param2: ScTemplateParam,
         param3: ScTemplateParam,
     ) -> None:
+        for param in (param1, param2, param3):
+            if isinstance(param, List):
+                self._is_var_type(param[0])
+            else:
+                self._is_var_type(param)
         p1, p2, p3 = tuple(map(self._split_template_param, [param1, param2, param3]))
 
         self.triple_list.append(ScTemplateTriple(src=p1, edge=p2, trg=p3))
+
+    def _is_var_type(self, param: ScTemplateParam):
+        if isinstance(param, ScType) and param.is_const():
+            raise InvalidTypeError("You should to use variable types in template")
 
     def triple_with_relation(
         self,
@@ -105,7 +114,7 @@ class ScTemplate:
                 raise InvalidValueError("Invalid number of values for replacement. Use [ScType | ScAddr, string]")
             value, alias = param
             if not isinstance(value, (ScAddr, ScType)) or not isinstance(alias, str):
-                raise InvalidValueError("The first parameter should be ScAddr or ScType. The second one is a string")
+                raise InvalidTypeError("The first parameter should be ScAddr or ScType. The second one is a string")
             return ScTemplateValue(value=value, alias=alias)
         return ScTemplateValue(value=param, alias=None)
 
@@ -173,7 +182,7 @@ class ScConstruction:
 
     def create_node(self, sc_type: ScType, alias: str = None) -> None:
         if not sc_type.is_node():
-            raise InvalidValueError("You should pass the node type here")
+            raise InvalidTypeError("You should pass the node type here")
         cmd = ScConstructionCommand(sc_type, None)
         if alias:
             self.aliases[alias] = len(self.commands)
@@ -187,7 +196,7 @@ class ScConstruction:
         alias: str = None,
     ) -> None:
         if not sc_type.is_edge():
-            raise InvalidValueError("You should pass the edge type here")
+            raise InvalidTypeError("You should pass the edge type here")
         cmd = ScConstructionCommand(sc_type, {common.SOURCE: src, common.TARGET: trg})
         if alias:
             self.aliases[alias] = len(self.commands)
@@ -195,7 +204,7 @@ class ScConstruction:
 
     def create_link(self, sc_type: ScType, content: ScLinkContent, alias: str = None) -> None:
         if not sc_type.is_link():
-            raise InvalidValueError("You should pass the link type here")
+            raise InvalidTypeError("You should pass the link type here")
         cmd = ScConstructionCommand(sc_type, {common.CONTENT: content.data, common.TYPE: content.content_type})
         if alias:
             self.aliases[alias] = len(self.commands)
