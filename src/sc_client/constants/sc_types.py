@@ -59,9 +59,6 @@ class ScType:
     def has_constancy(self) -> bool:
         return (self.value & SC_TYPE_CONSTANCY_MASK) != 0
 
-    def has_direction(self) -> bool:
-        return (self.value & SC_TYPE_UEDGE_COMMON) == 0
-
     def is_node(self) -> bool:
         return (self.value & SC_TYPE_NODE) != 0
 

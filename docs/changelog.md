@@ -9,7 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Add opportunity to create elements by scs
 ### Fixed
- - Raise error if the element will be passed with const type 
+ - Raise error if the element will be passed with const type
+### Removed
+ - Removed method for checking direction of the edge
 
 ## [0.2.0]
 ### Added
