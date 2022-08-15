@@ -20,6 +20,14 @@ class InvalidValueError(CommonError):
         super().__init__(message)
 
 
+class InvalidTypeError(CommonError):
+    def __init__(self, msg: str = None):
+        message = CommonErrorMessages.INVALID_TYPE.value
+        if msg:
+            message = ": ".join([message, msg])
+        super().__init__(message)
+
+
 class InvalidStateError(CommonError):
     def __init__(self, msg: str = None):
         message = CommonErrorMessages.INVALID_STATE.value
@@ -39,5 +47,6 @@ class LinkContentOversizeError(CommonError):
 class CommonErrorMessages(Enum):
     INVALID_STATE = "Invalid state"
     INVALID_VALUE = "Invalid value"
+    INVALID_TYPE = "Invalid type"
     MERGE_ERROR = "You can't merge two different syntax types"
     LINK_OVERSIZE = "Link content exceeds permitted value"

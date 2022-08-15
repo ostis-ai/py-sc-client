@@ -13,7 +13,7 @@ import pytest
 
 from sc_client import client, session
 from sc_client.constants import common, sc_types
-from sc_client.constants.exceptions import CommonErrorMessages, LinkContentOversizeError, InvalidValueError
+from sc_client.constants.exceptions import CommonErrorMessages, LinkContentOversizeError, InvalidTypeError
 from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
 from sc_client.models import (
     ScAddr,
@@ -310,15 +310,15 @@ class TestClientEvent(ScTest):
 
 class TestClientTemplate(ScTest):
     def test_wrong_template(self):
-        with pytest.raises(InvalidValueError):
+        with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.triple(ScAddr(0), sc_types.EDGE_ACCESS_CONST_POS_PERM, ScAddr(0))
 
-        with pytest.raises(InvalidValueError):
+        with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.triple([ScAddr(0), "_class_node"], ScAddr(0), [sc_types.LINK_CONST, "_const_link"])
 
-        with pytest.raises(InvalidValueError):
+        with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.triple_with_relation(
                 [ScAddr(0), "_main_node"],
