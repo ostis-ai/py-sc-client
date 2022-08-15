@@ -56,6 +56,11 @@ class ScType:
     def __init__(self, value: int = 0):
         self.value = value
 
+    def __eq__(self, other: ScType) -> bool:
+        if isinstance(other, ScType):
+            return self.value == other.value
+        return NotImplemented
+
     def has_constancy(self) -> bool:
         return (self.value & SC_TYPE_CONSTANCY_MASK) != 0
 
@@ -114,7 +119,7 @@ class ScType:
         return self.value != 0
 
     def is_equal(self, other: ScType) -> bool:
-        return self.value is other.value
+        return self.__eq__(other)
 
     def merge(self, other: ScType) -> ScType:
         t1 = self.value & SC_TYPE_ELEMENT_MASK

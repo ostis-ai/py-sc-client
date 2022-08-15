@@ -20,11 +20,16 @@ class ScAddr:
     def __init__(self, value: int) -> None:
         self.value = value
 
+    def __eq__(self, other: ScAddr) -> bool:
+        if isinstance(other, ScAddr):
+            return self.value == other.value
+        return NotImplemented
+
     def is_valid(self) -> bool:
         return self.value != 0
 
     def is_equal(self, other: ScAddr) -> bool:
-        return self.value is other.value
+        return self.__eq__(other)
 
     def __bool__(self) -> bool:
         return self.is_valid()
