@@ -4,7 +4,7 @@ import pytest
 
 from sc_client.constants import ScType
 from sc_client.constants import sc_types as t
-from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError, InvalidValueError
+from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError
 from sc_client.models import ScAddr
 
 
@@ -292,8 +292,6 @@ class TestScType(unittest.TestCase):
             assert sc_type.is_temp()
 
         for sc_type in self.types.difference(temp_types):
-            if sc_type.is_temp():
-                print(sc_type)
             assert sc_type.is_temp() is False
 
     def test_is_tuple(self):
@@ -360,7 +358,7 @@ class TestScType(unittest.TestCase):
 
     def test_merge(self):
         assert t.NODE_CONST.merge(t.NODE_CLASS) == t.NODE_CONST_CLASS
-        with pytest.raises(InvalidValueError, match=CommonErrorMessages.INVALID_VALUE.value):
+        with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
             assert t.CONST.merge(t.NODE) == t.NODE_CONST
 
     def test_has_constancy(self):

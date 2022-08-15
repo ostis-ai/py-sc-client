@@ -6,7 +6,7 @@ Distributed under the MIT License
 
 from __future__ import annotations
 
-from sc_client.constants.exceptions import InvalidTypeError, InvalidValueError
+from sc_client.constants.exceptions import InvalidTypeError
 
 SC_TYPE_NODE = 0x1
 SC_TYPE_LINK = 0x2
@@ -136,7 +136,7 @@ class ScType:
         t1 = self.value & SC_TYPE_ELEMENT_MASK
         t2 = other.value & SC_TYPE_ELEMENT_MASK
         if (t1 != 0 or t2 != 0) and (t1 != t2):
-            raise InvalidValueError()
+            raise InvalidTypeError()
         return ScType(self.value | other.value)
 
     def change_const(self, is_const: bool) -> ScType:
