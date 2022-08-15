@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - Add opportunity to create elements by scs
+ - Add tests for ScAddr and ScType classes
 ### Fixed
  - Raise error if the element will be passed with const type
 ### Removed
