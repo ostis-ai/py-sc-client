@@ -113,9 +113,9 @@ class GetLinksByContentPayloadCreator(BasePayloadCreator):
         link_contents = []
         for content in contents:
             if isinstance(content, str):
-                link_contents.append(ScLinkContent(content, ScLinkContentType.STRING.value))
+                link_contents.append(ScLinkContent(content, ScLinkContentType.STRING))
             elif isinstance(content, int):
-                link_contents.append(ScLinkContent(content, ScLinkContentType.INT.value))
+                link_contents.append(ScLinkContent(content, ScLinkContentType.INT))
             else:
                 link_contents.append(content)
         payload = []

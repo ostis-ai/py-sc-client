@@ -74,7 +74,7 @@ Create a given construction in the KB memory.
 ```py
 const = ScConstruction()
 const.create_node(sc_types.NODE_CONST, 'node')
-link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
+link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
 const.create_link(sc_types.LINK_CONST, link_content, 'link')
 const.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
 addr_list = client.create_elements(const)
@@ -113,7 +113,7 @@ Set the new content to corresponding links.
 *Returns*: The boolean value (true if the link content is set).
 
 ```py
-link_content = ScLinkContent("Hello world!", ScLinkContentType.STRING.value)
+link_content = ScLinkContent("Hello world!", ScLinkContentType.STRING)
 link_content.addr = link_addr
 status = client.set_link_contents(link_content)
 status # True

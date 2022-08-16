@@ -159,14 +159,8 @@ class ScLinkContent:
         if len(str(self.data)) > LINK_CONTENT_MAX_SIZE:
             raise LinkContentOversizeError
 
-    def type_to_str(self):
-        if self.content_type == ScLinkContentType.BINARY.value:
-            return common.BINARY
-        if self.content_type == ScLinkContentType.INT.value:
-            return common.INT
-        if self.content_type == ScLinkContentType.FLOAT.value:
-            return common.FLOAT
-        return common.STRING
+    def type_to_str(self) -> str:
+        return self.content_type.name.lower()
 
 
 @dataclass
@@ -205,7 +199,7 @@ class ScConstruction:
     def create_link(self, sc_type: ScType, content: ScLinkContent, alias: str = None) -> None:
         if not sc_type.is_link():
             raise InvalidTypeError("You should pass the link type here")
-        cmd = ScConstructionCommand(sc_type, {common.CONTENT: content.data, common.TYPE: content.content_type})
+        cmd = ScConstructionCommand(sc_type, {common.CONTENT: content.data, common.TYPE: content.content_type.value})
         if alias:
             self.aliases[alias] = len(self.commands)
         self.commands.append(cmd)

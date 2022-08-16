@@ -63,7 +63,7 @@ class TestClientCreateElements(ScTest):
 
     def test_create_link(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1182470]}')
-        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
+        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
         addr = client.create_elements(const)
@@ -71,7 +71,7 @@ class TestClientCreateElements(ScTest):
 
     def test_create_construction_with_edge(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
-        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
+        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         const = ScConstruction()
         const.create_node(sc_types.NODE_CONST, "node")
         const.create_link(sc_types.LINK_CONST, link_content, "link")
@@ -144,7 +144,7 @@ class TestClientDeleteElements(ScTest):
 class TestClientLinkContent(ScTest):
     def test_set_link_content(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [true]}')
-        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
+        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         link_content.addr = ScAddr(0)
         status = client.set_link_contents(link_content)
         assert status
@@ -152,7 +152,7 @@ class TestClientLinkContent(ScTest):
     def test_set_link_max_content(self):
         test_content = "a" * LINK_CONTENT_MAX_SIZE * 2
         with pytest.raises(LinkContentOversizeError, match=CommonErrorMessages.LINK_OVERSIZE.value):
-            ScLinkContent(test_content, ScLinkContentType.STRING.value)
+            ScLinkContent(test_content, ScLinkContentType.STRING)
 
     def test_get_link_content(self):
         msg = '{"id": 1, "event": false, "status": true, "payload": [{"value": "Hi!", "type": "string"}]}'
@@ -166,14 +166,14 @@ class TestClientLinkContent(ScTest):
     def test_get_link_by_content_empty(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[]]}')
         test_str = "that line nor in KB"
-        link_content = ScLinkContent(test_str, ScLinkContentType.STRING.value)
+        link_content = ScLinkContent(test_str, ScLinkContentType.STRING)
         content = client.get_links_by_content(link_content)
         assert content == [[]]
 
     def test_get_link_by_content_casual(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179679, 46368, 1181734]]}')
         test_str = "testing search by link content"
-        link_content = ScLinkContent(test_str, ScLinkContentType.STRING.value)
+        link_content = ScLinkContent(test_str, ScLinkContentType.STRING)
         content = client.get_links_by_content(link_content)
         assert content
         link_addr = ScAddr(46368)
@@ -194,7 +194,7 @@ class TestClientLinkContent(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         test_str_1 = "testing search by link content as string in multiple content"
         test_str_2 = "testing search by link content as casual in multiple content"
-        link_content_2 = ScLinkContent(test_str_2, ScLinkContentType.STRING.value)
+        link_content_2 = ScLinkContent(test_str_2, ScLinkContentType.STRING)
         content = client.get_links_by_content(test_str_1, link_content_2)
         addr_list = [ScAddr(46368), ScAddr(46400)]
         assert content
