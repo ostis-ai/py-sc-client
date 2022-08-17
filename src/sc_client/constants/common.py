@@ -35,11 +35,6 @@ class ClientCommand(Enum):
     EVENTS_DESTROY = auto()
 
 
-BINARY = "binary"
-INT = "int"
-FLOAT = "float"
-STRING = "string"
-
 SOURCE = "src"
 EDGE = "edge"
 TARGET = "trg"

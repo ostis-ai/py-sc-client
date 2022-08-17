@@ -44,17 +44,8 @@ class GetLinkContentResponseProcessor(BaseResponseProcessor):
         response_payload = response.get(common.PAYLOAD)
         result = []
         for link in response_payload:
-            str_type = link.get(common.TYPE)
-            content_type = 0
-            if str_type == common.STRING:
-                content_type = ScLinkContentType.STRING.value
-            elif str_type == common.INT:
-                content_type = ScLinkContentType.INT.value
-            elif str_type == common.BINARY:
-                content_type = ScLinkContentType.BINARY.value
-            elif str_type == common.FLOAT:
-                content_type = ScLinkContentType.FLOAT.value
-            result.append(ScLinkContent(link.get(common.VALUE), content_type))
+            str_type: str = link.get(common.TYPE)
+            result.append(ScLinkContent(link.get(common.VALUE), ScLinkContentType[str_type.upper()]))
         return result
 
 
