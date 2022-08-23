@@ -43,6 +43,11 @@ class ScAddr:
         return f"ScAddr({self.value})"
 
 
+class ScAddrEmpty(ScAddr):
+    def __init__(self) -> None:
+        super().__init__()
+
+
 ScTripleCallback = Callable[[ScAddr, ScAddr, ScAddr], None]
 ScEventCallbackFunc = ScTripleCallback
 
