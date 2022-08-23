@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Add opportunity to create elements by scs
  - Add tests for ScAddr and ScType classes
+ - Add ScAddrEmpty class
+### Changed
+ - Change return type of ScTripleCallback to Enum
 ### Fixed
  - Raise error if the element will be passed with const type
 ### Removed
