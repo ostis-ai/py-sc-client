@@ -7,7 +7,7 @@ The python implementation of the client for [communication with sc-server](https
 This module is compatible with 0.7.0 version of [sc-machine](https://github.com/ostis-ai/sc-machine).
 
 ## Installing py-sc-client
-py-sc-client is available on PyPI:
+py-sc-client is available on [PyPI](https://pypi.org/project/py-sc-client/):
 
 ```sh
 $ pip install py-sc-client
