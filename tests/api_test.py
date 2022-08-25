@@ -13,7 +13,7 @@ import pytest
 
 from sc_client import client, session
 from sc_client.constants import common, sc_types
-from sc_client.constants.exceptions import CommonErrorMessages, LinkContentOversizeError, InvalidTypeError
+from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError, LinkContentOversizeError
 from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
 from sc_client.models import (
     ScAddr,
@@ -64,6 +64,14 @@ class TestClientCreateElements(ScTest):
     def test_create_link(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1182470]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
+        const = ScConstruction()
+        const.create_link(sc_types.LINK_CONST, link_content)
+        addr = client.create_elements(const)
+        assert len(addr) == 1
+
+    def test_create_link_2(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [123211]}')
+        link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
         addr = client.create_elements(const)
@@ -145,6 +153,13 @@ class TestClientLinkContent(ScTest):
     def test_set_link_content(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [true]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
+        link_content.addr = ScAddr(0)
+        status = client.set_link_contents(link_content)
+        assert status
+
+    def test_set_link_content_2(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [true]}')
+        link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
         link_content.addr = ScAddr(0)
         status = client.set_link_contents(link_content)
         assert status
