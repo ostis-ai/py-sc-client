@@ -175,7 +175,9 @@ class ScLinkContent:
             raise LinkContentOversizeError
 
     def type_to_str(self) -> str:
-        return self.content_type.name.lower()
+        if isinstance(self.content_type, ScLinkContentType):
+            return self.content_type.name.lower()
+        return str(type(self.content_type))
 
 
 @dataclass
@@ -214,7 +216,11 @@ class ScConstruction:
     def create_link(self, sc_type: ScType, content: ScLinkContent, alias: str = None) -> None:
         if not sc_type.is_link():
             raise InvalidTypeError("You should pass the link type here")
-        cmd = ScConstructionCommand(sc_type, {common.CONTENT: content.data, common.TYPE: content.content_type.value})
+        if isinstance(content.content_type, ScLinkContentType):
+            content_type = content.content_type.value
+        else:
+            content_type = content.content_type
+        cmd = ScConstructionCommand(sc_type, {common.CONTENT: content.data, common.TYPE: content_type})
         if alias:
             self.aliases[alias] = len(self.commands)
         self.commands.append(cmd)
