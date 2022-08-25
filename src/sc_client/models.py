@@ -173,6 +173,7 @@ class ScLinkContent:
     def __post_init__(self):
         if len(str(self.data)) > LINK_CONTENT_MAX_SIZE:
             raise LinkContentOversizeError
+        self.content_type = ScLinkContentType(self.content_type)
 
     def type_to_str(self) -> str:
         return self.content_type.name.lower()

@@ -63,7 +63,7 @@ class TestClientCreateElements(ScTest):
 
     def test_create_link(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1182470]}')
-        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
+        link_content = ScLinkContent("Hello!", ScLinkContentType.STRING.value)
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
         addr = client.create_elements(const)
