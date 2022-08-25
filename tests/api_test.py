@@ -69,6 +69,14 @@ class TestClientCreateElements(ScTest):
         addr = client.create_elements(const)
         assert len(addr) == 1
 
+    def test_create_link_type_value(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [123211]}')
+        link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
+        const = ScConstruction()
+        const.create_link(sc_types.LINK_CONST, link_content)
+        addr = client.create_elements(const)
+        assert len(addr) == 1
+
     def test_create_construction_with_edge(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
