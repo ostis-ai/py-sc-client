@@ -13,7 +13,7 @@ import pytest
 
 from sc_client import client, session
 from sc_client.constants import common, sc_types
-from sc_client.constants.exceptions import CommonErrorMessages, LinkContentOversizeError, InvalidTypeError
+from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError, LinkContentOversizeError
 from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
 from sc_client.models import (
     ScAddr,
@@ -48,6 +48,10 @@ class ScTest(unittest.TestCase):
 
 
 class TestClientCreateElements(ScTest):
+    def test_create_construction_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.create_elements("wrong type here")
+
     def test_create_empty_construction(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": []}')
         const = ScConstruction()
@@ -89,6 +93,12 @@ class TestClientCreateElements(ScTest):
 
 
 class TestClientCreateElementsBySCs(ScTest):
+    def test_create_elements_by_scs_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.create_elements_by_scs("wrong type here")
+        with pytest.raises(InvalidTypeError):
+            client.create_elements_by_scs([1])
+
     def test_create_empty_scs_list(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": []}')
         results = client.create_elements_by_scs([])
@@ -108,6 +118,10 @@ class TestClientCreateElementsBySCs(ScTest):
 
 
 class TestClientCheckElements(ScTest):
+    def test_check_elements_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.check_elements("wrong type here")
+
     def test_check_node(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33]}')
         node_addr = ScAddr(0)
@@ -132,6 +146,10 @@ class TestClientCheckElements(ScTest):
 
 
 class TestClientDeleteElements(ScTest):
+    def test_delete_elements_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.create_elements_by_scs("wrong type here")
+
     def test_delete_empty(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
         status = client.delete_elements()
@@ -150,6 +168,18 @@ class TestClientDeleteElements(ScTest):
 
 
 class TestClientLinkContent(ScTest):
+    def test_set_link_contents_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.set_link_contents("wrong type here")
+
+    def test_get_link_content_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.get_link_content("wrong type here")
+
+    def test_get_links_by_content_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.get_links_by_content(["wrong type here"])
+
     def test_set_link_content(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [true]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
@@ -220,6 +250,10 @@ class TestClientLinkContent(ScTest):
 
 
 class TestClientResolveElements(ScTest):
+    def test_resolve_keynodes_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.resolve_keynodes("wrong type here")
+
     def test_resolve_keynode_not_exist(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238]}')
         params = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
@@ -244,6 +278,12 @@ class TestClientResolveElements(ScTest):
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
+    def test_find_keynode_exist_no_type(self):
+        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [900]}')
+        params = ScIdtfResolveParams(idtf="nrel_format", type=None)
+        addr = client.resolve_keynodes(params)
+        assert addr[0].value != 0
+
     def test_resolve_keynodes_list(self):
         self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238, 337259, 0]}')
         param1 = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
@@ -257,6 +297,18 @@ class TestClientResolveElements(ScTest):
 
 
 class TestClientEvent(ScTest):
+    def test_events_create_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.events_create("wrong type here")
+
+    def test_is_event_valid_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.is_event_valid("wrong type here")
+
+    def test_events_destroy_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.events_destroy("wrong type here")
+
     def _create_event(self, server_message: str, addr_value: int, callback: ScEventCallbackFunc) -> ScEvent:
         self.get_server_message(server_message)
         event_params = ScEventParams(ScAddr(addr_value), common.ScEventType.REMOVE_ELEMENT, callback)
@@ -317,6 +369,18 @@ class TestClientEvent(ScTest):
 
 
 class TestClientTemplate(ScTest):
+    def test_template_search_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.template_search(["wrong type here"])
+        with pytest.raises(InvalidTypeError):
+            client.template_search("wrong type", "here")
+
+    def test_template_generate_incorrect_arguments(self):
+        with pytest.raises(InvalidTypeError):
+            client.template_generate(["wrong type here"])
+        with pytest.raises(InvalidTypeError):
+            client.template_generate("wrong type", "here")
+
     def test_wrong_template(self):
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
