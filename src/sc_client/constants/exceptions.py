@@ -44,9 +44,18 @@ class LinkContentOversizeError(CommonError):
         super().__init__(message)
 
 
+class ServerError(CommonError):
+    def __init__(self, msg: str):
+        message = CommonErrorMessages.SERVER_ERROR.value
+        if msg:
+            message = ": ".join([message, msg])
+        super().__init__(message)
+
+
 class CommonErrorMessages(Enum):
     INVALID_STATE = "Invalid state"
     INVALID_VALUE = "Invalid value"
     INVALID_TYPE = "Invalid type"
     MERGE_ERROR = "You can't merge two different syntax types"
     LINK_OVERSIZE = "Link content exceeds permitted value"
+    SERVER_ERROR = "Server error"
