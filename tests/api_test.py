@@ -13,7 +13,7 @@ import pytest
 
 from sc_client import client, session
 from sc_client.constants import common, sc_types
-from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError, LinkContentOversizeError
+from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError, LinkContentOversizeError, ServerError
 from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
 from sc_client.models import (
     ScAddr,
@@ -45,6 +45,13 @@ class ScTest(unittest.TestCase):
     @staticmethod
     def get_server_message(response: str):
         session._on_message(session._ScClientSession.ws_app, response)
+
+
+class TestResponseWithFailedStatus(ScTest):
+    def test_incorrect_type(self):
+        self.get_server_message('{"id": 1, "event": false, "status": 0, "payload": ["type must be X, but is Y"]}')
+        with pytest.raises(ServerError):
+            client.create_elements_by_scs([])
 
 
 class TestClientCreateElements(ScTest):
