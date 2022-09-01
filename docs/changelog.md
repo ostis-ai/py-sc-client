@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Fixed
  - Raise error if the client API takes invalid argument
+ - Raise error if the server response returned with false-status and message in payload
 
 ## [0.2.2]
 ### Fixed
