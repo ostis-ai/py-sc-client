@@ -7,7 +7,7 @@ Distributed under the MIT License
 from __future__ import annotations
 
 from sc_client import session
-from sc_client.constants import common
+from sc_client.constants import common, exceptions
 from sc_client.constants.sc_types import ScType
 from sc_client.models import (
     ScAddr,
@@ -93,4 +93,6 @@ def events_destroy(*events: ScEvent) -> bool:
 
 
 def is_event_valid(event: ScEvent) -> bool:
+    if not isinstance(event, ScEvent):
+        raise exceptions.InvalidTypeError("expected object types: ScEvent")
     return bool(session.get_event(event.id))
