@@ -1,7 +1,7 @@
 from sc_client import session
 from sc_client.client._payload_factory import PayloadFactory
 from sc_client.client._resonse_processor import ResponseProcessor
-from sc_client.constants.common import PAYLOAD, STATUS, ClientCommand, RequestType
+from sc_client.constants.common import ERRORS, MESSAGE, REF, ClientCommand, RequestType
 from sc_client.constants.exceptions import ServerError
 
 
@@ -29,6 +29,10 @@ class Executor:
     def run(self, command_type: ClientCommand, *args):
         payload = self.payload_factory.run(command_type, *args)
         response = session.send_message(self._executor_mapper.get(command_type), payload)
-        if not response.get(STATUS) and response.get(PAYLOAD):
-            raise ServerError(str(response))
+        if response.get(ERRORS):
+            error_msgs = []
+            for error in response.get(ERRORS):
+                payload_part = "\nPayload: " + str(payload[int(error.get(REF))]) if error.get(REF) is not None else ""
+                error_msgs.append(error.get(MESSAGE) + payload_part)
+            raise ServerError("\n".join(error_msgs))
         return self.response_processor.run(command_type, response, *args)
