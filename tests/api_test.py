@@ -49,9 +49,10 @@ class ScTest(unittest.TestCase):
 
 class TestResponseWithFailedStatus(ScTest):
     def test_incorrect_type(self):
-        self.get_server_message('{"id": 1, "event": false, "status": 0, "payload": ["type must be X, but is Y"]}')
+        errors = '"errors": [{"message": "type must be X, but is Y", "ref": 0}]'
+        self.get_server_message('{"id": 1, "event": false, "status": 0, "payload": [0], ' + errors + "}")
         with pytest.raises(ServerError):
-            client.create_elements_by_scs([])
+            client.create_elements_by_scs(["asd ->"])
 
 
 class TestClientCreateElements(ScTest):
@@ -60,20 +61,20 @@ class TestClientCreateElements(ScTest):
             client.create_elements("wrong type here")
 
     def test_create_empty_construction(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": []}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": []}')
         const = ScConstruction()
         addr = client.create_elements(const)
         assert addr == []
 
     def test_create_node(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [59154]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [59154]}')
         const = ScConstruction()
         const.create_node(sc_types.NODE_CONST)
         addr = client.create_elements(const)
         assert len(addr) == 1
 
     def test_create_link(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1182470]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1182470]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
@@ -81,7 +82,7 @@ class TestClientCreateElements(ScTest):
         assert len(addr) == 1
 
     def test_create_link_type_value(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [123211]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [123211]}')
         link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
@@ -89,7 +90,7 @@ class TestClientCreateElements(ScTest):
         assert len(addr) == 1
 
     def test_create_construction_with_edge(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         const = ScConstruction()
         const.create_node(sc_types.NODE_CONST, "node")
@@ -107,18 +108,18 @@ class TestClientCreateElementsBySCs(ScTest):
             client.create_elements_by_scs([1])
 
     def test_create_empty_scs_list(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": []}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": []}')
         results = client.create_elements_by_scs([])
         assert results == []
 
     def test_create_by_scs(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1]}')
         results = client.create_elements_by_scs(["concept1 -> node1;;"])
         assert len(results) == 1
         assert results[0] is True
 
     def test_create_by_wrong_scs(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [0]}')
         results = client.create_elements_by_scs(["concept1 -> ;;"])
         assert len(results) == 1
         assert results[0] is False
@@ -130,21 +131,21 @@ class TestClientCheckElements(ScTest):
             client.check_elements("wrong type here")
 
     def test_check_node(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33]}')
         node_addr = ScAddr(0)
         elem_types = client.check_elements(node_addr)
         assert len(elem_types) == 1
         assert elem_types[0].is_node()
 
     def test_check_link(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [34]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [34]}')
         link_addr = ScAddr(0)
         elem_type = client.check_elements(link_addr)
         assert len(elem_type), 1
         assert elem_type[0].is_link()
 
     def test_check_elements_list(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
         elem_type_list = client.check_elements(ScAddr(0), ScAddr(0), ScAddr(0))
         assert len(elem_type_list) == 3
         assert elem_type_list[0].is_node()
@@ -158,18 +159,18 @@ class TestClientDeleteElements(ScTest):
             client.create_elements_by_scs("wrong type here")
 
     def test_delete_empty(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": true}')
         status = client.delete_elements()
         assert status
 
     def test_delete_node(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": true}')
         node_addr = ScAddr(0)
         status = client.delete_elements(node_addr)
         assert status
 
     def test_delete_elements_list(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": true}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": true}')
         status = client.delete_elements(ScAddr(0), ScAddr(0), ScAddr(0))
         assert status
 
@@ -188,7 +189,7 @@ class TestClientLinkContent(ScTest):
             client.get_links_by_content(["wrong type here"])
 
     def test_set_link_content(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [true]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [true]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         link_content.addr = ScAddr(0)
         status = client.set_link_contents(link_content)
@@ -200,7 +201,7 @@ class TestClientLinkContent(ScTest):
             ScLinkContent(test_content, ScLinkContentType.STRING)
 
     def test_get_link_content(self):
-        msg = '{"id": 1, "event": false, "status": true, "payload": [{"value": "Hi!", "type": "string"}]}'
+        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [{"value": "Hi!", "type": "string"}]}'
         self.get_server_message(msg)
         link_addr = ScAddr(0)
         content = client.get_link_content(link_addr)[0]
@@ -209,14 +210,15 @@ class TestClientLinkContent(ScTest):
         assert content.addr is None
 
     def test_get_link_by_content_empty(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[]]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [[]]}')
         test_str = "that line nor in KB"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING)
         content = client.get_links_by_content(link_content)
         assert content == [[]]
 
     def test_get_link_by_content_casual(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179679, 46368, 1181734]]}')
+        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [[1179679, 46368, 1181734]]}'
+        self.get_server_message(msg)
         test_str = "testing search by link content"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING)
         content = client.get_links_by_content(link_content)
@@ -226,7 +228,8 @@ class TestClientLinkContent(ScTest):
             assert item[0].value in [addr.value for addr in item[1]]
 
     def test_get_link_by_content_str(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}')
+        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}'
+        self.get_server_message(msg)
         test_str = "testing search by link content as string"
         content = client.get_links_by_content(test_str)
         assert content
@@ -236,7 +239,7 @@ class TestClientLinkContent(ScTest):
 
     def test_get_link_by_content_multiple(self):
         payload = "[[65504, 1179679, 46368], [46400, 1179711, 46336]]"
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         test_str_1 = "testing search by link content as string in multiple content"
         test_str_2 = "testing search by link content as casual in multiple content"
         link_content_2 = ScLinkContent(test_str_2, ScLinkContentType.STRING)
@@ -247,7 +250,8 @@ class TestClientLinkContent(ScTest):
             assert item[0].value in [addr.value for addr in item[1]]
 
     def test_get_link_by_content_substring_str(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}')
+        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}'
+        self.get_server_message(msg)
         test_str = "testing search by"
         content = client.get_links_by_content_substring(test_str)
         assert content
@@ -262,37 +266,38 @@ class TestClientResolveElements(ScTest):
             client.resolve_keynodes("wrong type here")
 
     def test_resolve_keynode_not_exist(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
         params = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
     def test_resolve_keynode_exist(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [337259]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [337259]}')
         params = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_types.NODE_CONST)
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
     def test_find_keynode_not_exist(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [0]}')
         params = ScIdtfResolveParams(idtf="my_another_keynode_that_not_exist", type=None)
         addr = client.resolve_keynodes(params)
         assert addr[0].is_valid() is False
 
     def test_find_keynode_exist(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [900]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [900]}')
         params = ScIdtfResolveParams(idtf="nrel_format", type=None)
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
     def test_find_keynode_exist_no_type(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [900]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [900]}')
         params = ScIdtfResolveParams(idtf="nrel_format", type=None)
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
     def test_resolve_keynodes_list(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238, 337259, 0]}')
+        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238, 337259, 0]}'
+        self.get_server_message(msg)
         param1 = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
         param2 = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_types.NODE_CONST)
         param3 = ScIdtfResolveParams(idtf="my_another_keynode_that_not_exist", type=None)
@@ -329,30 +334,32 @@ class TestClientEvent(ScTest):
             is_called = True
 
         is_called = False
-        server_message = '{"id": 1, "event": false, "status": true, "payload": [19]}'
+        server_message = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [19]}'
         addr_value = 1183238
         self._create_event(server_message, addr_value, test_callback)
         time.sleep(0.1)
-        self.get_server_message('{"id": 19, "event": true, "status": true, "payload": [1183238, 0, 0]}')
+        self.get_server_message('{"errors": [], "id": 19, "event": true, "status": true, "payload": [1183238, 0, 0]}')
         assert is_called
 
     def test_multiple_events(self):
         def test_callback_1(*_):
-            self.get_server_message('{"id": 3, "event": true, "status": true, "payload": [1183974, 1184230, 1184102]}')
+            res_msg = '{"errors": [], "id": 3, "event": true, "status": true, "payload": [1183974, 1184230, 1184102]}'
+            self.get_server_message(res_msg)
 
         def test_callback_2(*_):
             nonlocal is_called
             is_called = True
 
         is_called = False
-        server_message_1 = '{"id": 1, "event": false, "status": true, "payload": [2]}'
-        server_message_2 = '{"id": 2, "event": false, "status": true, "payload": [3]}'
+        server_message_1 = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [2]}'
+        server_message_2 = '{"errors": [], "id": 2, "event": false, "status": true, "payload": [3]}'
         addr_value_1 = 1183238
         addr_value_2 = 1183974
         self._create_event(server_message_1, addr_value_1, test_callback_1)
         self._create_event(server_message_2, addr_value_2, test_callback_2)
 
-        self.get_server_message('{"id": 2, "event": true, "status": true, "payload": [1183334, 45600, 1183974]}')
+        msg = '{"errors": [], "id": 2, "event": true, "status": true, "payload": [1183334, 45600, 1183974]}'
+        self.get_server_message(msg)
         time.sleep(0.1)
         assert is_called
 
@@ -362,16 +369,16 @@ class TestClientEvent(ScTest):
             is_called = True
 
         is_called = False
-        server_message = '{"id": 1, "event": false, "status": true, "payload": [19]}'
+        server_message = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [19]}'
         addr_value = 1183238
         sc_event = self._create_event(server_message, addr_value, test_callback)
 
-        self.get_server_message('{"id": 2, "event": false, "status": true, "payload": []}')
+        self.get_server_message('{"errors": [], "id": 2, "event": false, "status": true, "payload": []}')
         client.events_destroy(sc_event)
         assert client.is_event_valid(sc_event) is False
 
         time.sleep(0.1)
-        self.get_server_message('{"id": 19, "event": true, "status": true, "payload": [1183238, 0, 0]}')
+        self.get_server_message('{"errors": [], "id": 19, "event": true, "status": true, "payload": [1183238, 0, 0]}')
         assert is_called is False
 
 
@@ -416,7 +423,7 @@ class TestClientTemplate(ScTest):
             '{"aliases": {"_class_node": 0}, "addrs": '
             "[[1184838, 1184902, 1184870, 1184838, 1184934, 1184774, 1184838, 1184966, 1184806, 0, 0, 0]]}"
         )
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         templ = ScTemplate()
         templ.triple([ScAddr(0), "_class_node"], sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
         templ.triple("_class_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, ScAddr(0))
@@ -436,7 +443,7 @@ class TestClientTemplate(ScTest):
                 assert isinstance(addr, ScAddr)
 
         payload = '{"aliases": {"_class_node": 0}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         params = {"_class_node": "my_class"}
         search_result_list = client.template_search("my_template", params)
 
@@ -452,7 +459,7 @@ class TestClientTemplate(ScTest):
                 assert isinstance(addr, ScAddr)
 
         payload = '{"aliases": {}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         search_result_list = client.template_search(ScAddr(154454))
 
         assert len(search_result_list) != 0
@@ -465,7 +472,7 @@ class TestClientTemplate(ScTest):
             '{"aliases": {"_link": 2, "_main_node": 0, "_var_node": 8, "edge_1_0": 1}, '
             '"addrs": [1245352, 1245449, 1245384, 1245320, 1245481, 1245449, 1245352, 1245513, 1245288]}'
         )
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
 
         templ = ScTemplate()
         templ.triple_with_relation(
@@ -483,7 +490,7 @@ class TestClientTemplate(ScTest):
 
     def test_template_generate_by_idtf(self):
         payload = '{"aliases": {}, "addrs": [1245352, 1245449, 1245384, 1245352, 1245513, 1245288]}'
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
 
         gen_result = client.template_generate("my_template")
         assert gen_result.size() == 6
@@ -493,7 +500,7 @@ class TestClientTemplate(ScTest):
             '{"aliases": {"_link": 2, "_main_node": 0, "_var_node": 8, "edge_1_0": 1}, '
             '"addrs": [1245352, 1245449, 1245384, 1245320, 1245481, 1245449, 1245352, 1245513, 1245288]}'
         )
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": ' + payload + "}")
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(ScAddr(0), gen_params)
@@ -506,20 +513,20 @@ class TestScKeynodes(ScTest):
         IDTF_2 = "idtf_2"
 
     def test_should_get_keynode(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
         keynodes = ScKeynodes()
         result = keynodes["SYS_IDTF"]
         assert result.value == 1183238
 
     def test_should_get_keynodes_by_enum(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [1183238, 2]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238, 2]}')
         keynodes = ScKeynodes()
         keynodes.resolve_identifiers([self.TestEnum])
         assert keynodes[self.TestEnum.IDTF_1.value].value == 1183238
         assert keynodes[self.TestEnum.IDTF_2.value].value == 2
 
     def test_should_get_unknown_idtf(self):
-        self.get_server_message('{"id": 1, "event": false, "status": true, "payload": [0]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [0]}')
         keynodes = ScKeynodes()
         result = keynodes["UNKNOWN_IDTF"]
         assert not result.is_valid()
