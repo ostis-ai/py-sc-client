@@ -379,3 +379,26 @@ class MyModule(ScModule):
         agents_to_register = [MyAgent1, MyAgent2] # list of agent classes
         super().__init__(agents_to_register)
 ```
+
+## Logging
+
+Sometimes you might be in a situation where you deal with data that should be correct, but actually is not.
+You may still want to log that something fishy happened. This is where loggers come in handy.
+Default logger is preconfigured for you to use.
+
+Here are some example for logs review:
+```py
+from sc_client import LOGGER_NAME
+from sc_client import client
+import logging
+logger = logging.getLogger(LOGGER_NAME)
+logger.setLevel(logging.DEBUG)
+client.connect("ws://localhost:8090/ws_json")
+# 2022-09-14 13:44:00,667 - py-sc-client - DEBUG - Connected
+result = client.create_elements_by_scs([])
+# 2022-09-14 13:48:54,776 - py-sc-client - DEBUG - Send: {"id": 2, "type": "create_elements_by_scs", "payload": []}
+# 2022-09-14 13:48:54,777 - py-sc-client - DEBUG - Receive: {"errors":[],"event":0,"id":2,"payload":[],"status":1}
+```
+The attached logger is a standard logging [Logger](https://docs.python.org/3/library/logging.html#logging.Logger),
+so head over to the official [logging docs](https://docs.python.org/3/library/logging.html#module-logging)
+for more information.
