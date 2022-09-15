@@ -6,6 +6,16 @@ Distributed under the MIT License
 
 # Set default logging handler to avoid "No handler found" warnings.
 import logging
-from logging import NullHandler
+from logging import StreamHandler
 
-logging.getLogger(__name__).addHandler(NullHandler())
+
+def _setup_default_logger():
+    logger = logging.getLogger(LOGGER_NAME)
+    sh = StreamHandler()
+    formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+    sh.setFormatter(formatter)
+    logger.addHandler(sh)
+
+
+LOGGER_NAME = "py-sc-client"
+_setup_default_logger()
