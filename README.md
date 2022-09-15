@@ -3,7 +3,8 @@
 <img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/tests.yml/badge.svg?branch=main">
 <img src="https://github.com/ostis-ai/py-sc-client/actions/workflows/push.yml/badge.svg?branch=main">
 
-The python implementation of the client for [communication with sc-server](https://github.com/ostis-ai/sc-machine/blob/main/docs/http/websocket.md).
+The python implementation of the client for communication with
+[the OSTIS Technology web-oriented platform](https://github.com/ostis-ai/ostis-web-platform/blob/develop/docs/main.pdf).
 This module is compatible with 0.7.0 version of [sc-machine](https://github.com/ostis-ai/sc-machine).
 
 ## Installing py-sc-client
@@ -399,6 +400,7 @@ result = client.create_elements_by_scs([])
 # 2022-09-14 13:48:54,776 - py-sc-client - DEBUG - Send: {"id": 2, "type": "create_elements_by_scs", "payload": []}
 # 2022-09-14 13:48:54,777 - py-sc-client - DEBUG - Receive: {"errors":[],"event":0,"id":2,"payload":[],"status":1}
 ```
+
 The attached logger is a standard logging [Logger](https://docs.python.org/3/library/logging.html#logging.Logger),
 so head over to the official [logging docs](https://docs.python.org/3/library/logging.html#module-logging)
 for more information.
