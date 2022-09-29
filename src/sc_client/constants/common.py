@@ -28,6 +28,7 @@ class ClientCommand(Enum):
     GET_LINK_CONTENT = auto()
     GET_LINKS_BY_CONTENT = auto()
     GET_LINKS_BY_CONTENT_SUBSTRING = auto()
+    GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = auto()
     KEYNODES = auto()
     SEARCH_TEMPLATE = auto()
     GENERATE_TEMPLATE = auto()
@@ -83,7 +84,8 @@ class CommandTypes:
     GET = "get"
     RESOLVE = "resolve"
     FIND = "find"
-    FIND_BY_SUBSTRING = "find_by_substr"
+    FIND_LINKS_BY_SUBSTRING = "find_links_by_substr"
+    FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = "find_strings_by_substr"
     CREATE = "create"
     DELETE = "delete"
 

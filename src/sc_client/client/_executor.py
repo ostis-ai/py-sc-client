@@ -1,6 +1,6 @@
 from sc_client import session
 from sc_client.client._payload_factory import PayloadFactory
-from sc_client.client._resonse_processor import ResponseProcessor
+from sc_client.client._response_processor import ResponseProcessor
 from sc_client.constants.common import ERRORS, MESSAGE, REF, ClientCommand, RequestType
 from sc_client.constants.exceptions import ServerError
 
@@ -15,6 +15,7 @@ class Executor:
         ClientCommand.GET_LINK_CONTENT: RequestType.CONTENT,
         ClientCommand.GET_LINKS_BY_CONTENT: RequestType.CONTENT,
         ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: RequestType.CONTENT,
+        ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: RequestType.CONTENT,
         ClientCommand.SET_LINK_CONTENTS: RequestType.CONTENT,
         ClientCommand.EVENTS_CREATE: RequestType.EVENTS,
         ClientCommand.EVENTS_DESTROY: RequestType.EVENTS,

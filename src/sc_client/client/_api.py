@@ -68,6 +68,10 @@ def get_links_by_content_substring(*contents: ScLinkContent | str | int) -> list
     return session.execute(common.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING, *contents)
 
 
+def get_links_contents_by_content_substring(*contents: ScLinkContent | str | int) -> list[list[ScAddr]]:
+    return session.execute(common.ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING, *contents)
+
+
 def resolve_keynodes(*params: ScIdtfResolveParams) -> list[ScAddr]:
     return session.execute(common.ClientCommand.KEYNODES, *params)
 

@@ -16,6 +16,7 @@ from sc_client.client._api import (
     get_link_content,
     get_links_by_content,
     get_links_by_content_substring,
+    get_links_contents_by_content_substring,
     is_connected,
     is_event_valid,
     resolve_keynodes,

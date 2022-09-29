@@ -160,6 +160,19 @@ content[1]  # get an empty list if there is no link with the given content subst
 ```
 
 
+### get_links_contents_by_content_substring
+Get links contents from the KB by content substrings.
+
+*Parameters*: ScLinkContent class objects, substrings.
+*Returns*: A list of lists of str class objects.
+
+```py
+content = client.get_links_contents_by_content_substring("testing search", "no con")
+content[0]  # get a list of strings with the given content substring
+content[1]  # get an empty list if there is no link with the given content substring in the memory
+```
+
+
 ### resolve_keynodes
 Get a keynode from the KB memory by identifier and type. If it doesn't exist, then create a new one.
 If ScType is None, try to find an element by the system identifier.
