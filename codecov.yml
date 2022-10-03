@@ -1,0 +1,7 @@
+codecov:
+  archive:
+    uploads: no
+
+coverage:
+  precision: 0
+  range: 80...100
