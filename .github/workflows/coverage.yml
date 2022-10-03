@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [ 3.8 ]
+        python-version: [ 3.9 ]
 
     steps:
       - uses: actions/checkout@v3
@@ -29,12 +29,11 @@ jobs:
           pip install -U setuptools
           python -m pip install -U pip
           pip install -r requirements-dev.txt
-          pip install --user codecov
+          pip install coverage codecov
 
       - name: Run codecov
         run: |
-          python -m coverage run -m tests.api_test tests.models_test
-          python -m codecov
+          python3 -m coverage run --source=${pwd} -m pytest && python3 -m coverage report
         env:
           super_secret: ${{ secrets.CODECOV_TOKEN }}
 
