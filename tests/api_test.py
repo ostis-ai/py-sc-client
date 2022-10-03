@@ -249,7 +249,7 @@ class TestClientLinkContent(ScTest):
         for item in zip(addr_list, content):
             assert item[0].value in [addr.value for addr in item[1]]
 
-    def test_get_link_by_content_substring_str(self):
+    def test_get_link_by_content_substring(self):
         msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}'
         self.get_server_message(msg)
         test_str = "testing search by"
@@ -258,6 +258,17 @@ class TestClientLinkContent(ScTest):
         link_addr = ScAddr(1180550)
         for item in zip([link_addr], content):
             assert item[0].value in [addr.value for addr in item[1]]
+
+    def test_get_links_contents_by_content_substring(self):
+        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [["concept_test", "class_concept", ' \
+              '"content"]]} '
+        self.get_server_message(msg)
+        test_str = "con"
+        content = client.get_links_contents_by_content_substring(test_str)
+        assert content
+        strings = ["concept_test", "class_concept", "content"]
+        for item in zip(strings, content):
+            assert item[0] in [string for string in item[1]]
 
 
 class TestClientResolveElements(ScTest):

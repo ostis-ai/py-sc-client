@@ -148,7 +148,15 @@ class GetLinksByContentPayloadCreator(BasePayloadCreator):
 class GetLinksByContentSubstringPayloadCreator(GetLinksByContentPayloadCreator):
     def _form_payload_content(self, content):
         return {
-            common.COMMAND: common.CommandTypes.FIND_BY_SUBSTRING,
+            common.COMMAND: common.CommandTypes.FIND_LINKS_BY_SUBSTRING,
+            common.DATA: content.data,
+        }
+
+
+class GetLinksContentsByContentSubstringPayloadCreator(GetLinksByContentPayloadCreator):
+    def _form_payload_content(self, content):
+        return {
+            common.COMMAND: common.CommandTypes.FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING,
             common.DATA: content.data,
         }
 
@@ -238,6 +246,7 @@ class PayloadFactory:
         common.ClientCommand.GET_LINK_CONTENT: GetLinkContentPayloadCreator(),
         common.ClientCommand.GET_LINKS_BY_CONTENT: GetLinksByContentPayloadCreator(),
         common.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringPayloadCreator(),
+        common.ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringPayloadCreator(),
         common.ClientCommand.SET_LINK_CONTENTS: SetLinkContentPayloadCreator(),
         common.ClientCommand.EVENTS_CREATE: EventsCreatePayloadCreator(),
         common.ClientCommand.EVENTS_DESTROY: EventsDestroyPayloadCreator(),
