@@ -29,11 +29,12 @@ from sc_client.models import (
     ScIdtfResolveParams,
     ScLinkContent,
     ScLinkContentType,
+    SCs,
     ScTemplate,
-    SCs
 )
 
 # pylint: disable=W0212
+
 
 class ScTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -296,15 +297,17 @@ class TestClientLinkContent(ScTest):
             assert item[0].value in [addr.value for addr in item[1]]
 
     def test_get_links_contents_by_content_substring(self):
-        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [["concept_test", "class_concept", ' \
-              '"content"]]} '
+        msg = (
+            '{"errors": [], "id": 1, "event": false, "status": true, "payload": [["concept_test", "class_concept", '
+            '"content"]]} '
+        )
         self.get_server_message(msg)
         test_str = "con"
         content = client.get_links_contents_by_content_substring(test_str)
         assert content
         strings = ["concept_test", "class_concept", "content"]
         for item in zip(strings, content):
-            assert item[0] in [string for string in item[1]]
+            assert item[0] in item[1]
 
 
 class TestClientResolveElements(ScTest):
@@ -449,14 +452,14 @@ class TestClientTemplate(ScTest):
 
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
-            templ.triple([ScAddr(0), "_class_node"], ScAddr(0), [sc_types.LINK_CONST, "_const_link"])
+            templ.triple((ScAddr(0), "_class_node"), ScAddr(0), (sc_types.LINK_CONST, "_const_link"))
 
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.triple_with_relation(
-                [ScAddr(0), "_main_node"],
-                [sc_types.EDGE_D_COMMON_CONST, "_const_edge"],
-                [sc_types.LINK_VAR, "_link"],
+                (ScAddr(0), "_main_node"),
+                (sc_types.EDGE_D_COMMON_CONST, "_const_edge"),
+                (sc_types.LINK_VAR, "_link"),
                 sc_types.EDGE_ACCESS_VAR_POS_PERM,
                 ScAddr(0),
             )
@@ -472,7 +475,7 @@ class TestClientTemplate(ScTest):
         )
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         templ = ScTemplate()
-        templ.triple([ScAddr(0), "_class_node"], sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
+        templ.triple((ScAddr(0), "_class_node"), sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
         templ.triple("_class_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, ScAddr(0))
         templ.triple("_class_node", ScAddr(0), sc_types.NODE_VAR)
         templ.triple(ScAddr(0), ScAddr(0), sc_types.NODE_VAR)
@@ -523,13 +526,13 @@ class TestClientTemplate(ScTest):
 
         templ = ScTemplate()
         templ.triple_with_relation(
-            [ScAddr(0), "_main_node"],
+            (ScAddr(0), "_main_node"),
             sc_types.EDGE_D_COMMON_VAR,
-            [sc_types.LINK_VAR, "_link"],
+            (sc_types.LINK_VAR, "_link"),
             sc_types.EDGE_ACCESS_VAR_POS_PERM,
             ScAddr(0),
         )
-        templ.triple("_main_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, [sc_types.NODE_VAR, "_var_node"])
+        templ.triple("_main_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, (sc_types.NODE_VAR, "_var_node"))
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(templ, gen_params)
