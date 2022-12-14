@@ -15,6 +15,9 @@ class ScAddr:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}({self.value})"
 
+    def __rshift__(self, alias: str) -> tuple[ScAddr, str]:
+        return self, alias
+
     def __eq__(self, other: ScAddr) -> bool:
         if not isinstance(other, ScAddr):
             raise InvalidTypeError(f"Cannot compare ScAddr with {type(other)}")

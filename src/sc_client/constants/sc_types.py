@@ -64,6 +64,9 @@ class ScType:
     def __hash__(self) -> int:
         return hash((self.value, self.__class__))
 
+    def __rshift__(self, alias: str) -> tuple[ScType, str]:
+        return self, alias
+
     def __eq__(self, other: ScType) -> bool:
         if isinstance(other, ScType):
             return self.value == other.value
