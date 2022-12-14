@@ -14,14 +14,13 @@ from typing import Any
 
 import websocket
 
-from sc_client import LOGGER_NAME
 from sc_client.client._executor import Executor
 from sc_client.constants import common
 from sc_client.constants.common import ClientCommand
 from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ANSWER_CHECK_TIME, SERVER_ESTABLISH_CONNECTION_TIME
 from sc_client.models import Response, ScAddr, ScEvent
 
-logger = logging.getLogger(LOGGER_NAME)
+logger = logging.getLogger(__name__)
 
 
 class _ScClientSession:
