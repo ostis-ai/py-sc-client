@@ -11,15 +11,17 @@ import logging
 import threading
 import time
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional
 
 import websocket
 
 from sc_client.client._executor import Executor
 from sc_client.constants import common
 from sc_client.constants.common import ClientCommand
+from sc_client.constants.exceptions import PayloadMaxSizeError
 from sc_client.constants.numeric import (
     LOGGING_MAX_SIZE,
+    MAX_PAYLOAD_SIZE,
     SERVER_ANSWER_CHECK_TIME,
     SERVER_ESTABLISH_CONNECTION_TIME,
     SERVER_RECONNECTION_TIME,
@@ -43,7 +45,7 @@ class _ScClientSession:
     events_dict = {}
     command_id = 0
     executor = Executor()
-    ws_app = None
+    ws_app: Optional[websocket.WebSocketApp] = None
 
     @classmethod
     def clear(cls):
@@ -154,6 +156,9 @@ def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
             common.PAYLOAD: payload,
         }
     )
+    len_data = len(bytes(data, "utf-8"))
+    if len_data > MAX_PAYLOAD_SIZE:
+        raise PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes")
     _send_message(data)
     response = receive_message(command_id)
     return response

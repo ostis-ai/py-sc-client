@@ -52,6 +52,14 @@ class ServerError(CommonError):
         super().__init__(message)
 
 
+class PayloadMaxSizeError(CommonError):
+    def __init__(self, msg: str = None):
+        message = CommonErrorMessages.PAYLOAD_MAX_SIZE.value
+        if msg:
+            message = f"{message}: {msg}"
+        super().__init__(message)
+
+
 class CommonErrorMessages(Enum):
     INVALID_STATE = "Invalid state"
     INVALID_VALUE = "Invalid value"
@@ -59,3 +67,4 @@ class CommonErrorMessages(Enum):
     MERGE_ERROR = "You can't merge two different syntax types"
     LINK_OVERSIZE = "Link content exceeds permitted value"
     SERVER_ERROR = "Server error"
+    PAYLOAD_MAX_SIZE = "Payload max size error"
