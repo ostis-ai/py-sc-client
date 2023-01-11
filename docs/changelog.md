@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
  - Output structure for generation by scs
  - Add autoreconnection to sc-server
+ - Web-socket data size validation
 ### Changed
  - Change single logger to a logging hierarchy
 ### Deprecated
