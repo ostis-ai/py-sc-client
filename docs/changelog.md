@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+ - Change single logger to a logging hierarchy
+### Removed
+ - ScModule, ScAgent and ScKeynode class implementations moved to [py-sc-kpm](https://github.com/ostis-ai/py-sc-kpm/tree/main/src/sc_kpm)
 
 ## [0.2.4]
 ### Added
