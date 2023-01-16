@@ -230,7 +230,7 @@ class SCs:
         self.output_struct = output_struct
 
 
-SCsText = List[str | SCs]
+SCsText = List[Union[str, SCs]]
 
 
 class Response(TypedDict):

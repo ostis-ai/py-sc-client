@@ -61,6 +61,7 @@ ELEMENT = "el"
 SCS = "scs"
 OUTPUT_STRUCTURE = "outputStructure"
 
+
 class Elements:
     NODE = "node"
     EDGE = "edge"

@@ -24,6 +24,7 @@ from sc_client.models import (
     ScLinkContent,
     ScLinkContentType,
     ScTemplate,
+    SCs
 )
 
 # pylint: disable=W0212
@@ -118,6 +119,18 @@ class TestClientCreateElementsBySCs(ScTest):
     def test_create_by_wrong_scs(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [0]}')
         results = client.create_elements_by_scs(["concept1 -> ;;"])
+        assert len(results) == 1
+        assert results[0] is False
+
+    def test_create_by_scs_with_output_struct(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1]}')
+        results = client.create_elements_by_scs([SCs("concept1 -> node1;;", ScAddr(0))])
+        assert len(results) == 1
+        assert results[0] is True
+
+    def test_create_by_wrong_scs_with_output_struct(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [0]}')
+        results = client.create_elements_by_scs([SCs("concept1 -> ", ScAddr(0))])
         assert len(results) == 1
         assert results[0] is False
 
