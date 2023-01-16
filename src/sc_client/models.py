@@ -224,7 +224,13 @@ class ScConstruction:
         return self.aliases[alias]
 
 
-SCsText = List[str]
+class SCs:
+    def __init__(self, text: str, output_struct: ScAddr = ScAddr(0)) -> None:
+        self.scs = text
+        self.output_struct = output_struct
+
+
+SCsText = List[str | SCs]
 
 
 class Response(TypedDict):
