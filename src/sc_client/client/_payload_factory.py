@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import get_args, get_origin
+from typing import get_origin
 
 from sc_client._internal_utils import process_triple_item
 from sc_client.constants import common, exceptions
@@ -13,8 +13,8 @@ from sc_client.models import (
     ScIdtfResolveParams,
     ScLinkContent,
     ScLinkContentType,
-    SCsText,
     SCs,
+    SCsText,
     ScTemplate,
     ScTemplateIdtf,
     ScTemplateParams,
@@ -73,9 +73,7 @@ class CreateElementsPayloadCreator(BasePayloadCreator):
 
 class CreateElementsBySCsPayloadCreator(BasePayloadCreator):
     def __call__(self, scs_list: SCsText, *_):
-        if not isinstance(scs_list, get_origin(SCsText)) or not all(
-            isinstance(n, get_args(SCsText)) for n in scs_list
-        ):
+        if not isinstance(scs_list, list) or not all(isinstance(n, (str, SCs)) for n in scs_list):
             raise exceptions.InvalidTypeError("expected object types: SCsText")
         payload = []
         for scs in scs_list:
@@ -143,12 +141,8 @@ class GetLinkContentPayloadCreator(BasePayloadCreator):
 
 class GetLinksByContentPayloadCreator(BasePayloadCreator):
     def __call__(self, *contents: ScLinkContent | str | int):
-        if not all(
-            isinstance(content, (ScLinkContent, str, int)) for content in contents
-        ):
-            raise exceptions.InvalidTypeError(
-                "expected object types: ScLinkContent, str or int"
-            )
+        if not all(isinstance(content, (ScLinkContent, str, int)) for content in contents):
+            raise exceptions.InvalidTypeError("expected object types: ScLinkContent, str or int")
         link_contents = []
         for content in contents:
             if isinstance(content, str):
@@ -188,9 +182,7 @@ class GetLinksContentsByContentSubstringPayloadCreator(GetLinksByContentPayloadC
 class ResolveKeynodesPayloadCreator(BasePayloadCreator):
     def __call__(self, *params: ScIdtfResolveParams):
         if not all(isinstance(par, dict) for par in params):
-            raise exceptions.InvalidTypeError(
-                "expected object types: ScIdtfResolveParams"
-            )
+            raise exceptions.InvalidTypeError("expected object types: ScIdtfResolveParams")
         payload = []
         for idtf_param in params:
             keynode_type = idtf_param.get(common.TYPE)
@@ -217,9 +209,7 @@ class TemplatePayloadCreator(BasePayloadCreator):
         *_,
     ):
         if not isinstance(template, (ScTemplate, str, ScTemplateIdtf, ScAddr)):
-            raise exceptions.InvalidTypeError(
-                "expected object types: ScTemplate | str | ScTemplateIdtf"
-            )
+            raise exceptions.InvalidTypeError("expected object types: ScTemplate | str | ScTemplateIdtf")
         if isinstance(template, ScAddr):
             payload_template = {
                 common.TYPE: common.Types.ADDR,
@@ -235,9 +225,7 @@ class TemplatePayloadCreator(BasePayloadCreator):
         payload_params = {}
         if params is not None:
             if not isinstance(params, get_origin(ScTemplateParams)):
-                raise exceptions.InvalidTypeError(
-                    "expected object types: ScTemplateParams"
-                )
+                raise exceptions.InvalidTypeError("expected object types: ScTemplateParams")
             for alias, addr in params.items():
                 if isinstance(addr, ScAddr):
                     payload_params.update({alias: addr.value})
@@ -261,10 +249,7 @@ class EventsCreatePayloadCreator(BasePayloadCreator):
     def __call__(self, *events: ScEventParams):
         if not all(isinstance(event, ScEventParams) for event in events):
             raise exceptions.InvalidTypeError("expected object types: ScEventParams")
-        payload_create = [
-            {common.TYPE: event.event_type.value, common.ADDR: event.addr.value}
-            for event in events
-        ]
+        payload_create = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
         payload = {common.CommandTypes.CREATE: payload_create}
         return payload
 
