@@ -124,7 +124,7 @@ class TestClientCreateElementsBySCs(ScTest):
 
     def test_create_by_scs_with_output_struct(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1]}')
-        results = client.create_elements_by_scs([SCs("concept1 -> node1;;", ScAddr(0))])
+        results = client.create_elements_by_scs([SCs("concept1 -> node1;;", ScAddr(1))])
         assert len(results) == 1
         assert results[0] is True
 
@@ -133,6 +133,18 @@ class TestClientCreateElementsBySCs(ScTest):
         results = client.create_elements_by_scs([SCs("concept1 -> ", ScAddr(0))])
         assert len(results) == 1
         assert results[0] is False
+
+    def test_create_by_scs_with_output_struct_default_scs(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1]}')
+        results = client.create_elements_by_scs([SCs("concept1 -> node1;;")])
+        assert len(results) == 1
+        assert results[0] is True
+
+    def test_create_by_scs_with_output_struct_multiple_scs(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1, 1]}')
+        results = client.create_elements_by_scs([SCs("concept1 -> node1;;", ScAddr(1)), SCs("concept1 -> node2;;")])
+        assert len(results) == 2
+        assert results[0] is True and results[1] is True
 
 
 class TestClientCheckElements(ScTest):

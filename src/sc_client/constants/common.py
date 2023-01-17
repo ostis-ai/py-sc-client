@@ -59,7 +59,7 @@ DATA = "data"
 ELEMENT = "el"
 
 SCS = "scs"
-OUTPUT_STRUCTURE = "outputStructure"
+OUTPUT_STRUCTURE = "output_structure"
 
 
 class Elements:

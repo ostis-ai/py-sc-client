@@ -84,14 +84,19 @@ addr_list # [node_addr, link_addr, edge_addr]
 
 
 ### create_elements_by_scs
-Create elements by scs texts in the KB memory.
+Create elements by scs texts in the KB memory and put them in structure.
 
-*Parameters*: A list of scs (str).
+*Parameters*: A list of scs (str), optional ScAddr of structure.
 *Returns*: A list of bool scs translation results.
 
 ```py
 results = client.create_elements_by_scs(["concept1 -> node1;;", "concept1 -> ;;"])
 results # [True, False]
+```
+
+```py
+results = client.create_elements_by_scs([SCs("concept1 -> node1;;", struct_addr), ("concept1 -> node2;;", struct_addr)])
+results # [True, True]
 ```
 
 

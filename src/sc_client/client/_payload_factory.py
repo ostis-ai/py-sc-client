@@ -72,11 +72,11 @@ class CreateElementsPayloadCreator(BasePayloadCreator):
 
 
 class CreateElementsBySCsPayloadCreator(BasePayloadCreator):
-    def __call__(self, scs_list: SCsText, *_):
-        if not isinstance(scs_list, list) or not all(isinstance(n, (str, SCs)) for n in scs_list):
-            raise exceptions.InvalidTypeError("expected object types: SCsText")
+    def __call__(self, scs_text: SCsText, *_):
+        if not isinstance(scs_text, list) or not all(isinstance(n, (str, SCs)) for n in scs_text):
+            raise exceptions.InvalidTypeError("expected object types: string or SCs(string, ScAddr)")
         payload = []
-        for scs in scs_list:
+        for scs in scs_text:
             if isinstance(scs, str):
                 payload.append(
                     {
@@ -87,7 +87,7 @@ class CreateElementsBySCsPayloadCreator(BasePayloadCreator):
             else:
                 payload.append(
                     {
-                        common.SCS: scs.scs,
+                        common.SCS: scs.text,
                         common.OUTPUT_STRUCTURE: scs.output_struct.value,
                     }
                 )
