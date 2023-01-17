@@ -224,10 +224,10 @@ class ScConstruction:
         return self.aliases[alias]
 
 
+@dataclass
 class SCs:
-    def __init__(self, text: str, output_struct: ScAddr = ScAddr(0)) -> None:
-        self.scs = text
-        self.output_struct = output_struct
+    text: str
+    output_struct: ScAddr = ScAddr(0)
 
 
 SCsText = List[Union[str, SCs]]
