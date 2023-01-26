@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - Output structure for generation by scs
+ - Add autoreconnection to sc-server
 ### Changed
  - Change single logger to a logging hierarchy
 ### Removed
