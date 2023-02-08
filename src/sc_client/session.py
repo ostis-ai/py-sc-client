@@ -10,6 +10,7 @@ import json
 import logging
 import threading
 import time
+from dataclasses import dataclass
 from typing import Any
 
 import websocket
@@ -17,11 +18,24 @@ import websocket
 from sc_client.client._executor import Executor
 from sc_client.constants import common
 from sc_client.constants.common import ClientCommand
-from sc_client.constants.numeric import LOGGING_MAX_SIZE, SERVER_ANSWER_CHECK_TIME, SERVER_ESTABLISH_CONNECTION_TIME, SERVER_RECONNECTION_TIME
+from sc_client.constants.numeric import (
+    LOGGING_MAX_SIZE,
+    SERVER_ANSWER_CHECK_TIME,
+    SERVER_ESTABLISH_CONNECTION_TIME,
+    SERVER_RECONNECTION_TIME,
+)
 from sc_client.models import Response, ScAddr, ScEvent
 
 logger = logging.getLogger(__name__)
-reconnection_enable = False
+
+
+@dataclass
+class Reconnection:
+    reconnection_enable = False
+
+
+reconnection = Reconnection()
+
 
 class _ScClientSession:
     lock_instance = threading.Lock()
@@ -71,15 +85,15 @@ def is_connection_established() -> bool:
     return bool(_ScClientSession.ws_app)
 
 
-def set_connection(url: str, autoreconnection = False, reconnection_time = SERVER_RECONNECTION_TIME) -> None:
-    reconnection_enable = autoreconnection
-    if (reconnection_time > 1800): #30 min
+def set_connection(url: str, autoreconnection=False, reconnection_time=SERVER_RECONNECTION_TIME) -> None:
+    reconnection.reconnection_enable = autoreconnection
+    if reconnection_time > 1800:  # 30 min
         reconnection_time = SERVER_RECONNECTION_TIME
     if not is_connection_established():
         establish_connection(url)
 
     def run_in_thread(url: str):
-        while (reconnection_enable):
+        while reconnection.reconnection_enable:
             if not is_connection_established():
                 time.sleep(reconnection_time)
                 establish_connection(url)
@@ -106,7 +120,7 @@ def establish_connection(url) -> None:
 
 def close_connection() -> None:
     try:
-        reconnection_enable = False
+        reconnection.reconnection_enable = False
         _ScClientSession.ws_app.close()
     except AttributeError:
         pass
