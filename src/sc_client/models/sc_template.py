@@ -1,6 +1,6 @@
 import warnings
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, Iterator, List, Optional, Tuple, Union
 
 from sc_client.constants import ScType
 from sc_client.constants.exceptions import InvalidTypeError
@@ -78,18 +78,46 @@ class ScTemplate:
 
 
 class ScTemplateResult:
+    addrs_iter: Iterator[ScAddr]
+
     def __init__(self, addrs: List[ScAddr], aliases: Dict[str, int]) -> None:
         self.addrs = addrs
         self.aliases = aliases
 
     def size(self) -> int:
+        warnings.warn("ScTemplateResult 'size()' method is deprecated. Use 'len(res)' instead", DeprecationWarning)
+        # TODO: remove method in version 0.3.0
+        return len(self)
+
+    def __len__(self) -> int:
         return len(self.addrs)
 
     def get(self, alias_or_index: Union[str, int]) -> ScAddr:
-        if isinstance(alias_or_index, str):
-            return self.addrs[self.aliases[alias_or_index]]
-        return self.addrs[alias_or_index]
+        if isinstance(alias_or_index, int):
+            warnings.warn(
+                "ScTemplateResult 'get()' will not get element by index. Use square brackets 'res[i]' instead.",
+                DeprecationWarning,
+            )
+            # TODO: remove getting by index in version 0.3.0
+            return self.addrs[alias_or_index]
+        return self.addrs[self.aliases[alias_or_index]]
+
+    def __getitem__(self, index: int):
+        return self.addrs[index]
 
     def for_each_triple(self, func: ScEventCallbackFunc):
-        for i in range(0, self.size(), 3):
+        warnings.warn(
+            "ScTemplateResult 'for_each_triple()' method is deprecated. Use for-iteration instead.",
+            DeprecationWarning,
+        )
+        # TODO: remove method in version 0.3.0
+        for i in range(0, len(self), 3):
             func(self.addrs[i], self.addrs[i + 1], self.addrs[i + 2])
+
+    def __iter__(self):
+        """Iterate by triples"""
+        self.addrs_iter = iter(self.addrs)
+        return self
+
+    def __next__(self) -> Tuple[ScAddr, ScAddr, ScAddr]:
+        return next(self.addrs_iter), next(self.addrs_iter), next(self.addrs_iter)

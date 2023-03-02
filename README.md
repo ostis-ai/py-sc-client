@@ -223,13 +223,13 @@ search_params = {'_link': link_node, '_var_node': 'node_idtf'} # value element c
 search_results = client.template_search(templ, search_params) # templ can be ScTemplate or ScTemplateIdtf or ScAddr
 search_result = search_results[0]
 
-search_result.size() # count of elements in the resulting construction
-search_result.get(0).value # get an element from the result by index
+len(search_result) # count of elements in the resulting construction
+search_result[0].value # get an element from the result by index
 search_result.get('_class_node').value # get an element from the result by alias
 
-def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
+for src, edge, trg in search_result:
     ...
-search_result.for_each_triple(for_each_tripple_func) # call a function for each triple in the result
+    # do smth with each triple in the result
 ```
 
 Search by sc-template address.
@@ -238,7 +238,7 @@ template = keynodes['my_template']
 search_results = client.template_search(template)
 search_result = search_results[0]
 
-search_result.size()
+len(search_result)
 ```
 
 Search by sc-template system identifier.
@@ -247,7 +247,7 @@ search_params = {'_link': link_node, '_var_node': 'node_idtf'}
 search_results = client.template_search('my_template', search_params)
 search_result = search_results[0]
 
-search_result.size()
+len(search_result)
 ```
 
 Search by scs sc-template.
@@ -255,7 +255,7 @@ Search by scs sc-template.
 search_results = client.template_search('class _-> _node;;')
 search_result = search_results[0]
 
-search_result.size()
+len(search_result)
 ```
 
 ### template_generate

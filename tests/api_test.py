@@ -465,10 +465,6 @@ class TestClientTemplate(ScTest):
             )
 
     def test_template_search(self):
-        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
-            for addr in [src, edge, trg]:
-                assert isinstance(addr, ScAddr)
-
         payload = (
             '{"aliases": {"_class_node": 0}, "addrs": '
             "[[1184838, 1184902, 1184870, 1184838, 1184934, 1184774, 1184838, 1184966, 1184806, 0, 0, 0]]}"
@@ -483,15 +479,13 @@ class TestClientTemplate(ScTest):
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
-        assert search_result.size() == 12
-        assert search_result.get("_class_node").value == search_result.get(0).value
-        search_result.for_each_triple(for_each_tripple_func)
-
-    def test_template_search_by_idtf(self):
-        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
-            for addr in [src, edge, trg]:
+        assert len(search_result) == 12
+        assert search_result.get("_class_node").value == search_result[0].value
+        for src, edge, trg in search_result:
+            for addr in (src, edge, trg):
                 assert isinstance(addr, ScAddr)
 
+    def test_template_search_by_idtf(self):
         payload = '{"aliases": {"_class_node": 0}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         params = {"_class_node": "my_class"}
@@ -499,23 +493,23 @@ class TestClientTemplate(ScTest):
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
-        assert search_result.size() == 6
-        assert search_result.get("_class_node").value == search_result.get(0).value
-        search_result.for_each_triple(for_each_tripple_func)
-
-    def test_template_search_by_addr(self):
-        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
-            for addr in [src, edge, trg]:
+        assert len(search_result) == 6
+        assert search_result.get("_class_node").value == search_result[0].value
+        for src, edge, trg in search_result:
+            for addr in (src, edge, trg):
                 assert isinstance(addr, ScAddr)
 
+    def test_template_search_by_addr(self):
         payload = '{"aliases": {}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         search_result_list = client.template_search(ScAddr(154454))
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
-        assert search_result.size() == 6
-        search_result.for_each_triple(for_each_tripple_func)
+        assert len(search_result) == 6
+        for src, edge, trg in search_result:
+            for addr in (src, edge, trg):
+                assert isinstance(addr, ScAddr)
 
     def test_template_generate(self):
         payload = (
@@ -536,14 +530,14 @@ class TestClientTemplate(ScTest):
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(templ, gen_params)
-        assert gen_result.size() == 9
+        assert len(gen_result) == 9
 
     def test_template_generate_by_idtf(self):
         payload = '{"aliases": {}, "addrs": [1245352, 1245449, 1245384, 1245352, 1245513, 1245288]}'
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
 
         gen_result = client.template_generate("my_template")
-        assert gen_result.size() == 6
+        assert len(gen_result) == 6
 
     def test_template_generate_by_addr(self):
         payload = (
@@ -554,7 +548,7 @@ class TestClientTemplate(ScTest):
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(ScAddr(0), gen_params)
-        assert gen_result.size() == 9
+        assert len(gen_result) == 9
 
 
 client_test_cases = (
