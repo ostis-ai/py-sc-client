@@ -94,6 +94,7 @@ class TestClientCreateElements(ScTest):
         addr = client.create_elements(const)
         assert len(addr) == 1
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_create_link_type_value(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [123211]}')
         link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
@@ -464,14 +465,19 @@ class TestClientTemplate(ScTest):
                 ScAddr(0),
             )
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_template_search(self):
+        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
+            for addr in [src, edge, trg]:
+                assert isinstance(addr, ScAddr)
+
         payload = (
             '{"aliases": {"_class_node": 0}, "addrs": '
             "[[1184838, 1184902, 1184870, 1184838, 1184934, 1184774, 1184838, 1184966, 1184806, 0, 0, 0]]}"
         )
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         templ = ScTemplate()
-        templ.triple((ScAddr(0), "_class_node"), sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
+        templ.triple([ScAddr(0), "_class_node"], sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
         templ.triple("_class_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, ScAddr(0))
         templ.triple("_class_node", ScAddr(0), sc_types.NODE_VAR)
         templ.triple(ScAddr(0), ScAddr(0), sc_types.NODE_VAR)
@@ -479,11 +485,9 @@ class TestClientTemplate(ScTest):
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
-        assert len(search_result) == 12
-        assert search_result.get("_class_node").value == search_result[0].value
-        for src, edge, trg in search_result:
-            for addr in (src, edge, trg):
-                assert isinstance(addr, ScAddr)
+        assert search_result.size() == 12
+        assert search_result.get("_class_node").value == search_result.get(0).value
+        search_result.for_each_triple(for_each_tripple_func)
 
     def test_template_search_by_idtf(self):
         payload = '{"aliases": {"_class_node": 0}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
