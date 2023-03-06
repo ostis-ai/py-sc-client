@@ -214,7 +214,7 @@ ScTemplateParams may contain addresses of sc-elements or system identifiers of t
 
 ```py
 templ = ScTemplate()
-templ.triple([class_node_addr, '_class_node'], sc_types.EDGE_ACCESS_VAR_POS_PERM, node_addr) # faf
+templ.triple((class_node_addr, '_class_node'), sc_types.EDGE_ACCESS_VAR_POS_PERM, node_addr) # faf
 templ.triple('_class_node', sc_types.EDGE_ACCESS_VAR_POS_TEMP, link_addr) # faf
 templ.triple('_class_node', edge_addr, sc_types.NODE_VAR) # ffa
 templ.triple(node_addr, edge_addr, sc_types.NODE_VAR) # ffa
@@ -224,12 +224,16 @@ search_results = client.template_search(templ, search_params) # templ can be ScT
 search_result = search_results[0]
 
 len(search_result) # count of elements in the resulting construction
-search_result[0].value # get an element from the result by index
-search_result.get('_class_node').value # get an element from the result by alias
+search_result.size() # deprecated count of elements, will be removed in version 0.3.0
+search_result[0] # get an element from the result by index
+search_result.get(0) # deprecated get by index, will be removed in version 0.3.0
+search_result.get('_class_node') # get an element from the result by alias
 
 for src, edge, trg in search_result:
     ...
     # do smth with each triple in the result
+
+search_result.for_each_triple(func)  # use function to each triple. Deprecated in 0.3.0
 ```
 
 Search by sc-template address.
@@ -267,16 +271,16 @@ Generate a construction in the KB memory by template.
 ```py
 templ = ScTemplate()
 templ.triple_with_relation( # faaaf
-    [main_node, '_main_node'],
+    (main_node, '_main_node'),
     sc_types.EDGE_D_COMMON_VAR,
-    [sc_types.LINK_VAR, '_link'],
+    [sc_types.LINK_VAR, '_link'],  # Do not use List aliased item, use tuple instead (deprecated 0.3.0)
     sc_types.EDGE_ACCESS_VAR_POS_PERM,
     relation_node,
 )
 templ.triple( # faa
     '_main_node',
     sc_types.EDGE_ACCESS_VAR_POS_TEMP,
-    [sc_types.NODE_VAR, '_var_node']
+    (sc_types.NODE_VAR, '_var_node')
 )
 gen_params = {'_link': link_node, '_var_node': 'node_idtf'}
 gen_result = client.template_generate(templ, gen_params)
