@@ -12,8 +12,14 @@ import pytest
 
 from sc_client import client, session
 from sc_client.constants import common, sc_types
-from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError, LinkContentOversizeError, ServerError
-from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE
+from sc_client.constants.exceptions import (
+    CommonErrorMessages,
+    InvalidTypeError,
+    LinkContentOversizeError,
+    PayloadMaxSizeError,
+    ServerError,
+)
+from sc_client.constants.numeric import LINK_CONTENT_MAX_SIZE, MAX_PAYLOAD_SIZE
 from sc_client.models import (
     ScAddr,
     ScConstruction,
@@ -51,6 +57,14 @@ class TestResponseWithFailedStatus(ScTest):
         self.get_server_message('{"id": 1, "event": false, "status": 0, "payload": [0], ' + errors + "}")
         with pytest.raises(ServerError):
             client.create_elements_by_scs(["asd ->"])
+
+
+class TestWebsocketMaxSize(ScTest):
+    def test_more(self):
+        link_content = ScLinkContent("0" * LINK_CONTENT_MAX_SIZE, ScLinkContentType.STRING, ScAddr(0))
+        link_contents = [link_content] * (1 + MAX_PAYLOAD_SIZE // LINK_CONTENT_MAX_SIZE)
+        with pytest.raises(PayloadMaxSizeError):
+            client.set_link_contents(*link_contents)
 
 
 class TestClientCreateElements(ScTest):
