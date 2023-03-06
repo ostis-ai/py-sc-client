@@ -98,6 +98,7 @@ class TestClientCreateElements(ScTest):
     def test_create_link_type_value(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [123211]}')
         link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
+        # TODO: Remove as deprecated in version 0.3.0 (ScLinkContent(..., ScLinkContentType..value))
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
         addr = client.create_elements(const)

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, TypedDict
@@ -62,21 +63,25 @@ class ScIdtfResolveParams(TypedDict):
 
 class ScLinkContentType(Enum):
     INT = 0
-    # FLOAT = 1
+    FLOAT = 1
     STRING = 2
-    # BINARY = 3
 
 
 @dataclass
 class ScLinkContent:
-    data: str | int
+    data: str | int | float
     content_type: ScLinkContentType
     addr: ScAddr = None
 
     def __post_init__(self):
         if len(str(self.data)) > LINK_CONTENT_MAX_SIZE:
             raise LinkContentOversizeError
-        self.content_type = ScLinkContentType(self.content_type)
+        if isinstance(self.content_type, int):
+            warnings.warn(
+                "ScLinkContentType in ScLinkContent int is deprecated. Use enum type instead", DeprecationWarning
+            )
+            # TODO: remove check int in version 0.3.0
+            self.content_type = ScLinkContentType(self.content_type)
 
     def type_to_str(self) -> str:
         return self.content_type.name.lower()
