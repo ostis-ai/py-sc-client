@@ -459,9 +459,9 @@ class TestClientTemplate(ScTest):
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.triple_with_relation(
-                (ScAddr(0), "_main_node"),
-                (sc_types.EDGE_D_COMMON_CONST, "_const_edge"),
-                (sc_types.LINK_VAR, "_link"),
+                ScAddr(0) >> "_main_node",
+                sc_types.EDGE_D_COMMON_CONST >> "_const_edge",
+                sc_types.LINK_VAR >> "_link",
                 sc_types.EDGE_ACCESS_VAR_POS_PERM,
                 ScAddr(0),
             )
