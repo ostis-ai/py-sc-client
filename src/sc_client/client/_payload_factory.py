@@ -236,11 +236,7 @@ class TemplatePayloadCreator(BasePayloadCreator):
     def _process_template(self, template: ScTemplate):
         payload_template = []
         for triple in template.triple_list:
-            items = [
-                triple.get(common.SOURCE),
-                triple.get(common.EDGE),
-                triple.get(common.TARGET),
-            ]
+            items = [triple.src, triple.edge, triple.trg]
             payload_template.append([process_triple_item(item) for item in items])
         return payload_template
 

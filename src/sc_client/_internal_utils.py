@@ -4,16 +4,14 @@ Distributed under the MIT License
 (See an accompanying file LICENSE or a copy at http://opensource.org/licenses/MIT)
 """
 
-from __future__ import annotations
-
 from sc_client.constants import common
 from sc_client.constants.sc_types import ScType
 from sc_client.models import ScAddr, ScTemplateValue
 
 
 def process_triple_item(item: ScTemplateValue) -> dict:
-    item_value = item.get(common.VALUE)
-    item_alias = item.get(common.ALIAS)
+    item_value = item.value
+    item_alias = item.alias
     if isinstance(item_value, ScAddr):
         result = {common.TYPE: common.Types.ADDR, common.VALUE: item_value.value}
     elif isinstance(item_value, ScType):

@@ -29,11 +29,12 @@ from sc_client.models import (
     ScIdtfResolveParams,
     ScLinkContent,
     ScLinkContentType,
+    SCs,
     ScTemplate,
-    SCs
 )
 
 # pylint: disable=W0212
+
 
 class ScTest(unittest.TestCase):
     def setUp(self) -> None:
@@ -93,9 +94,11 @@ class TestClientCreateElements(ScTest):
         addr = client.create_elements(const)
         assert len(addr) == 1
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_create_link_type_value(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [123211]}')
         link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
+        # TODO: Remove as deprecated in version 0.3.0 (ScLinkContent(..., ScLinkContentType..value))
         const = ScConstruction()
         const.create_link(sc_types.LINK_CONST, link_content)
         addr = client.create_elements(const)
@@ -296,15 +299,17 @@ class TestClientLinkContent(ScTest):
             assert item[0].value in [addr.value for addr in item[1]]
 
     def test_get_links_contents_by_content_substring(self):
-        msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [["concept_test", "class_concept", ' \
-              '"content"]]} '
+        msg = (
+            '{"errors": [], "id": 1, "event": false, "status": true, "payload": [["concept_test", "class_concept", '
+            '"content"]]} '
+        )
         self.get_server_message(msg)
         test_str = "con"
         content = client.get_links_contents_by_content_substring(test_str)
         assert content
         strings = ["concept_test", "class_concept", "content"]
         for item in zip(strings, content):
-            assert item[0] in [string for string in item[1]]
+            assert item[0] in item[1]
 
 
 class TestClientResolveElements(ScTest):
@@ -449,18 +454,19 @@ class TestClientTemplate(ScTest):
 
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
-            templ.triple([ScAddr(0), "_class_node"], ScAddr(0), [sc_types.LINK_CONST, "_const_link"])
+            templ.triple((ScAddr(0), "_class_node"), ScAddr(0), (sc_types.LINK_CONST, "_const_link"))
 
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.triple_with_relation(
-                [ScAddr(0), "_main_node"],
-                [sc_types.EDGE_D_COMMON_CONST, "_const_edge"],
-                [sc_types.LINK_VAR, "_link"],
+                (ScAddr(0), "_main_node"),
+                (sc_types.EDGE_D_COMMON_CONST, "_const_edge"),
+                (sc_types.LINK_VAR, "_link"),
                 sc_types.EDGE_ACCESS_VAR_POS_PERM,
                 ScAddr(0),
             )
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_template_search(self):
         def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
             for addr in [src, edge, trg]:
@@ -485,10 +491,6 @@ class TestClientTemplate(ScTest):
         search_result.for_each_triple(for_each_tripple_func)
 
     def test_template_search_by_idtf(self):
-        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
-            for addr in [src, edge, trg]:
-                assert isinstance(addr, ScAddr)
-
         payload = '{"aliases": {"_class_node": 0}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         params = {"_class_node": "my_class"}
@@ -496,23 +498,23 @@ class TestClientTemplate(ScTest):
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
-        assert search_result.size() == 6
-        assert search_result.get("_class_node").value == search_result.get(0).value
-        search_result.for_each_triple(for_each_tripple_func)
-
-    def test_template_search_by_addr(self):
-        def for_each_tripple_func(src: ScAddr, edge: ScAddr, trg: ScAddr):
-            for addr in [src, edge, trg]:
+        assert len(search_result) == 6
+        assert search_result.get("_class_node").value == search_result[0].value
+        for src, edge, trg in search_result:
+            for addr in (src, edge, trg):
                 assert isinstance(addr, ScAddr)
 
+    def test_template_search_by_addr(self):
         payload = '{"aliases": {}, "addrs": [[1184838, 1184902, 1184870, 1184838, 1184934, 1184774]]}'
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         search_result_list = client.template_search(ScAddr(154454))
 
         assert len(search_result_list) != 0
         search_result = search_result_list[0]
-        assert search_result.size() == 6
-        search_result.for_each_triple(for_each_tripple_func)
+        assert len(search_result) == 6
+        for src, edge, trg in search_result:
+            for addr in (src, edge, trg):
+                assert isinstance(addr, ScAddr)
 
     def test_template_generate(self):
         payload = (
@@ -523,24 +525,24 @@ class TestClientTemplate(ScTest):
 
         templ = ScTemplate()
         templ.triple_with_relation(
-            [ScAddr(0), "_main_node"],
+            (ScAddr(0), "_main_node"),
             sc_types.EDGE_D_COMMON_VAR,
-            [sc_types.LINK_VAR, "_link"],
+            (sc_types.LINK_VAR, "_link"),
             sc_types.EDGE_ACCESS_VAR_POS_PERM,
             ScAddr(0),
         )
-        templ.triple("_main_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, [sc_types.NODE_VAR, "_var_node"])
+        templ.triple("_main_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, (sc_types.NODE_VAR, "_var_node"))
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(templ, gen_params)
-        assert gen_result.size() == 9
+        assert len(gen_result) == 9
 
     def test_template_generate_by_idtf(self):
         payload = '{"aliases": {}, "addrs": [1245352, 1245449, 1245384, 1245352, 1245513, 1245288]}'
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
 
         gen_result = client.template_generate("my_template")
-        assert gen_result.size() == 6
+        assert len(gen_result) == 6
 
     def test_template_generate_by_addr(self):
         payload = (
@@ -551,7 +553,7 @@ class TestClientTemplate(ScTest):
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(ScAddr(0), gen_params)
-        assert gen_result.size() == 9
+        assert len(gen_result) == 9
 
 
 client_test_cases = (
