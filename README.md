@@ -330,12 +330,9 @@ Methods:
 - *ScTemplateResult*[i: int]
 
   Get ScAddr by index
-- *ScTemplateResult*.**get**(i: int)
+- *ScTemplateResult*.**get**(alias_or_index: str | int)
 
-  The same, deprecated in version 0.3.0
-- *ScTemplateResult*.**get**(alias: str)
-
-  Get ScAddr by alias
+  Get ScAddr by alias or index
 - **iter**(*ScTemplateResult*), **next**(*ScTemplateResult*)
 
   Iterate by triplets using `for`
@@ -351,8 +348,8 @@ from sc_client.models import ScTemplateResult, ScAddr
 template_result: ScTemplateResult
 length = len(template_result)  # in the resulting construction
 template_result.size()  # deprecated count of elements, will be removed in version 0.3.0
-first_element = template_result[0]  # get an element from the result by index
-template_result.get(0)  # deprecated get by index, only str, will be removed in version 0.3.0
+first_element = template_result[0]  # get an element from the result by index (recommended)
+template_result.get(0)  # get an element from the result by index
 arg_node = template_result.get("_arg_node")  # get an element from the result by alias
 
 for src, edge, trg in template_result:
