@@ -93,16 +93,13 @@ class ScTemplateResult:
         return len(self.addrs)
 
     def get(self, alias_or_index: Union[str, int]) -> ScAddr:
-        if isinstance(alias_or_index, int):
-            warnings.warn(
-                "ScTemplateResult 'get()' will not get element by index. Use square brackets 'res[i]' instead.",
-                DeprecationWarning,
-            )
-            # TODO: remove getting by index in version 0.3.0
-            return self.addrs[alias_or_index]
-        return self.addrs[self.aliases[alias_or_index]]
+        """Get ScAddr by alias or index in template result"""
+        if isinstance(alias_or_index, str):
+            return self.addrs[self.aliases[alias_or_index]]
+        return self.addrs[alias_or_index]
 
-    def __getitem__(self, index: int):
+    def __getitem__(self, index: int) -> ScAddr:
+        """Get ScAddr by index in template result"""
         return self.addrs[index]
 
     def for_each_triple(self, func: ScEventCallbackFunc):
