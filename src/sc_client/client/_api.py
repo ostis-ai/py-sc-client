@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from sc_client import session
 from sc_client.constants import common, exceptions
+from sc_client.constants.numeric import SERVER_RECONNECTION_TIME
 from sc_client.constants.sc_types import ScType
 from sc_client.models import (
     ScAddr,
@@ -25,8 +26,8 @@ from sc_client.models import (
 from sc_client.models.sc_construction import ScLinkContentData
 
 
-def connect(url: str) -> None:
-    session.set_connection(url)
+def connect(url: str, do_reconnect=False, reconnection_time=SERVER_RECONNECTION_TIME) -> None:
+    session.set_connection(url, do_reconnect, reconnection_time)
 
 
 def is_connected() -> bool:
@@ -34,6 +35,7 @@ def is_connected() -> bool:
 
 
 def disconnect() -> None:
+    session.disable_reconnection()
     session.close_connection()
 
 

@@ -10,8 +10,7 @@ import json
 import logging
 import threading
 import time
-from dataclasses import dataclass
-from typing import Any, Optional
+from typing import Any
 
 import websocket
 
@@ -31,21 +30,15 @@ from sc_client.models import Response, ScAddr, ScEvent
 logger = logging.getLogger(__name__)
 
 
-@dataclass
-class Reconnection:
-    reconnection_enable = False
-
-
-reconnection = Reconnection()
-
-
 class _ScClientSession:
     lock_instance = threading.Lock()
     responses_dict = {}
     events_dict = {}
     command_id = 0
     executor = Executor()
-    ws_app: Optional[websocket.WebSocketApp] = None
+    ws_app: websocket.WebSocketApp | None = None
+    do_reconnect = False
+    reconnecion_time = SERVER_RECONNECTION_TIME
 
     @classmethod
     def clear(cls):
@@ -87,42 +80,54 @@ def is_connection_established() -> bool:
     return bool(_ScClientSession.ws_app)
 
 
-def set_connection(url: str, autoreconnection=False, reconnection_time=SERVER_RECONNECTION_TIME) -> None:
-    reconnection.reconnection_enable = autoreconnection
-    if reconnection_time > 1800:  # 30 min
-        reconnection_time = SERVER_RECONNECTION_TIME
+def set_connection(url: str, do_reconnect, reconnection_time) -> None:
+    _ScClientSession.do_reconnect = do_reconnect
+    _ScClientSession.reconnecion_time = reconnection_time
+
     if not is_connection_established():
         establish_connection(url)
 
-    def run_in_thread(url: str):
-        while reconnection.reconnection_enable:
-            if not is_connection_established():
-                time.sleep(reconnection_time)
-                establish_connection(url)
-
-    reconnection_thread = threading.Thread(target=run_in_thread, args=(url,), name="reconnection-thread")
-    reconnection_thread.start()
+    if _ScClientSession.do_reconnect:
+        set_reconnection(url)
 
 
 def establish_connection(url) -> None:
-    def run_in_thread(url_for_ws_app: str):
+    def run_in_thread():
         _ScClientSession.ws_app = websocket.WebSocketApp(
-            url_for_ws_app,
+            url,
             on_message=_on_message,
             on_error=_on_error,
             on_close=_on_close,
         )
         _ScClientSession.ws_app.run_forever()
 
-    client_thread = threading.Thread(target=run_in_thread, args=(url,), name="sc-client-session-thread")
+    client_thread = threading.Thread(target=run_in_thread, name="sc-client-session-thread")
     client_thread.start()
-    logger.debug("Connected")
     time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
+    logger.debug("Trying to establish connection: %s", "successful" if is_connection_established() else "unsuccessful")
+
+
+def set_reconnection(url: str) -> None:
+    def run_in_thread():
+        while _ScClientSession.do_reconnect:
+            time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
+            if not is_connection_established():
+                logger.debug("No connection, trying to reconnect")
+                establish_connection(url)
+                if not is_connection_established():
+                    logger.debug("Still no connection, waiting")
+                    time.sleep(_ScClientSession.reconnecion_time)
+
+    reconnection_thread = threading.Thread(target=run_in_thread, name="reconnection-thread")
+    reconnection_thread.start()
+
+
+def disable_reconnection() -> None:
+    _ScClientSession.do_reconnect = False
 
 
 def close_connection() -> None:
     try:
-        reconnection.reconnection_enable = False
         _ScClientSession.ws_app.close()
     except AttributeError:
         pass
