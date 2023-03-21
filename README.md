@@ -115,8 +115,7 @@ It contains methods to check if it is node, edge or link, const or var, and so o
 
 If you paid attention, the class is in constants submodule.
 They are already defined, and you can import them from file `sc_client.constants.sc_types`.
-
-***Warning: don't use sc-type masks as sc-types. Bitmasks start with `SC_TYPE_`.***
+If you need bitmasks, they are in `sc_client.constants.sc_types.bitmasks`.
 
 ```python
 from sc_client.constants import sc_types
