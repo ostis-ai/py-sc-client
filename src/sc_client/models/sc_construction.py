@@ -3,7 +3,7 @@ from __future__ import annotations
 import warnings
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypedDict
+from typing import Any, TypedDict, Union
 
 from sc_client.constants import ScType, common
 from sc_client.constants.exceptions import InvalidTypeError, LinkContentOversizeError
@@ -67,9 +67,12 @@ class ScLinkContentType(Enum):
     STRING = 2
 
 
+ScLinkContentData = Union[str, int, float]
+
+
 @dataclass
 class ScLinkContent:
-    data: str | int | float
+    data: ScLinkContentData
     content_type: ScLinkContentType
     addr: ScAddr = None
 
