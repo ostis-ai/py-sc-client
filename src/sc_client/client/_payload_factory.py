@@ -19,6 +19,7 @@ from sc_client.models import (
     ScTemplateIdtf,
     ScTemplateParams,
 )
+from sc_client.models.sc_construction import ScLinkContentData
 
 
 class BasePayloadCreator:
@@ -140,17 +141,20 @@ class GetLinkContentPayloadCreator(BasePayloadCreator):
 
 
 class GetLinksByContentPayloadCreator(BasePayloadCreator):
-    def __call__(self, *contents: ScLinkContent | str | int):
-        if not all(isinstance(content, (ScLinkContent, str, int)) for content in contents):
+    def __call__(self, *contents: ScLinkContent | ScLinkContentData):
+        if not all(isinstance(content, (ScLinkContent, str, int, float)) for content in contents):
             raise exceptions.InvalidTypeError("expected object types: ScLinkContent, str or int")
         link_contents = []
         for content in contents:
-            if isinstance(content, str):
+            if isinstance(content, ScLinkContent):
+                link_contents.append(content)
+            elif isinstance(content, str):
                 link_contents.append(ScLinkContent(content, ScLinkContentType.STRING))
             elif isinstance(content, int):
                 link_contents.append(ScLinkContent(content, ScLinkContentType.INT))
-            else:
-                link_contents.append(content)
+            else:  # float
+                link_contents.append(ScLinkContent(content, ScLinkContentType.FLOAT))
+
         payload = []
         for content in link_contents:
             payload.append(self._form_payload_content(content))

@@ -22,6 +22,7 @@ from sc_client.models import (
     ScTemplateParams,
     ScTemplateResult,
 )
+from sc_client.models.sc_construction import ScLinkContentData
 
 
 def connect(url: str) -> None:
@@ -60,15 +61,15 @@ def get_link_content(*addr: ScAddr) -> list[ScLinkContent]:
     return session.execute(common.ClientCommand.GET_LINK_CONTENT, *addr)
 
 
-def get_links_by_content(*contents: ScLinkContent | str | int) -> list[list[ScAddr]]:
+def get_links_by_content(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     return session.execute(common.ClientCommand.GET_LINKS_BY_CONTENT, *contents)
 
 
-def get_links_by_content_substring(*contents: ScLinkContent | str | int) -> list[list[ScAddr]]:
+def get_links_by_content_substring(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     return session.execute(common.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING, *contents)
 
 
-def get_links_contents_by_content_substring(*contents: ScLinkContent | str | int) -> list[list[ScAddr]]:
+def get_links_contents_by_content_substring(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     return session.execute(common.ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING, *contents)
 
 
