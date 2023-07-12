@@ -23,7 +23,6 @@ from sc_client.constants.numeric import (
     MAX_PAYLOAD_SIZE,
     SERVER_ANSWER_CHECK_TIME,
     SERVER_ESTABLISH_CONNECTION_TIME,
-    SERVER_RECONNECTION_TIME,
 )
 from sc_client.models import Response, ScAddr, ScEvent
 
@@ -37,8 +36,6 @@ class _ScClientSession:
     command_id = 0
     executor = Executor()
     ws_app: websocket.WebSocketApp | None = None
-    do_reconnect = False
-    reconnecion_time = SERVER_RECONNECTION_TIME
 
     @classmethod
     def clear(cls):
@@ -80,15 +77,9 @@ def is_connection_established() -> bool:
     return bool(_ScClientSession.ws_app)
 
 
-def set_connection(url: str, do_reconnect, reconnection_time) -> None:
-    _ScClientSession.do_reconnect = do_reconnect
-    _ScClientSession.reconnecion_time = reconnection_time
-
+def set_connection(url: str) -> None:
     if not is_connection_established():
         establish_connection(url)
-
-    if _ScClientSession.do_reconnect:
-        set_reconnection(url)
 
 
 def establish_connection(url) -> None:
@@ -105,21 +96,6 @@ def establish_connection(url) -> None:
     client_thread.start()
     time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
     logger.debug("Trying to establish connection: %s", "successful" if is_connection_established() else "unsuccessful")
-
-
-def set_reconnection(url: str) -> None:
-    def run_in_thread():
-        while _ScClientSession.do_reconnect:
-            time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
-            if not is_connection_established():
-                logger.debug("No connection, trying to reconnect")
-                establish_connection(url)
-                if not is_connection_established():
-                    logger.debug("Still no connection, waiting")
-                    time.sleep(_ScClientSession.reconnecion_time)
-
-    reconnection_thread = threading.Thread(target=run_in_thread, name="reconnection-thread")
-    reconnection_thread.start()
 
 
 def disable_reconnection() -> None:
