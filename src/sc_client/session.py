@@ -96,7 +96,7 @@ def _on_close(_, close_status_code, close_msg) -> None:
     close_connection()
     _ScClientSession.is_open = False
     if close_status_code and close_msg:
-        logger.info(f"{close_status_code}: {close_msg}")
+        logger.info(f"{close_msg}")
 
 
 def set_error_handler(callback) -> None:
@@ -115,6 +115,18 @@ def set_connection(url: str) -> None:
     establish_connection(url)
 
 
+def is_connected() -> bool:
+    check_request = json.dumps({"type": "healthcheck"})
+    _ScClientSession.ws_app.send(check_request)
+
+    try:
+        result = _ScClientSession.ws_app.recv()
+    except websocket.WebSocketTimeoutException:
+        return False
+
+    return json.loads(result) == "OK"
+
+
 def establish_connection(url) -> None:
     def run_in_thread():
         if not _ScClientSession.ws_app or _ScClientSession.ws_app.url != url:
@@ -127,13 +139,14 @@ def establish_connection(url) -> None:
             logger.info(f"Sc-server socket: {_ScClientSession.ws_app.url}")
         if not _ScClientSession.is_open:
             try:
+                _on_open(_ScClientSession.ws_app)
+                logger.info("Set new connection")
                 _ScClientSession.ws_app.run_forever()
             except websocket.WebSocketException as e:
-                _on_error(None, e)
+                _on_error(_ScClientSession.ws_app, e)
 
     client_thread = threading.Thread(target=run_in_thread, name="sc-client-session-thread")
     client_thread.start()
-    logger.info(f"Trying to establish connection to socket")
     time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
 
 
@@ -141,13 +154,13 @@ def close_connection() -> None:
     try:
         _ScClientSession.ws_app.close()
     except AttributeError as e:
-        _on_error(None, e)
+        _on_error(_ScClientSession.ws_app, e)
     logger.debug("Disconnected")
 
 
 def receive_message(command_id: int) -> Response:
     response = None
-    while not response:
+    while not response and _ScClientSession.is_open:
         response = _ScClientSession.responses_dict.get(command_id)
         time.sleep(SERVER_ANSWER_CHECK_TIME)
     return response
@@ -157,17 +170,18 @@ def _send_message(data: str, retries: int, retry_delay: float, retry: int = 0) -
     try:
         logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
         _ScClientSession.ws_app.send(data)
-    except websocket.WebSocketException as e:
-        close_connection()
+    except websocket.WebSocketConnectionClosedException as e:
+        _on_close(_ScClientSession.ws_app, 1, "Connection broken")
         if _ScClientSession.reconnect_callback and retry < retries:
-            logger.warning(f"Connection to sc-server has failed. Trying to reconnect to sc-server socket")
+            logger.warning(
+                f"Connection to sc-server has failed. Trying to reconnect to sc-server socket in {retry_delay} seconds")
             time.sleep(retry_delay)
             _ScClientSession.reconnect_callback()
             if _ScClientSession.post_reconnect_callback:
                 _ScClientSession.post_reconnect_callback()
             _send_message(data, retries, retry_delay, retry + 1)
         else:
-            _on_error(None, e)
+            _on_error(_ScClientSession.ws_app, ConnectionAbortedError("Sc-server takes a long time to respond"))
 
 
 def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
@@ -181,11 +195,21 @@ def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
             common.PAYLOAD: payload,
         }
     )
-    len_data = len(bytes(data, "utf-8"))
-    if len_data > MAX_PAYLOAD_SIZE:
-        _on_error(None, PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes"))
-    _send_message(data, _ScClientSession.reconnect_retries, _ScClientSession.reconnect_retry_delay)
-    response = receive_message(command_id)
+
+    def handle_request() -> Response:
+        len_data = len(bytes(data, "utf-8"))
+        if len_data > MAX_PAYLOAD_SIZE:
+            _on_error(
+                _ScClientSession.ws_app,
+                PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes")
+            )
+        _send_message(data, _ScClientSession.reconnect_retries, _ScClientSession.reconnect_retry_delay)
+        return receive_message(command_id)
+
+    response = handle_request()
+    if not response:
+        return handle_request()
+
     return response
 
 

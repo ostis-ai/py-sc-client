@@ -7,6 +7,7 @@ Distributed under the MIT License
 from sc_client.client._api import (
     check_elements,
     connect,
+    is_connected,
     set_error_handler,
     set_reconnect_handler,
     create_elements,

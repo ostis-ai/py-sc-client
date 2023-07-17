@@ -42,6 +42,7 @@ class ScTest(unittest.TestCase):
         self.mock_ws_app = self._mock_ws_app_patcher.start()
         self.mock_ws_app.send = Mock()
         self.mock_ws_app.return_value = Mock()
+        session._ScClientSession.is_open = True
 
     def tearDown(self) -> None:
         self._mock_ws_app_patcher.stop()

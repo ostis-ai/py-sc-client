@@ -31,7 +31,7 @@ def connect(url: str) -> None:
 
 
 def is_connected() -> bool:
-    return False
+    return session.is_connected()
 
 
 def disconnect() -> None:
