@@ -71,6 +71,52 @@ if is_connected():
     ...
 ```
 
+- *sc_client.client*.**set_error_handler**(callback)
+
+Set handler callback to manage client and server errors such. Callback must take one argument - an exception object.
+
+```python
+from sc_client.client import set_error_handler
+
+def on_error(e):
+    if isinstance(e, AttributeError):
+        print(e)
+
+set_error_handler(on_error)        
+...
+```
+
+- *sc_client.client*.**set_reconnect_handler**(**reconnect_kwargs)
+
+Set handler callback to reconnect after sc-server connection refuse or abort. Method may take the next arguments:
+
+- `_reconnect_handler_` - handler callback to reconnect after sc-server connection refuse or abort. 
+By default, it is `_session.default_reconnect_handler_`,
+- `_post_reconnect_callback_` - handler callback callable after `_reconnect_handler_` successfully call,
+- `_reconnect_retries_` - amount of call tries of `_reconnect_handler_`. By default, it is equal 5.
+- `_reconnect_retry_delay_` - period between call tries of `_reconnect_handler_`. By default, it is equal 2 seconds.
+
+If the sc-server did not respond to one of the resent messages, then after a requested `_reconnect_retry_delay_`, 
+the `_reconnect_handler_` was called, and the same message was resent. This procedure is repeated a specified 
+`_reconnect_retries_` times, until the message is sent and a response is received.
+
+```python
+from sc_client.client import set_reconnect_handler
+
+url = "ws://localhost:8090/ws_json"
+
+def on_reconnect():
+    connect(url)
+
+set_reconnect_handler(
+    reconnect_handler=connect,
+    post_reconnect_callback=None,
+    reconnect_retries=5,
+    reconnect_retry_delay=1.0 #seconds
+)        
+...
+```
+
 ## Base classes
 
 ### ScAddr
