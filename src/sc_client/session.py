@@ -48,6 +48,7 @@ class _ScClientSession:
     post_reconnect_callback = None
     reconnect_retries: int = SERVER_RECONNECT_RETRIES
     reconnect_retry_delay: float = SERVER_RECONNECT_RETRY_DELAY
+    last_healthcheck_answer: str = None
 
     @classmethod
     def clear(cls):
@@ -66,7 +67,9 @@ class _ScClientSession:
 def _on_message(_, response: str) -> None:
     logger.debug(f"Receive: {str(response)[:LOGGING_MAX_SIZE]}")
     response = json.loads(response, object_hook=Response)
-    if response.get(common.EVENT):
+    if isinstance(response, str):
+        _ScClientSession.last_healthcheck_answer = response
+    elif response.get(common.EVENT):
         threading.Thread(
             target=_emit_callback,
             args=(response.get(common.ID), response.get(common.PAYLOAD)),
@@ -119,12 +122,12 @@ def is_connected() -> bool:
     check_request = json.dumps({"type": "healthcheck"})
     _ScClientSession.ws_app.send(check_request)
 
-    try:
-        result = _ScClientSession.ws_app.recv()
-    except websocket.WebSocketTimeoutException:
-        return False
+    while not _ScClientSession.last_healthcheck_answer and _ScClientSession.is_open:
+        time.sleep(SERVER_ANSWER_CHECK_TIME)
 
-    return json.loads(result) == "OK"
+    result = _ScClientSession.last_healthcheck_answer == "OK"
+    _ScClientSession.last_healthcheck_answer = None
+    return result
 
 
 def establish_connection(url) -> None:
