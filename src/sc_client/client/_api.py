@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from sc_client import session
 from sc_client.constants import common, exceptions
+from sc_client.constants.numeric import SERVER_RECONNECT_RETRIES, SERVER_RECONNECT_RETRY_DELAY
 from sc_client.constants.sc_types import ScType
 from sc_client.models import (
     ScAddr,
@@ -30,12 +31,24 @@ def connect(url: str) -> None:
 
 
 def is_connected() -> bool:
-    return session.is_connection_established()
+    return False
 
 
 def disconnect() -> None:
-    session.disable_reconnection()
     session.close_connection()
+
+
+def set_error_handler(callback) -> None:
+    session.set_error_handler(callback)
+
+
+def set_reconnect_handler(**reconnect_kwargs) -> None:
+    session.set_reconnect_handler(
+        reconnect_kwargs.get("reconnect_handler", session.default_reconnect_handler),
+        reconnect_kwargs.get("post_reconnect_callback"),
+        reconnect_kwargs.get("reconnect_retries", SERVER_RECONNECT_RETRIES),
+        reconnect_kwargs.get("reconnect_retry_delay", SERVER_RECONNECT_RETRY_DELAY)
+    )
 
 
 def check_elements(*addrs: ScAddr) -> list[ScType]:
@@ -79,13 +92,13 @@ def resolve_keynodes(*params: ScIdtfResolveParams) -> list[ScAddr]:
 
 
 def template_search(
-    template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
+        template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
 ) -> list[ScTemplateResult]:
     return session.execute(common.ClientCommand.SEARCH_TEMPLATE, template, params)
 
 
 def template_generate(
-    template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
+        template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
 ) -> ScTemplateResult:
     return session.execute(common.ClientCommand.GENERATE_TEMPLATE, template, params)
 
