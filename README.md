@@ -73,7 +73,7 @@ if is_connected():
 
 - *sc_client.client*.**set_error_handler**(callback)
 
-Set handler callback to manage client and server errors such. Callback must take one argument - an exception object.
+Sets a handler callback to manage client and server errors. Callback must take one argument - an exception object.
 
 ```python
 from sc_client.client import set_error_handler
@@ -88,16 +88,15 @@ set_error_handler(on_error)
 
 - *sc_client.client*.**set_reconnect_handler**(**reconnect_kwargs)
 
-Set handler callback to reconnect after sc-server connection refuse or abort. Method may take the next arguments:
+Sets handler callback to reconnect on sc-server connection failure. Method takes the following arguments:
+ 
+- `_reconnect_handler_` - handler callback function. Default value: `_session.default_reconnect_handler_`.
+- `_post_reconnect_callback_` - handler callback invoked after `_reconnect_handler_` has finished successfully.
+- `_reconnect_retries_` - amount of call tries of `_reconnect_handler_`. Default value: `5`.
+- `_reconnect_retry_delay_` - period between call tries of `_reconnect_handler_` (in seconds). Default value: `2`.
 
-- `_reconnect_handler_` - handler callback to reconnect after sc-server connection refuse or abort. 
-By default, it is `_session.default_reconnect_handler_`,
-- `_post_reconnect_callback_` - handler callback callable after `_reconnect_handler_` successfully call,
-- `_reconnect_retries_` - amount of call tries of `_reconnect_handler_`. By default, it is equal 5.
-- `_reconnect_retry_delay_` - period between call tries of `_reconnect_handler_`. By default, it is equal 2 seconds.
-
-If the sc-server did not respond to one of the resent messages, then after a requested `_reconnect_retry_delay_`, 
-the `_reconnect_handler_` was called, and the same message was resent. This procedure is repeated a specified 
+If the sc-server did not respond to one of the resent messages, after a requested `_reconnect_retry_delay_`
+the `_reconnect_handler_` is called, and the same message is sent again. This procedure is repeated for
 `_reconnect_retries_` times, until the message is sent and a response is received.
 
 ```python
