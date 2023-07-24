@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 ### Added
  - Reconnection retries to sc-server in send message
- - Healthcheck from sc-machine
-
+ - OnReconnect handler setter
+ - OnError handler setter
+### Fixed
+ - Infinite loop when receiving response to message
 ### Removed
  - Reconnection to sc-server in separate thread by time
 
