@@ -7,9 +7,6 @@ Distributed under the MIT License
 from sc_client.client._api import (
     check_elements,
     connect,
-    is_connected,
-    set_error_handler,
-    set_reconnect_handler,
     create_elements,
     create_elements_by_scs,
     delete_elements,
@@ -23,7 +20,9 @@ from sc_client.client._api import (
     is_connected,
     is_event_valid,
     resolve_keynodes,
+    set_error_handler,
     set_link_contents,
+    set_reconnect_handler,
     template_generate,
     template_search,
 )
