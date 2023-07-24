@@ -47,7 +47,7 @@ def set_reconnect_handler(**reconnect_kwargs) -> None:
         reconnect_kwargs.get("reconnect_handler", session.default_reconnect_handler),
         reconnect_kwargs.get("post_reconnect_handler"),
         reconnect_kwargs.get("reconnect_retries", SERVER_RECONNECT_RETRIES),
-        reconnect_kwargs.get("reconnect_retry_delay", SERVER_RECONNECT_RETRY_DELAY)
+        reconnect_kwargs.get("reconnect_retry_delay", SERVER_RECONNECT_RETRY_DELAY),
     )
 
 
@@ -92,13 +92,13 @@ def resolve_keynodes(*params: ScIdtfResolveParams) -> list[ScAddr]:
 
 
 def template_search(
-        template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
+    template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
 ) -> list[ScTemplateResult]:
     return session.execute(common.ClientCommand.SEARCH_TEMPLATE, template, params)
 
 
 def template_generate(
-        template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
+    template: ScTemplate | str | ScTemplateIdtf | ScAddr, params: ScTemplateParams = None
 ) -> ScTemplateResult:
     return session.execute(common.ClientCommand.GENERATE_TEMPLATE, template, params)
 
