@@ -109,7 +109,7 @@ def on_reconnect():
 
 set_reconnect_handler(
     reconnect_handler=connect,
-    post_reconnect_callback=None,
+    post_reconnect_handler=None,
     reconnect_retries=5,
     reconnect_retry_delay=1.0 #seconds
 )        

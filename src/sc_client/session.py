@@ -83,9 +83,8 @@ def _emit_callback(event_id: int, elems: list[int]) -> None:
 
 
 def _on_open(_) -> None:
+    logger.info("New connection opened")
     _ScClientSession.is_open = True
-    if _ScClientSession.post_reconnect_callback:
-        _ScClientSession.post_reconnect_callback()
 
 
 def _on_error(_, error: Exception) -> None:
@@ -95,11 +94,9 @@ def _on_error(_, error: Exception) -> None:
         raise error
 
 
-def _on_close(_, close_status_code, close_msg) -> None:
-    close_connection()
+def _on_close(_, _close_status_code, _close_msg) -> None:
+    logger.info("Connection closed")
     _ScClientSession.is_open = False
-    if close_status_code and close_msg:
-        logger.info(f"{close_msg}")
 
 
 def set_error_handler(callback) -> None:
@@ -132,24 +129,25 @@ def establish_connection(url) -> None:
             on_close=_on_close,
         )
         logger.info(f"Sc-server socket: {_ScClientSession.ws_app.url}")
-        if not _ScClientSession.is_open:
-            try:
-                logger.info("Set new connection")
-                _ScClientSession.ws_app.run_forever()
-            except websocket.WebSocketException as e:
-                _on_error(_ScClientSession.ws_app, e)
+        try:
+            _ScClientSession.ws_app.run_forever()
+        except websocket.WebSocketException as e:
+            _on_error(_ScClientSession.ws_app, e)
 
     client_thread = threading.Thread(target=run_in_thread, name="sc-client-session-thread")
     client_thread.start()
     time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
 
+    if _ScClientSession.is_open and _ScClientSession.post_reconnect_callback:
+        _ScClientSession.post_reconnect_callback()
+
 
 def close_connection() -> None:
     try:
         _ScClientSession.ws_app.close()
+        _ScClientSession.is_open = False
     except AttributeError as e:
         _on_error(_ScClientSession.ws_app, e)
-    logger.debug("Disconnected")
 
 
 def receive_message(command_id: int) -> Response:

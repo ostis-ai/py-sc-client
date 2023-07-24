@@ -45,7 +45,7 @@ def set_error_handler(callback) -> None:
 def set_reconnect_handler(**reconnect_kwargs) -> None:
     session.set_reconnect_handler(
         reconnect_kwargs.get("reconnect_handler", session.default_reconnect_handler),
-        reconnect_kwargs.get("post_reconnect_callback"),
+        reconnect_kwargs.get("post_reconnect_handler"),
         reconnect_kwargs.get("reconnect_retries", SERVER_RECONNECT_RETRIES),
         reconnect_kwargs.get("reconnect_retry_delay", SERVER_RECONNECT_RETRY_DELAY)
     )
