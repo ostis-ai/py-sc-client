@@ -23,29 +23,45 @@ from sc_client.constants.numeric import (
     MAX_PAYLOAD_SIZE,
     SERVER_ANSWER_CHECK_TIME,
     SERVER_ESTABLISH_CONNECTION_TIME,
-    SERVER_RECONNECTION_TIME,
+    SERVER_RECONNECT_RETRIES,
+    SERVER_RECONNECT_RETRY_DELAY,
 )
 from sc_client.models import Response, ScAddr, ScEvent
 
 logger = logging.getLogger(__name__)
 
 
+def default_reconnect_handler() -> None:
+    establish_connection(_ScClientSession.ws_app.url)
+
+
 class _ScClientSession:
+    is_open = False
     lock_instance = threading.Lock()
     responses_dict = {}
     events_dict = {}
     command_id = 0
     executor = Executor()
     ws_app: websocket.WebSocketApp | None = None
-    do_reconnect = False
-    reconnecion_time = SERVER_RECONNECTION_TIME
+    error_handler = None
+    reconnect_callback = default_reconnect_handler
+    post_reconnect_callback = None
+    reconnect_retries: int = SERVER_RECONNECT_RETRIES
+    reconnect_retry_delay: float = SERVER_RECONNECT_RETRY_DELAY
+    last_healthcheck_answer: str = None
 
     @classmethod
     def clear(cls):
+        cls.is_open = False
         cls.responses_dict = {}
         cls.events_dict = {}
         cls.command_id = 0
         cls.ws_app = None
+        cls.error_handler = None
+        cls.reconnect_callback = default_reconnect_handler
+        cls.post_reconnect_callback = None
+        cls.reconnect_retries = SERVER_RECONNECT_RETRIES
+        cls.reconnect_retry_delay = SERVER_RECONNECT_RETRY_DELAY
 
 
 def _on_message(_, response: str) -> None:
@@ -66,91 +82,100 @@ def _emit_callback(event_id: int, elems: list[int]) -> None:
         event.callback(*[ScAddr(addr) for addr in elems])
 
 
+def _on_open(_) -> None:
+    logger.info("New connection opened")
+    _ScClientSession.is_open = True
+
+
 def _on_error(_, error: Exception) -> None:
-    close_connection()
-    logger.error(f"{error}")
+    if _ScClientSession.error_handler:
+        _ScClientSession.error_handler(error)
+    else:
+        raise error
 
 
-def _on_close(_, close_status_code, close_msg) -> None:
-    close_connection()
-    logger.info(f"{close_status_code}: {close_msg}")
+def _on_close(_, _close_status_code, _close_msg) -> None:
+    logger.info("Connection closed")
+    _ScClientSession.is_open = False
 
 
-def is_connection_established() -> bool:
-    return bool(_ScClientSession.ws_app)
+def set_error_handler(callback) -> None:
+    _ScClientSession.error_handler = callback
 
 
-def set_connection(url: str, do_reconnect, reconnection_time) -> None:
-    _ScClientSession.do_reconnect = do_reconnect
-    _ScClientSession.reconnecion_time = reconnection_time
+def set_reconnect_handler(
+        reconnect_callback, post_reconnect_callback, reconnect_retries: int, reconnect_retry_delay: float) -> None:
+    _ScClientSession.reconnect_callback = reconnect_callback
+    _ScClientSession.post_reconnect_callback = post_reconnect_callback
+    _ScClientSession.reconnect_retries = reconnect_retries
+    _ScClientSession.reconnect_retry_delay = reconnect_retry_delay
 
-    if not is_connection_established():
-        establish_connection(url)
 
-    if _ScClientSession.do_reconnect:
-        set_reconnection(url)
+def set_connection(url: str) -> None:
+    establish_connection(url)
+
+
+def is_connected() -> bool:
+    return _ScClientSession.is_open
 
 
 def establish_connection(url) -> None:
     def run_in_thread():
         _ScClientSession.ws_app = websocket.WebSocketApp(
             url,
+            on_open=_on_open,
             on_message=_on_message,
             on_error=_on_error,
             on_close=_on_close,
         )
-        _ScClientSession.ws_app.run_forever()
+        logger.info(f"Sc-server socket: {_ScClientSession.ws_app.url}")
+        try:
+            _ScClientSession.ws_app.run_forever()
+        except websocket.WebSocketException as e:
+            _on_error(_ScClientSession.ws_app, e)
 
     client_thread = threading.Thread(target=run_in_thread, name="sc-client-session-thread")
     client_thread.start()
     time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
-    logger.debug("Trying to establish connection: %s", "successful" if is_connection_established() else "unsuccessful")
 
-
-def set_reconnection(url: str) -> None:
-    def run_in_thread():
-        while _ScClientSession.do_reconnect:
-            time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
-            if not is_connection_established():
-                logger.debug("No connection, trying to reconnect")
-                establish_connection(url)
-                if not is_connection_established():
-                    logger.debug("Still no connection, waiting")
-                    time.sleep(_ScClientSession.reconnecion_time)
-
-    reconnection_thread = threading.Thread(target=run_in_thread, name="reconnection-thread")
-    reconnection_thread.start()
-
-
-def disable_reconnection() -> None:
-    _ScClientSession.do_reconnect = False
+    if _ScClientSession.is_open and _ScClientSession.post_reconnect_callback:
+        _ScClientSession.post_reconnect_callback()
 
 
 def close_connection() -> None:
     try:
         _ScClientSession.ws_app.close()
-    except AttributeError:
-        pass
-    _ScClientSession.ws_app = None
-    logger.debug("Disconnected")
+        _ScClientSession.is_open = False
+    except AttributeError as e:
+        _on_error(_ScClientSession.ws_app, e)
 
 
 def receive_message(command_id: int) -> Response:
     response = None
-    while not response:
+    while not response and _ScClientSession.is_open:
         response = _ScClientSession.responses_dict.get(command_id)
         time.sleep(SERVER_ANSWER_CHECK_TIME)
     return response
 
 
-def _send_message(data: str) -> None:
-    _ScClientSession.ws_app.send(data)
-    logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
+def _send_message(data: str, retries: int, retry: int = 0) -> None:
+    try:
+        logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
+        _ScClientSession.ws_app.send(data)
+    except websocket.WebSocketConnectionClosedException as e:
+        if _ScClientSession.reconnect_callback and retry < retries:
+            logger.warning(
+                f"Connection to sc-server has failed. "
+                f"Trying to reconnect to sc-server socket in {_ScClientSession.reconnect_retry_delay} seconds")
+            if retry > 0:
+                time.sleep(_ScClientSession.reconnect_retry_delay)
+            _ScClientSession.reconnect_callback()
+            _send_message(data, retries, retry + 1)
+        else:
+            _on_error(_ScClientSession.ws_app, ConnectionAbortedError("Sc-server takes a long time to respond"))
 
 
 def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
-    if not is_connection_established():
-        raise BrokenPipeError
     with _ScClientSession.lock_instance:
         _ScClientSession.command_id += 1
         command_id = _ScClientSession.command_id
@@ -161,11 +186,22 @@ def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
             common.PAYLOAD: payload,
         }
     )
+
     len_data = len(bytes(data, "utf-8"))
     if len_data > MAX_PAYLOAD_SIZE:
-        raise PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes")
-    _send_message(data)
-    response = receive_message(command_id)
+        _on_error(
+            _ScClientSession.ws_app,
+            PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes")
+        )
+
+    def _handle_message() -> Response:
+        _send_message(data, _ScClientSession.reconnect_retries)
+        return receive_message(command_id)
+
+    response = _handle_message()
+    if not response:
+        _on_error(_ScClientSession.ws_app, ConnectionAbortedError("Sc-server takes a long time to respond"))
+
     return response
 
 
