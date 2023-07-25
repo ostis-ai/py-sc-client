@@ -10,7 +10,7 @@ import json
 import logging
 import threading
 import time
-from typing import Any
+from typing import Any, Callable
 
 import websocket
 
@@ -35,6 +35,10 @@ def default_reconnect_handler() -> None:
     establish_connection(_ScClientSession.ws_app.url)
 
 
+def default_error_handler(error: Exception) -> None:
+    raise error
+
+
 class _ScClientSession:
     is_open = False
     lock_instance = threading.Lock()
@@ -43,9 +47,9 @@ class _ScClientSession:
     command_id = 0
     executor = Executor()
     ws_app: websocket.WebSocketApp | None = None
-    error_handler = None
-    reconnect_callback = default_reconnect_handler
-    post_reconnect_callback = None
+    error_handler: Callable[[Exception], None] = default_error_handler
+    reconnect_callback: Callable[[], None] = default_reconnect_handler
+    post_reconnect_callback: Callable[[], None] = lambda *args: None
     reconnect_retries: int = SERVER_RECONNECT_RETRIES
     reconnect_retry_delay: float = SERVER_RECONNECT_RETRY_DELAY
     last_healthcheck_answer: str = None
@@ -57,9 +61,9 @@ class _ScClientSession:
         cls.events_dict = {}
         cls.command_id = 0
         cls.ws_app = None
-        cls.error_handler = None
+        cls.error_handler = default_error_handler
         cls.reconnect_callback = default_reconnect_handler
-        cls.post_reconnect_callback = None
+        cls.post_reconnect_callback = lambda *args: None
         cls.reconnect_retries = SERVER_RECONNECT_RETRIES
         cls.reconnect_retry_delay = SERVER_RECONNECT_RETRY_DELAY
 
@@ -88,10 +92,7 @@ def _on_open(_) -> None:
 
 
 def _on_error(_, error: Exception) -> None:
-    if _ScClientSession.error_handler:
-        _ScClientSession.error_handler(error)
-    else:
-        raise error
+    _ScClientSession.error_handler(error)
 
 
 def _on_close(_, _close_status_code, _close_msg) -> None:
@@ -104,7 +105,8 @@ def set_error_handler(callback) -> None:
 
 
 def set_reconnect_handler(
-        reconnect_callback, post_reconnect_callback, reconnect_retries: int, reconnect_retry_delay: float) -> None:
+    reconnect_callback, post_reconnect_callback, reconnect_retries: int, reconnect_retry_delay: float
+) -> None:
     _ScClientSession.reconnect_callback = reconnect_callback
     _ScClientSession.post_reconnect_callback = post_reconnect_callback
     _ScClientSession.reconnect_retries = reconnect_retries
@@ -138,7 +140,7 @@ def establish_connection(url) -> None:
     client_thread.start()
     time.sleep(SERVER_ESTABLISH_CONNECTION_TIME)
 
-    if _ScClientSession.is_open and _ScClientSession.post_reconnect_callback:
+    if _ScClientSession.is_open:
         _ScClientSession.post_reconnect_callback()
 
 
@@ -162,11 +164,12 @@ def _send_message(data: str, retries: int, retry: int = 0) -> None:
     try:
         logger.debug(f"Send: {data[:LOGGING_MAX_SIZE]}")
         _ScClientSession.ws_app.send(data)
-    except websocket.WebSocketConnectionClosedException as e:
+    except websocket.WebSocketConnectionClosedException:
         if _ScClientSession.reconnect_callback and retry < retries:
             logger.warning(
                 f"Connection to sc-server has failed. "
-                f"Trying to reconnect to sc-server socket in {_ScClientSession.reconnect_retry_delay} seconds")
+                f"Trying to reconnect to sc-server socket in {_ScClientSession.reconnect_retry_delay} seconds"
+            )
             if retry > 0:
                 time.sleep(_ScClientSession.reconnect_retry_delay)
             _ScClientSession.reconnect_callback()
@@ -190,8 +193,7 @@ def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
     len_data = len(bytes(data, "utf-8"))
     if len_data > MAX_PAYLOAD_SIZE:
         _on_error(
-            _ScClientSession.ws_app,
-            PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes")
+            _ScClientSession.ws_app, PayloadMaxSizeError(f"Data is too large: {len_data} > {MAX_PAYLOAD_SIZE} bytes")
         )
 
     def _handle_message() -> Response:
