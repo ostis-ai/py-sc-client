@@ -20,3 +20,6 @@ class ScEvent:
     id: int = 0
     event_type: ScEventType = None
     callback: ScEventCallbackFunc = None
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(id={self.id}, event_type={self.event_type})"

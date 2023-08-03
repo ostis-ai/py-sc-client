@@ -1,5 +1,5 @@
-from sc_client.constants.sc_types import bitmasks as b
-from sc_client.constants.sc_types.sc_type import ScType
+from sc_client.constants import bitmasks as b
+from sc_client.models import ScType
 
 UNKNOWN = ScType()
 

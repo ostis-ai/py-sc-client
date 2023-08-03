@@ -1,14 +1,18 @@
 from __future__ import annotations
 
-from sc_client.constants.exceptions import InvalidTypeError
-from sc_client.constants.sc_types import bitmasks
+from sc_client.constants import bitmasks
+from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError
 
 
 class ScType:
-    def __init__(self, value: int = 0):
+    def __init__(self, value: int = 0) -> None:
         if not isinstance(value, int):
-            raise InvalidTypeError("You should to use int type for ScType initialization")
-        self.value = value
+            raise InvalidTypeError(ErrorNotes.INT_TYPE_INITIALIZATION)
+        self._value = value
+
+    @property
+    def value(self) -> int:
+        return self._value
 
     def __repr__(self) -> str:
         return f"ScType({hex(self.value)})"
@@ -20,12 +24,16 @@ class ScType:
         return self, alias
 
     def __eq__(self, other: ScType) -> bool:
-        if isinstance(other, ScType):
-            return self.value == other.value
-        return NotImplemented
+        return self.value == other.value
+
+    def is_equal(self, other: ScType) -> bool:
+        return self.__eq__(other)
 
     def __bool__(self) -> bool:
         return self.value != 0
+
+    def is_valid(self) -> bool:
+        return self.__bool__()
 
     def has_constancy(self) -> bool:
         return (self.value & bitmasks.SC_TYPE_CONSTANCY_MASK) != 0
@@ -81,17 +89,11 @@ class ScType:
     def is_material(self) -> bool:
         return (self.value & bitmasks.SC_TYPE_NODE_MATERIAL) != 0 and (self.value & bitmasks.SC_TYPE_NODE) != 0
 
-    def is_valid(self) -> bool:
-        return self.__bool__()
-
-    def is_equal(self, other: ScType) -> bool:
-        return self.__eq__(other)
-
     def merge(self, other: ScType) -> ScType:
         t1 = self.value & bitmasks.SC_TYPE_ELEMENT_MASK
         t2 = other.value & bitmasks.SC_TYPE_ELEMENT_MASK
         if (t1 != 0 or t2 != 0) and (t1 != t2):
-            raise InvalidTypeError()
+            raise InvalidTypeError
         return ScType(self.value | other.value)
 
     def change_const(self, is_const: bool) -> ScType:
