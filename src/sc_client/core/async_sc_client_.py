@@ -1,13 +1,14 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 import time
-from typing import Callable, get_origin
+from typing import Awaitable, Callable, get_origin
 
 from sc_client.constants import common, sc_types
 from sc_client.constants.common import CommandTypes, RequestType
-from sc_client.core.sc_connection import ScConnection
+from sc_client.core.async_sc_connection import AsyncScConnection
 from sc_client.models import (
     Response,
     ScAddr,
@@ -29,46 +30,44 @@ from sc_client.models import (
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
 
 
-class ScClient:
+class AsyncScClient:
     def __init__(self) -> None:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
-        self._sc_connection = ScConnection()
+        self._sc_connection = AsyncScConnection()
 
-    def connect(self, url: str) -> None:
-        self._sc_connection.connect(url)
+    async def connect(self, url: str) -> None:
+        await self._sc_connection.connect(url)
 
     def is_connected(self) -> bool:
         return self._sc_connection.is_connected()
 
-    def disconnect(self) -> None:
-        self._sc_connection.disconnect()
+    async def disconnect(self) -> None:
+        await self._sc_connection.disconnect()
 
     def set_error_handler(self, callback) -> None:
-        self._sc_connection.set_error_handler(callback)
+        self._sc_connection.on_error = callback
 
     def set_reconnect_handler(
         self,
-        reconnect_callback: Callable[[], None] = None,
-        post_reconnect_callback: Callable[[], None] = None,
+        reconnect_callback: Callable[[], Awaitable[None]] = None,
+        connect_callback: Callable[[], Awaitable[None]] = None,
         reconnect_retries: int = None,
         reconnect_retry_delay: float = None,
     ) -> None:
-        self._sc_connection.set_reconnect_handler(
-            reconnect_callback,
-            post_reconnect_callback,
-            reconnect_retries,
-            reconnect_retry_delay,
-        )
+        self._sc_connection.on_reconnect = reconnect_callback or self._sc_connection.on_reconnect
+        self._sc_connection.on_open = connect_callback or self._sc_connection.on_open
+        self._sc_connection.reconnect_retries = reconnect_retries or self._sc_connection.reconnect_retries
+        self._sc_connection.reconnect_retry_delay = reconnect_retry_delay or self._sc_connection.reconnect_retry_delay
 
-    def check_elements(self, *addrs: ScAddr) -> list[ScType]:
+    async def check_elements(self, *addrs: ScAddr) -> list[ScType]:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         payload = [addr.value for addr in addrs]
-        response = self._send_message(RequestType.CHECK_ELEMENTS, payload)
+        response = await self._send_message(RequestType.CHECK_ELEMENTS, payload)
         data = [ScType(type_value) for type_value in response.payload]
         return data
 
-    def create_elements(self, constr: ScConstruction) -> list[ScAddr]:
+    async def create_elements(self, constr: ScConstruction) -> list[ScAddr]:
         if not isinstance(constr, ScConstruction):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScConstruction")
         payload = []
@@ -95,7 +94,7 @@ class ScClient:
                     common.CONTENT_TYPE: command.data.get(common.TYPE),
                 }
                 payload.append(payload_part)
-        response = self._send_message(RequestType.CREATE_ELEMENTS, payload)
+        response = await self._send_message(RequestType.CREATE_ELEMENTS, payload)
         return [ScAddr(addr_value) for addr_value in response.payload]
 
     @staticmethod
@@ -109,7 +108,7 @@ class ScClient:
             }
         )
 
-    def create_elements_by_scs(self, scs_text: SCsText) -> list[bool]:
+    async def create_elements_by_scs(self, scs_text: SCsText) -> list[bool]:
         if not isinstance(scs_text, list) or any(isinstance(n, (str, SCs)) for n in scs_text):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "string or SCs")
         payload = [
@@ -124,17 +123,17 @@ class ScClient:
             }
             for scs in scs_text
         ]
-        response = self._send_message(RequestType.CREATE_ELEMENTS_BY_SCS, payload)
+        response = await self._send_message(RequestType.CREATE_ELEMENTS_BY_SCS, payload)
         return [bool(result) for result in response.payload]
 
-    def delete_elements(self, *addrs: ScAddr) -> bool:
+    async def delete_elements(self, *addrs: ScAddr) -> bool:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         payload = [addr.value for addr in addrs]
-        response = self._send_message(RequestType.DELETE_ELEMENTS, payload)
+        response = await self._send_message(RequestType.DELETE_ELEMENTS, payload)
         return response.status
 
-    def set_link_contents(self, *contents: ScLinkContent) -> bool:
+    async def set_link_contents(self, *contents: ScLinkContent) -> bool:
         if not all(isinstance(content, ScLinkContent) for content in contents):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         payload = [
@@ -146,10 +145,10 @@ class ScClient:
             }
             for content in contents
         ]
-        response = self._send_message(RequestType.CONTENT, payload)
+        response = await self._send_message(RequestType.CONTENT, payload)
         return response.status
 
-    def get_link_content(self, *addrs: ScAddr) -> list[ScLinkContent]:
+    async def get_link_content(self, *addrs: ScAddr) -> list[ScLinkContent]:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         payload = [
@@ -159,25 +158,27 @@ class ScClient:
             }
             for addr in addrs
         ]
-        response = self._send_message(RequestType.CONTENT, payload)
+        response = await self._send_message(RequestType.CONTENT, payload)
         result = []
         for link in response.payload:
             str_type: str = link.get(common.TYPE)
             result.append(ScLinkContent(link.get(common.VALUE), ScLinkContentType[str_type.upper()]))
         return result
 
-    def get_links_by_content(self, *contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
-        return self._process_get_links(*contents, command=CommandTypes.FIND)
+    async def get_links_by_content(self, *contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
+        return await self._process_get_links(*contents, command=CommandTypes.FIND)
 
-    def get_links_by_content_substring(self, *contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
-        return self._process_get_links(*contents, command=CommandTypes.FIND_LINKS_BY_SUBSTRING)
+    async def get_links_by_content_substring(self, *contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
+        return await self._process_get_links(*contents, command=CommandTypes.FIND_LINKS_BY_SUBSTRING)
 
-    def get_links_contents_by_content_substring(
+    async def get_links_contents_by_content_substring(
         self, *contents: ScLinkContent | ScLinkContentData
     ) -> list[list[ScAddr]]:
-        return self._process_get_links(*contents, command=CommandTypes.FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING)
+        return await self._process_get_links(*contents, command=CommandTypes.FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING)
 
-    def _process_get_links(self, *contents: ScLinkContent | ScLinkContentData, command: str) -> list[list[ScAddr]]:
+    async def _process_get_links(
+        self, *contents: ScLinkContent | ScLinkContentData, command: str
+    ) -> list[list[ScAddr]]:
         if not all(isinstance(content, (ScLinkContent, str, int, float)) for content in contents):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScLinkContent, str, int or float")
         link_contents = []
@@ -197,12 +198,12 @@ class ScClient:
             }
             for content in link_contents
         ]
-        response = self._sc_connection.send_message(RequestType.CONTENT, payload)
+        response = await self._sc_connection.send_message(RequestType.CONTENT, payload)
         if not response.payload:
             return response.payload
         return [[ScAddr(addr_value) for addr_value in addr_list] for addr_list in response.payload]
 
-    def resolve_keynodes(self, *params: ScIdtfResolveParams) -> list[ScAddr]:
+    async def resolve_keynodes(self, *params: ScIdtfResolveParams) -> list[ScAddr]:
         if not all(isinstance(par, ScIdtfResolveParams) for par in params):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScIdtfResolveParams")
         payload = []
@@ -220,16 +221,16 @@ class ScClient:
                     common.IDTF: idtf_param.idtf,
                 }
             payload.append(payload_item)
-        response = self._send_message(RequestType.KEYNODES, payload)
+        response = await self._send_message(RequestType.KEYNODES, payload)
         return [ScAddr(addr_value) for addr_value in response.payload]
 
-    def template_search(
+    async def template_search(
         self,
         template: ScTemplate | str | ScAddr,
         params: ScTemplateParams = None,
     ) -> list[ScTemplateResult]:
         payload = self._create_template_payload(template, params)
-        response = self._send_message(RequestType.SEARCH_TEMPLATE, payload)
+        response = await self._send_message(RequestType.SEARCH_TEMPLATE, payload)
         result = []
         if response.status:
             response_payload = response.payload
@@ -240,13 +241,13 @@ class ScClient:
                 result.append(ScTemplateResult(addrs, aliases))
         return result
 
-    def template_generate(
+    async def template_generate(
         self,
         template: ScTemplate | str | ScAddr,
         params: ScTemplateParams = None,
     ) -> ScTemplateResult:
         payload = self._create_template_payload(template, params)
-        response = self._send_message(RequestType.GENERATE_TEMPLATE, payload)
+        response = await self._send_message(RequestType.GENERATE_TEMPLATE, payload)
         result = None
         if response.status:
             response_payload = response.payload
@@ -303,12 +304,12 @@ class ScClient:
             result[common.ALIAS] = item.alias
         return result
 
-    def events_create(self, *events: ScEventParams) -> list[ScEvent]:
+    async def events_create(self, *events: ScEventParams) -> list[ScEvent]:
         if not all(isinstance(event, ScEventParams) for event in events):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEventParams")
         payload_create = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
         payload = {CommandTypes.CREATE: payload_create}
-        response = self._send_message(RequestType.EVENTS, payload)
+        response = await self._send_message(RequestType.EVENTS, payload)
         result: list[ScEvent] = []
         for count, event in enumerate(events):
             command_id = response.payload[count]
@@ -317,11 +318,11 @@ class ScClient:
             result.append(sc_event)
         return result
 
-    def events_destroy(self, *events: ScEvent) -> bool:
+    async def events_destroy(self, *events: ScEvent) -> bool:
         if not all(isinstance(event, ScEvent) for event in events):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
         payload = {CommandTypes.DELETE: [event.id for event in events]}
-        response = self._send_message(RequestType.EVENTS, payload)
+        response = await self._send_message(RequestType.EVENTS, payload)
         for event in events:
             self._sc_connection.drop_event(event.id)
         return response.status
@@ -331,8 +332,8 @@ class ScClient:
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
         return bool(self._sc_connection.get_event(event.id))
 
-    def _send_message(self, request_type: common.RequestType, payload: any) -> Response:
-        response = self._sc_connection.send_message(request_type, payload)
+    async def _send_message(self, request_type: common.RequestType, payload: any) -> Response:
+        response = await self._sc_connection.send_message(request_type, payload)
         if not response.errors:
             return response
         error_msgs: list[str] = []
@@ -348,18 +349,18 @@ class ScClient:
         raise error
 
 
-def main():
-    client = ScClient()
-    client.connect("ws://localhost:8090/ws_json")
+async def main():
+    client = AsyncScClient()
+    await client.connect("ws://localhost:8090/ws_json")
     constr = ScConstruction()
     constr.create_node(sc_types.NODE_CONST)
     start = time.time()
-    res = [client.create_elements(constr) for _ in range(100)]
+    res = await asyncio.gather(*[client.create_elements(constr) for _ in range(100)])
     timedelta = time.time() - start
     print(f"Created element: {res}\nin {timedelta} sec")
-    client.disconnect()
+    await client.disconnect()
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
-    main()
+    asyncio.run(main())
