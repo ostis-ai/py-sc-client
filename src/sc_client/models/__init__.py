@@ -8,7 +8,7 @@ from sc_client.models.sc_construction import (
     ScLinkContentData,
     ScLinkContentType,
 )
-from sc_client.models.sc_event import ScEvent, ScEventCallbackFunc, ScEventParams
+from sc_client.models.sc_event import AsyncScEvent, AsyncScEventParams, ScEvent, ScEventParams
 from sc_client.models.sc_template import (
     ScTemplate,
     ScTemplateParam,

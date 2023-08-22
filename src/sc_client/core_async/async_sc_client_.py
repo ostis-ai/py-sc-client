@@ -1,20 +1,18 @@
 from __future__ import annotations
 
-import asyncio
 import logging
 import re
-import time
 from typing import Awaitable, Callable, get_origin
 
-from sc_client.constants import common, sc_types
+from sc_client.constants import common
 from sc_client.constants.common import CommandTypes, RequestType
-from sc_client.core.async_sc_connection import AsyncScConnection
+from sc_client.core_async.async_sc_connection import AsyncScConnection
 from sc_client.models import (
+    AsyncScEvent,
+    AsyncScEventParams,
     Response,
     ScAddr,
     ScConstruction,
-    ScEvent,
-    ScEventParams,
     ScIdtfResolveParams,
     ScLinkContent,
     ScLinkContentData,
@@ -44,20 +42,21 @@ class AsyncScClient:
     async def disconnect(self) -> None:
         await self._sc_connection.disconnect()
 
-    def set_error_handler(self, callback) -> None:
-        self._sc_connection.on_error = callback
-
-    def set_reconnect_handler(
+    def set_handlers(
         self,
-        reconnect_callback: Callable[[], Awaitable[None]] = None,
-        connect_callback: Callable[[], Awaitable[None]] = None,
-        reconnect_retries: int = None,
-        reconnect_retry_delay: float = None,
+        on_open: Callable[[], Awaitable[None]] = None,
+        on_close: Callable[[], Awaitable[None]] = None,
+        on_error: Callable[[Exception], Awaitable[None]] = None,
+        on_reconnect: Callable[[], Awaitable[None]] = None,
     ) -> None:
-        self._sc_connection.on_reconnect = reconnect_callback or self._sc_connection.on_reconnect
-        self._sc_connection.on_open = connect_callback or self._sc_connection.on_open
-        self._sc_connection.reconnect_retries = reconnect_retries or self._sc_connection.reconnect_retries
-        self._sc_connection.reconnect_retry_delay = reconnect_retry_delay or self._sc_connection.reconnect_retry_delay
+        self._sc_connection.on_open = on_open or self._sc_connection.on_open
+        self._sc_connection.on_close = on_close or self._sc_connection.on_close
+        self._sc_connection.on_error = on_error or self._sc_connection.on_error
+        self._sc_connection.on_reconnect = on_reconnect or self._sc_connection.on_reconnect
+
+    def set_reconnect_settings(self, retries: int = None, retry_delay: float = None) -> None:
+        self._sc_connection.reconnect_retries = retries or self._sc_connection.reconnect_retries
+        self._sc_connection.reconnect_retry_delay = retry_delay or self._sc_connection.reconnect_retry_delay
 
     async def check_elements(self, *addrs: ScAddr) -> list[ScType]:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
@@ -285,8 +284,8 @@ class AsyncScClient:
         return {common.TEMPLATE: payload_template, common.PARAMS: payload_params}
 
     @classmethod
-    def _process_template(cls, template: ScTemplate):
-        payload_template = []
+    def _process_template(cls, template: ScTemplate) -> list[list[dict]]:
+        payload_template: list[list[dict]] = []
         for triple in template.triple_list:
             items = [triple.src, triple.edge, triple.trg]
             payload_template.append([cls._process_triple_item(item) for item in items])
@@ -304,32 +303,32 @@ class AsyncScClient:
             result[common.ALIAS] = item.alias
         return result
 
-    async def events_create(self, *events: ScEventParams) -> list[ScEvent]:
-        if not all(isinstance(event, ScEventParams) for event in events):
-            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEventParams")
-        payload_create = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
+    async def events_create(self, *params: AsyncScEventParams) -> list[AsyncScEvent]:
+        if not all(isinstance(param, AsyncScEventParams) for param in params):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "AsyncScEventParams")
+        payload_create = [{common.TYPE: param.event_type.value, common.ADDR: param.addr.value} for param in params]
         payload = {CommandTypes.CREATE: payload_create}
         response = await self._send_message(RequestType.EVENTS, payload)
-        result: list[ScEvent] = []
-        for count, event in enumerate(events):
+        result: list[AsyncScEvent] = []
+        for count, event in enumerate(params):
             command_id = response.payload[count]
-            sc_event = ScEvent(command_id, event.event_type, event.callback)
+            sc_event = AsyncScEvent(command_id, event.event_type, event.callback)
             self._sc_connection.set_event(sc_event)
             result.append(sc_event)
         return result
 
-    async def events_destroy(self, *events: ScEvent) -> bool:
-        if not all(isinstance(event, ScEvent) for event in events):
-            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
+    async def events_destroy(self, *events: AsyncScEvent) -> bool:
+        if not all(isinstance(event, AsyncScEvent) for event in events):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "AsyncScEvent")
         payload = {CommandTypes.DELETE: [event.id for event in events]}
         response = await self._send_message(RequestType.EVENTS, payload)
         for event in events:
             self._sc_connection.drop_event(event.id)
         return response.status
 
-    def is_event_valid(self, event: ScEvent) -> bool:
-        if not isinstance(event, ScEvent):
-            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
+    def is_event_valid(self, event: AsyncScEvent) -> bool:
+        if not isinstance(event, AsyncScEvent):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "AsyncScEvent")
         return bool(self._sc_connection.get_event(event.id))
 
     async def _send_message(self, request_type: common.RequestType, payload: any) -> Response:
@@ -347,20 +346,3 @@ class AsyncScClient:
         error = ScServerError(error_msg)
         self._logger.error(error, exc_info=True)
         raise error
-
-
-async def main():
-    client = AsyncScClient()
-    await client.connect("ws://localhost:8090/ws_json")
-    constr = ScConstruction()
-    constr.create_node(sc_types.NODE_CONST)
-    start = time.time()
-    res = await asyncio.gather(*[client.create_elements(constr) for _ in range(100)])
-    timedelta = time.time() - start
-    print(f"Created element: {res}\nin {timedelta} sec")
-    await client.disconnect()
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
-    asyncio.run(main())

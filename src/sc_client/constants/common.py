@@ -1,4 +1,4 @@
-from enum import Enum, IntEnum, auto
+from enum import Enum
 
 
 class RequestType(Enum):
@@ -11,23 +11,6 @@ class RequestType(Enum):
     SEARCH_TEMPLATE = "search_template"
     GENERATE_TEMPLATE = "generate_template"
     EVENTS = "events"
-
-
-class ClientCommand(IntEnum):
-    CHECK_ELEMENTS = auto()
-    CREATE_ELEMENTS = auto()
-    CREATE_ELEMENTS_BY_SCS = auto()
-    DELETE_ELEMENTS = auto()
-    SET_LINK_CONTENTS = auto()
-    GET_LINK_CONTENT = auto()
-    GET_LINKS_BY_CONTENT = auto()
-    GET_LINKS_BY_CONTENT_SUBSTRING = auto()
-    GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = auto()
-    KEYNODES = auto()
-    SEARCH_TEMPLATE = auto()
-    GENERATE_TEMPLATE = auto()
-    EVENTS_CREATE = auto()
-    EVENTS_DESTROY = auto()
 
 
 class Elements:
