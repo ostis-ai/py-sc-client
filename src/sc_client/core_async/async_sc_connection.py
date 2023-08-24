@@ -3,7 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-from typing import Awaitable, Callable, Iterator
+from typing import Awaitable, Callable
 
 import websockets
 import websockets.client
@@ -61,8 +61,8 @@ class AsyncScConnection:
         if response.event:
             if event := self.get_event(response.id):
                 self._logger.debug(f"Started {str(event)}")
-                iter_payload: Iterator[ScAddr] = iter(response.payload)
-                asyncio.create_task(event.callback(next(iter_payload), next(iter_payload), next(iter_payload)))
+                addrs: list[ScAddr] = [ScAddr(value) for value in response.payload]
+                asyncio.create_task(event.callback(*addrs))
                 await asyncio.sleep(0)
         else:
             self._responses_dict[response.id] = response

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Callable, Coroutine
+from typing import Any, Callable, Coroutine, Optional
 
 from sc_client.constants.common import ScEventType
 from sc_client.models.sc_addr import ScAddr
@@ -18,8 +18,8 @@ class ScEventParams:
 @dataclass
 class ScEvent:
     id: int
-    event_type: ScEventType
-    callback: ScEventCallback
+    event_type: Optional[ScEventType] = None
+    callback: Optional[ScEventCallback] = None
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, event_type={self.event_type})"
@@ -35,8 +35,8 @@ class AsyncScEventParams:
 @dataclass
 class AsyncScEvent:
     id: int
-    event_type: ScEventType
-    callback: AsyncScEventCallback
+    event_type: Optional[ScEventType] = None
+    callback: Optional[AsyncScEventCallback] = None
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, event_type={self.event_type})"
