@@ -9,7 +9,7 @@ import nest_asyncio
 
 from sc_client import ScEventType
 from sc_client.constants import sc_types
-from sc_client.core_async import AsyncScClient
+from sc_client.core.async_sc_client_ import AsyncScClient
 from sc_client.models import (
     AsyncScEvent,
     AsyncScEventParams,
@@ -27,14 +27,13 @@ from sc_client.models import (
     ScType,
 )
 
-nest_asyncio.apply()
-
 
 # noinspection PyProtectedMember
 # pylint: disable=protected-access
 class ScClient:
     def __init__(self) -> None:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+        nest_asyncio.apply()
         self._async_sc_client = AsyncScClient()
         self._loop = asyncio.get_event_loop()
 
