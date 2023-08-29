@@ -13,14 +13,14 @@ class WebsocketStub:
     """Stub for async websockets.client.WebSocketClientProtocol"""
 
     is_connection_lost: bool = False
+    # pylint: disable=unsubscriptable-object
+    messages: asyncio.Queue[str] = asyncio.Queue()
+    message_callbacks: asyncio.LifoQueue[Callable[[str], str]] = asyncio.LifoQueue()
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
         self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self.is_connected = False
-        # pylint: disable=unsubscriptable-object
-        self.messages: asyncio.Queue[str] = asyncio.Queue()
-        self.message_callbacks: asyncio.LifoQueue[Callable[[str], str]] = asyncio.LifoQueue()
 
     async def connect(self, url: str):
         await asyncio.sleep(0.01)
@@ -28,12 +28,12 @@ class WebsocketStub:
             raise ConnectionRefusedError
         if self.__class__.is_connection_lost:
             raise ConnectionRefusedError
-        self.logger.info("Mock connection")
+        self.logger.info("Connection established")
         self.is_connected = True
 
     async def close(self):
         await asyncio.sleep(0.01)
-        self.logger.info("Mock disonnection")
+        self.logger.info("Connection closed")
         self.is_connected = False
         # await self.messages.join()
 

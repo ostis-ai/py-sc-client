@@ -69,3 +69,26 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         async with websocket.lose_connection():
             with self.assertRaisesRegex(ScServerError, ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND):
                 await connection.send_message(RequestType.CHECK_ELEMENTS, None)
+
+    async def test_reconnect(self):
+        connection = AsyncScConnection()
+        connection.reconnect_retries = 5
+        connection.reconnect_delay = 0.1
+        await connection.connect("url")
+        websocket = WebsocketStub.of(connection)
+        request_type = RequestType.CHECK_ELEMENTS
+        payload = 1
+
+        def callback(message_json: str) -> str:
+            message: Dict[str, any] = json.loads(message_json)
+            return Response(message[common.ID], True, False, "2", None).dump()
+
+        await websocket.set_message_callback(callback)
+        send_message_coroutine = connection.send_message(request_type, payload)
+
+        async with websocket.lose_connection():
+            task = asyncio.create_task(send_message_coroutine)
+            await asyncio.sleep(connection.reconnect_delay)
+        await task
+        response = task.result()
+        self.assertEqual(response.payload, "2")
