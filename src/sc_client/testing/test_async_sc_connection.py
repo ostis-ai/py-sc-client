@@ -92,3 +92,21 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await task
         response = task.result()
         self.assertEqual(response.payload, "2")
+
+    # @pytest.mark.skip
+    async def test_lose_connection_while_receiving(self):
+        connection = AsyncScConnection()
+        connection.reconnect_retries = 5
+        connection.reconnect_delay = 0.1
+        await connection.connect("url")
+        websocket = WebsocketStub.of(connection)
+        await websocket.set_message_callback(
+            lambda message_json: Response(json.loads(message_json)[common.ID], True, False, None, None).dump()
+        )
+        send_message_coroutine = connection.send_message(RequestType.CHECK_ELEMENTS, None)
+        task = asyncio.create_task(send_message_coroutine)
+        await asyncio.sleep(0)
+        async with websocket.lose_connection():
+            pass  # Lose connection after sending and before receiving. How it works? Only God knows
+        with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
+            await task

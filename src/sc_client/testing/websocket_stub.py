@@ -39,14 +39,14 @@ class WebsocketStub:
 
     @property
     def open(self) -> bool:
-        return self.is_connected
+        return self.is_connected and not self.is_connection_lost
 
     async def send(self, message: str) -> None:
         self._assert_connection()
         callback = await self.message_callbacks.get()
         response = callback(message)
         await self.messages.put(response)
-        await asyncio.sleep(0)
+        await asyncio.sleep(0)  # ? it changes logic
 
     async def receive(self) -> str:
         while True:
