@@ -197,7 +197,7 @@ class AsyncScClient:
             }
             for content in link_contents
         ]
-        response = await self._sc_connection.send_message(RequestType.CONTENT, payload)
+        response = await self._send_message(RequestType.CONTENT, payload)
         if not response.payload:
             return response.payload
         return [[ScAddr(addr_value) for addr_value in addr_list] for addr_list in response.payload]

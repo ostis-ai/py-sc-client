@@ -12,7 +12,6 @@ from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 from sc_client.constants import common, config
 from sc_client.models import AsyncScEvent, Response, ScAddr
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
-from sc_client.sc_exceptions.sc_exeptions_ import ScConnectionError
 
 
 class AsyncScConnection:
@@ -114,20 +113,22 @@ class AsyncScConnection:
                 # Everything is OK
                 return
             except ConnectionClosed as e:
-                if not retries:
-                    raise ScConnectionError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND) from e
+                if retries <= 0:
+                    raise ScServerError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND) from e
                 retries -= 1
                 self._logger.warning(f"Trying to reconnect in {self.reconnect_delay} seconds (retries left: {retries})")
                 await asyncio.sleep(self.reconnect_delay)
-                await self.connect()
-                if self.is_connected():
+                try:
+                    await self.connect()
                     await self.on_reconnect()
+                except ScServerError:
+                    pass
 
     async def _receive(self, command_id: int) -> Response:
         while (answer := self._responses_dict.get(command_id)) is None and self._websocket.open:
             await asyncio.sleep(config.SERVER_ANSWER_CHECK_TIME)
         if answer is None:
-            raise ScConnectionError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST)
+            raise ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST)
         del self._responses_dict[command_id]
         return answer
 

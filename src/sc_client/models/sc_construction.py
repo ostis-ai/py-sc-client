@@ -106,3 +106,14 @@ class Response:
             errors=response.get(ERRORS),
         )
         return instance
+
+    def dump(self) -> str:
+        return json.dumps(
+            {
+                common.ID: self.id,
+                common.STATUS: self.status,
+                common.EVENT: self.event,
+                common.PAYLOAD: self.payload,
+                common.ERRORS: self.errors,
+            }
+        )

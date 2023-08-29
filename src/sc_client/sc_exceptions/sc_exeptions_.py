@@ -11,8 +11,8 @@ class ScException(Exception, abc.ABC):
         super().__init__(self.default_message if not note else f"{self.default_message}: {note.format(*note_args)}")
 
 
-class ScConnectionError(ScException, ConnectionAbortedError):
-    default_message = ErrorDefaultMessages.CANNOT_CONNECT_TO_SC_SERVER
+class ScServerError(ScException):
+    default_message = ErrorDefaultMessages.SC_SERVER_ERROR
 
 
 class InvalidValueError(ScException):
@@ -25,10 +25,6 @@ class InvalidTypeError(ScException):
 
 class LinkContentOversizeError(ScException):
     default_message = ErrorDefaultMessages.LINK_OVERSIZE
-
-
-class ScServerError(ScException):
-    default_message = ErrorDefaultMessages.SC_SERVER_ERROR
 
 
 class PayloadMaxSizeError(ScException):
