@@ -39,7 +39,7 @@ class AsyncScConnection:
             self._websocket = await websockets.client.connect(self._url)
             self._logger.info("connected")
             await self.on_open()
-            asyncio.create_task(self._handle_messages())
+            asyncio.create_task(self._handle_messages(), name="Handle messages")
             await asyncio.sleep(0)
         except ConnectionRefusedError as e:
             self._logger.error("Cannot to connect to sc-server")
