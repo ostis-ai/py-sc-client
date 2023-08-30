@@ -12,12 +12,12 @@ from sc_client.constants.config import MAX_PAYLOAD_SIZE
 from sc_client.core.async_sc_connection import AsyncScConnection
 from sc_client.models import AsyncScEvent, Response
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
-from sc_client.testing.websocket_stub import WebsocketStub, sc_connect_patch
+from sc_client.testing import WebsocketStub, websockets_client_connect_patch
 
 logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
 
-@patch("websockets.client.connect", sc_connect_patch)
+@patch("websockets.client.connect", websockets_client_connect_patch)
 class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
     async def test_connection(self):
         connection = AsyncScConnection()
@@ -98,7 +98,6 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         response = task.result()
         self.assertEqual(response.payload, "2")
 
-    # @pytest.mark.skip
     async def test_lose_connection_while_receiving(self):
         connection = AsyncScConnection()
         connection.reconnect_retries = 5

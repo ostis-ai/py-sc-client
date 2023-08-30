@@ -92,7 +92,7 @@ class WebsocketStub:
             await asyncio.sleep(0)
 
 
-async def sc_connect_patch(url: str) -> WebsocketStub:
+async def websockets_client_connect_patch(url: str) -> WebsocketStub:
     websocket_mock = WebsocketStub()
     await websocket_mock.connect(url)
     return websocket_mock
