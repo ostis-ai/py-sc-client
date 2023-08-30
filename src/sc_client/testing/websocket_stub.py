@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable
+from typing import Any, Callable, Coroutine
 
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
@@ -15,7 +15,7 @@ class WebsocketStub:
     is_connection_lost: bool = False
     # pylint: disable=unsubscriptable-object
     messages: asyncio.Queue[str] = asyncio.Queue()
-    message_callbacks: asyncio.LifoQueue[Callable[[str], str]] = asyncio.LifoQueue()
+    message_callbacks: asyncio.LifoQueue[Callable[[str], Coroutine[None, None, str]]] = asyncio.LifoQueue()
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -43,10 +43,13 @@ class WebsocketStub:
 
     async def send(self, message: str) -> None:
         self._assert_connection()
+        asyncio.create_task(self._add_response(message))
+        await asyncio.sleep(0)
+
+    async def _add_response(self, message: str) -> None:
         callback = await self.message_callbacks.get()
-        response = callback(message)
+        response = await callback(message)
         await self.messages.put(response)
-        await asyncio.sleep(0)  # ? it changes logic
 
     async def receive(self) -> str:
         while True:
@@ -62,12 +65,6 @@ class WebsocketStub:
         if not self.is_connected:
             raise ConnectionClosedOK(None, None)
 
-    async def __aenter__(self):
-        return self
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        pass
-
     def __aiter__(self):
         return self
 
@@ -80,7 +77,7 @@ class WebsocketStub:
         # pylint: disable=protected-access
         return connection._websocket
 
-    async def set_message_callback(self, callback: Callable[[str], str]) -> None:
+    async def set_message_callback(self, callback: Callable[[str], Coroutine[None, None, str]]) -> None:
         await self.message_callbacks.put(callback)
 
     class lose_connection:

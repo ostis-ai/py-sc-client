@@ -5,11 +5,13 @@ from typing import Dict
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
 
+from sc_client import ScAddr
 from sc_client.constants import common
-from sc_client.constants.common import RequestType
+from sc_client.constants.common import RequestType, ScEventType
+from sc_client.constants.config import MAX_PAYLOAD_SIZE
 from sc_client.core.async_sc_connection import AsyncScConnection
-from sc_client.models import Response
-from sc_client.sc_exceptions import ErrorNotes, ScServerError
+from sc_client.models import AsyncScEvent, Response
+from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
 from sc_client.testing.websocket_stub import WebsocketStub, sc_connect_patch
 
 logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
@@ -52,13 +54,16 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         request_type = RequestType.CHECK_ELEMENTS
         payload = [1, 2]
 
-        def callback(message_json: str) -> str:
+        async def callback(message_json: str) -> str:
             message: Dict[str, any] = json.loads(message_json)
             return Response(message[common.ID], True, False, "[3, 4]", None).dump()
 
         await websocket.set_message_callback(callback)
         response = await connection.send_message(request_type, payload)
         self.assertEqual(response.payload, "[3, 4]")
+        await connection.disconnect()
+        with self.assertRaisesRegex(ScServerError, ErrorNotes.ALREADY_DISCONNECTED):
+            await connection.send_message(request_type, payload)
 
     async def test_sc_server_doesnt_response(self):
         connection = AsyncScConnection()
@@ -79,7 +84,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         request_type = RequestType.CHECK_ELEMENTS
         payload = 1
 
-        def callback(message_json: str) -> str:
+        async def callback(message_json: str) -> str:
             message: Dict[str, any] = json.loads(message_json)
             return Response(message[common.ID], True, False, "2", None).dump()
 
@@ -100,13 +105,45 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         connection.reconnect_delay = 0.1
         await connection.connect("url")
         websocket = WebsocketStub.of(connection)
-        await websocket.set_message_callback(
-            lambda message_json: Response(json.loads(message_json)[common.ID], True, False, None, None).dump()
-        )
+
+        async def callback(message_json: str) -> str:
+            await asyncio.sleep(0.2)
+            return Response(json.loads(message_json)[common.ID], True, False, None, None).dump()
+
+        await websocket.set_message_callback(callback)
         send_message_coroutine = connection.send_message(RequestType.CHECK_ELEMENTS, None)
         task = asyncio.create_task(send_message_coroutine)
         await asyncio.sleep(0)
         async with websocket.lose_connection():
-            pass  # Lose connection after sending and before receiving. How it works? Only God knows
+            pass  # Lose connection after sending and before receiving
         with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
             await task
+
+    async def test_payload_max_size(self):
+        connection = AsyncScConnection()
+        await connection.connect("url")
+        with self.assertRaises(PayloadMaxSizeError):
+            await connection.send_message(RequestType.CHECK_ELEMENTS, "0" * MAX_PAYLOAD_SIZE)
+
+    async def test_event(self):
+        connection = AsyncScConnection()
+        await connection.connect("url")
+        websocket = WebsocketStub.of(connection)
+
+        event_run_times = 0
+
+        async def event_callback(*params: ScAddr) -> None:
+            self.assertEqual(params, (ScAddr(1), ScAddr(2), ScAddr(3)))
+            nonlocal event_run_times
+            event_run_times += 1
+
+        event = AsyncScEvent(20, ScEventType.ADD_OUTGOING_EDGE, event_callback)
+        connection.set_event(event)
+        event_same = connection.get_event(20)
+        await websocket.messages.put(Response(20, True, True, [1, 2, 3], None).dump())
+        await asyncio.sleep(0)
+        self.assertEqual(event, event_same)
+        connection.drop_event(20)
+        await websocket.messages.put(Response(20, True, True, [4, 5, 6], None).dump())
+        await asyncio.sleep(0)
+        self.assertEqual(event_run_times, 1)

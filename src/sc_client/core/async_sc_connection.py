@@ -109,9 +109,8 @@ class AsyncScConnection:
             try:
                 await self._websocket.send(data)
                 return
-            except ConnectionClosedOK:
-                # Everything is OK
-                return
+            except ConnectionClosedOK as e:
+                raise ScServerError(ErrorNotes.ALREADY_DISCONNECTED) from e
             except ConnectionClosed as e:
                 if retries <= 0:
                     raise ScServerError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND) from e

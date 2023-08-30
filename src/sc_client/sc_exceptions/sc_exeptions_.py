@@ -15,6 +15,10 @@ class ScServerError(ScException):
     default_message = ErrorDefaultMessages.SC_SERVER_ERROR
 
 
+class PayloadMaxSizeError(ScServerError):
+    default_message = ErrorDefaultMessages.PAYLOAD_MAX_SIZE
+
+
 class InvalidValueError(ScException):
     default_message = ErrorDefaultMessages.INVALID_VALUE
 
@@ -25,7 +29,3 @@ class InvalidTypeError(ScException):
 
 class LinkContentOversizeError(ScException):
     default_message = ErrorDefaultMessages.LINK_OVERSIZE
-
-
-class PayloadMaxSizeError(ScException):
-    default_message = ErrorDefaultMessages.PAYLOAD_MAX_SIZE

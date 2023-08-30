@@ -17,6 +17,7 @@ class ErrorNotes:
     CANNOT_CONNECT_TO_SC_SERVER = "Cannot connect to sc-server"
     CONNECTION_TO_SC_SERVER_LOST = "Connection to sc-server lost"
     SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND = "Sc-server takes a long time to respond"
+    ALREADY_DISCONNECTED = "You already disconnected from the sc-server before"
     INT_TYPE_INITIALIZATION = "You must use int type for initialization"
     SC_ADDR_OF_IDENTIFIER_IS_INVALID = "ScAddr of {} is invalid"
     EXPECTED_OBJECT_TYPES = "Expected object types: {}"
