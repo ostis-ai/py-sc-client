@@ -2,12 +2,13 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Callable, Coroutine
+from typing import Any
 
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from sc_client.core import AsyncScClient
 from sc_client.core.async_sc_connection import AsyncScConnection
+from sc_client.testing.response_callback import ResponseCallback
 
 
 class WebsocketStub:
@@ -16,7 +17,7 @@ class WebsocketStub:
     is_connection_lost: bool = False
     # pylint: disable=unsubscriptable-object
     messages: asyncio.Queue[str] = asyncio.Queue()
-    message_callbacks: asyncio.LifoQueue[Callable[[str], Coroutine[None, None, str]]] = asyncio.LifoQueue()
+    message_callbacks: asyncio.LifoQueue[ResponseCallback] = asyncio.LifoQueue()
 
     def __init__(self, *args: Any, **kwargs: Any):
         super().__init__(*args, **kwargs)
@@ -49,7 +50,7 @@ class WebsocketStub:
 
     async def _add_response(self, message: str) -> None:
         callback = await self.message_callbacks.get()
-        response = await callback(message)
+        response = await callback.process_response(message)
         await self.messages.put(response)
 
     async def receive(self) -> str:
@@ -78,19 +79,23 @@ class WebsocketStub:
         # pylint: disable=protected-access
         return (obj if isinstance(obj, AsyncScConnection) else obj._sc_connection)._websocket
 
-    async def set_message_callback(self, callback: Callable[[str], Coroutine[None, None, str]]) -> None:
+    async def set_message_callback(self, callback: ResponseCallback) -> None:
         await self.message_callbacks.put(callback)
 
-    class lose_connection:
-        """Context manager to lose and establish connection"""
+    @staticmethod
+    def lose_connection() -> ConnectionEstablisher:
+        """The context manager to lose and establish connection"""
+        return ConnectionEstablisher()
 
-        async def __aenter__(self):
-            WebsocketStub.is_connection_lost = True
-            await asyncio.sleep(0)
 
-        async def __aexit__(self, exc_type, exc_val, exc_tb):
-            WebsocketStub.is_connection_lost = False
-            await asyncio.sleep(0)
+class ConnectionEstablisher:
+    async def __aenter__(self):
+        WebsocketStub.is_connection_lost = True
+        await asyncio.sleep(0)
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        WebsocketStub.is_connection_lost = False
+        await asyncio.sleep(0)
 
 
 async def websockets_client_connect_patch(url: str) -> WebsocketStub:

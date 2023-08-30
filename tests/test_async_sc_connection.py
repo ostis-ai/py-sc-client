@@ -1,7 +1,6 @@
 import asyncio
-import json
 import logging
-from typing import Dict
+from typing import Any
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
 
@@ -13,6 +12,7 @@ from sc_client.core.async_sc_connection import AsyncScConnection
 from sc_client.models import AsyncScEvent, Response
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
 from sc_client.testing import WebsocketStub, websockets_client_connect_patch
+from sc_client.testing.response_callback import ResponseCallback
 
 logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
@@ -56,13 +56,13 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         request_type = RequestType.CHECK_ELEMENTS
         payload = [1, 2]
 
-        async def callback(message_json: str) -> str:
-            message: Dict[str, any] = json.loads(message_json)
-            return Response(message[common.ID], True, False, "[3, 4]", None).dump()
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                return Response(id_, True, False, "test_send_receive", None)
 
-        await websocket.set_message_callback(callback)
+        await websocket.set_message_callback(Callback())
         response = await connection.send_message(request_type, payload)
-        self.assertEqual(response.payload, "[3, 4]")
+        self.assertEqual(response.payload, "test_send_receive")
         await connection.disconnect()
         with self.assertRaisesRegex(ScServerError, ErrorNotes.ALREADY_DISCONNECTED):
             await connection.send_message(request_type, payload)
@@ -88,11 +88,11 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         request_type = RequestType.CHECK_ELEMENTS
         payload = 1
 
-        async def callback(message_json: str) -> str:
-            message: Dict[str, any] = json.loads(message_json)
-            return Response(message[common.ID], True, False, "2", None).dump()
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                return Response(id_, True, False, "2", None)
 
-        await websocket.set_message_callback(callback)
+        await websocket.set_message_callback(Callback())
         send_message_coroutine = connection.send_message(request_type, payload)
 
         async with websocket.lose_connection():
@@ -110,11 +110,11 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.connect("url")
         websocket = WebsocketStub.of(connection)
 
-        async def callback(_: str):
-            await asyncio.sleep(0.2)  # Lose connection here
-            raise AssertionError
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
 
-        await websocket.set_message_callback(callback)
+        await websocket.set_message_callback(Callback(0.2))
         send_message_coroutine = connection.send_message(RequestType.CHECK_ELEMENTS, None)
         task = asyncio.create_task(send_message_coroutine)
         await asyncio.sleep(0)
@@ -122,6 +122,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
             pass  # Lose connection after sending and before receiving
         with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
             await task
+        websocket.lose_connection()
         await connection.disconnect()
 
     async def test_payload_max_size(self):
