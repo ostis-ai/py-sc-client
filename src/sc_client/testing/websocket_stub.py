@@ -6,6 +6,7 @@ from typing import Any, Callable, Coroutine
 
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
+from sc_client.core import AsyncScClient
 from sc_client.core.async_sc_connection import AsyncScConnection
 
 
@@ -72,10 +73,10 @@ class WebsocketStub:
         return await self.receive()
 
     @classmethod
-    def of(cls, connection: AsyncScConnection) -> WebsocketStub:
+    def of(cls, obj: AsyncScConnection | AsyncScClient) -> WebsocketStub:
         # noinspection PyProtectedMember
         # pylint: disable=protected-access
-        return connection._websocket
+        return (obj if isinstance(obj, AsyncScConnection) else obj._sc_connection)._websocket
 
     async def set_message_callback(self, callback: Callable[[str], Coroutine[None, None, str]]) -> None:
         await self.message_callbacks.put(callback)

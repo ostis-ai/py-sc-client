@@ -31,6 +31,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         connection = AsyncScConnection()
         with self.assertRaisesRegex(ScServerError, ErrorNotes.CANNOT_CONNECT_TO_SC_SERVER):
             await connection.connect("")
+        self.assertFalse(connection.is_connected())
 
     async def test_lose_connection(self):
         connection = AsyncScConnection()
@@ -46,6 +47,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
                     break
         else:
             raise AssertionError("Task 'Handle messages' wasn't found")
+        await connection.disconnect()
 
     async def test_send_receive(self):
         connection = AsyncScConnection()
@@ -64,6 +66,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
         with self.assertRaisesRegex(ScServerError, ErrorNotes.ALREADY_DISCONNECTED):
             await connection.send_message(request_type, payload)
+        await connection.disconnect()
 
     async def test_sc_server_doesnt_response(self):
         connection = AsyncScConnection()
@@ -74,6 +77,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         async with websocket.lose_connection():
             with self.assertRaisesRegex(ScServerError, ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND):
                 await connection.send_message(RequestType.CHECK_ELEMENTS, None)
+            await connection.disconnect()
 
     async def test_reconnect(self):
         connection = AsyncScConnection()
@@ -97,6 +101,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await task
         response = task.result()
         self.assertEqual(response.payload, "2")
+        await connection.disconnect()
 
     async def test_lose_connection_while_receiving(self):
         connection = AsyncScConnection()
@@ -105,9 +110,9 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.connect("url")
         websocket = WebsocketStub.of(connection)
 
-        async def callback(message_json: str) -> str:
-            await asyncio.sleep(0.2)
-            return Response(json.loads(message_json)[common.ID], True, False, None, None).dump()
+        async def callback(_: str):
+            await asyncio.sleep(0.2)  # Lose connection here
+            raise AssertionError
 
         await websocket.set_message_callback(callback)
         send_message_coroutine = connection.send_message(RequestType.CHECK_ELEMENTS, None)
@@ -117,12 +122,14 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
             pass  # Lose connection after sending and before receiving
         with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
             await task
+        await connection.disconnect()
 
     async def test_payload_max_size(self):
         connection = AsyncScConnection()
         await connection.connect("url")
         with self.assertRaises(PayloadMaxSizeError):
             await connection.send_message(RequestType.CHECK_ELEMENTS, "0" * MAX_PAYLOAD_SIZE)
+        await connection.disconnect()
 
     async def test_event(self):
         connection = AsyncScConnection()
@@ -146,3 +153,4 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await websocket.messages.put(Response(20, True, True, [4, 5, 6], None).dump())
         await asyncio.sleep(0)
         self.assertEqual(event_run_times, 1)
+        await connection.disconnect()
