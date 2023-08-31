@@ -61,6 +61,9 @@ class AsyncScClient:
     async def check_elements(self, *addrs: ScAddr) -> list[ScType]:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
+        if not addrs:
+            self._logger.warning("check_elements: empty params")
+            return []
         payload = [addr.value for addr in addrs]
         response = await self._send_message(RequestType.CHECK_ELEMENTS, payload)
         data = [ScType(type_value) for type_value in response.payload]
@@ -69,6 +72,9 @@ class AsyncScClient:
     async def create_elements(self, constr: ScConstruction) -> list[ScAddr]:
         if not isinstance(constr, ScConstruction):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScConstruction")
+        if not constr.commands:
+            self._logger.warning("create_elements: empty ScConstruction")
+            return []
         payload = []
         for command in constr.commands:
             if command.el_type.is_node():
@@ -108,8 +114,11 @@ class AsyncScClient:
         )
 
     async def create_elements_by_scs(self, scs_text: SCsText) -> list[bool]:
-        if not isinstance(scs_text, list) or any(isinstance(n, (str, SCs)) for n in scs_text):
+        if not isinstance(scs_text, list) or not all(isinstance(n, (str, SCs)) for n in scs_text):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "string or SCs")
+        if not scs_text:
+            self._logger.warning("create_elements: empty SCsText")
+            return []
         payload = [
             {
                 common.SCS: scs,
@@ -343,6 +352,6 @@ class AsyncScClient:
                 payload_part = f"\nPayload: {payload[int(error.get(common.REF))]}" if error.get(common.REF) else ""
                 error_msgs.append(error.get(common.MESSAGE) + payload_part)
         error_msg = "\n".join(error_msgs)
-        error = ScServerError(error_msg)
+        error = ScServerError(ErrorNotes.GOT_ERROR, repr(error_msg))
         self._logger.error(error, exc_info=True)
         raise error

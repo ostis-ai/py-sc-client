@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, Union
+from typing import Union
 
 from sc_client.constants import common
 from sc_client.constants.common import ERRORS, EVENT, ID, PAYLOAD, STATUS
@@ -55,7 +55,7 @@ class ScConstruction:
 @dataclass
 class ScConstructionCommand:
     el_type: ScType
-    data: Any
+    data: any
 
 
 @dataclass
@@ -92,16 +92,16 @@ class Response:
     id: int
     status: bool
     event: bool
-    payload: Any
-    errors: Any
+    payload: any
+    errors: any
 
     @classmethod
     def load(cls, response: str) -> Response:
-        response: dict = json.loads(response)
+        response: dict[str, any] = json.loads(response)
         instance = cls(
             id=response.get(ID),
-            status=response.get(STATUS),
-            event=response.get(EVENT),
+            status=bool(response.get(STATUS)),
+            event=bool(response.get(EVENT)),
             payload=response.get(PAYLOAD),
             errors=response.get(ERRORS),
         )
@@ -111,8 +111,8 @@ class Response:
         return json.dumps(
             {
                 common.ID: self.id,
-                common.STATUS: self.status,
-                common.EVENT: self.event,
+                common.STATUS: int(self.status),
+                common.EVENT: int(self.event),
                 common.PAYLOAD: self.payload,
                 common.ERRORS: self.errors,
             }

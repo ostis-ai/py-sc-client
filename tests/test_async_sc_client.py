@@ -3,8 +3,9 @@ from typing import Any
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
 
-from sc_client import ScAddr, ScType
-from sc_client.constants import common
+from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, ScType
+from sc_client.constants import common, sc_types
+from sc_client.constants.common import RequestType
 from sc_client.core import AsyncScClient
 from sc_client.models import Response
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
@@ -42,19 +43,120 @@ class AsyncScClientActionsTestCase(IsolatedAsyncioTestCase):
     async def asyncTearDown(self) -> None:
         await self.client.disconnect()
 
-    async def test_check_elements(self):
-        addr1, addr2 = ScAddr(1), ScAddr(2)
-        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR):
-            # noinspection PyTypeChecker
-            await self.client.check_elements(1, 2)
 
+class CheckElementsTestCase(AsyncScClientActionsTestCase):
+    async def test_ok(self):
         class Callback(ResponseCallback):
             def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
                 assert payload_ == [1, 2]
                 assert type_ == common.RequestType.CHECK_ELEMENTS
                 return Response(id_, True, False, [11, 22], None)
 
-        callback = Callback()
-        await self.websocket.set_message_callback(callback)
-        result = await self.client.check_elements(addr1, addr2)
+        await self.websocket.set_message_callback(Callback())
+        result = await self.client.check_elements(ScAddr(1), ScAddr(2))
         self.assertEqual(result, [ScType(11), ScType(22)])
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR):
+            # noinspection PyTypeChecker
+            await self.client.check_elements(1, 2)
+
+    async def test_empty_params(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        result = await self.client.check_elements()
+        self.assertEqual(result, [])
+
+
+class CreateElementsTestCase(AsyncScClientActionsTestCase):
+    async def test_ok(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert payload_ == [
+                    {common.ELEMENT: common.Elements.NODE, common.TYPE: sc_types.NODE_CONST.value},
+                    {
+                        common.CONTENT: "link content",
+                        common.CONTENT_TYPE: ScLinkContentType.STRING.value,
+                        common.ELEMENT: common.Elements.LINK,
+                        common.TYPE: sc_types.LINK_CONST.value,
+                    },
+                    {
+                        common.ELEMENT: common.Elements.EDGE,
+                        common.SOURCE: {common.TYPE: common.REF, common.VALUE: 0},
+                        common.TARGET: {common.TYPE: common.REF, common.VALUE: 1},
+                        common.TYPE: sc_types.EDGE_ACCESS_CONST_POS_PERM.value,
+                    },
+                ]
+                assert type_ == common.RequestType.CREATE_ELEMENTS
+                return Response(id_, True, False, [1, 2, 3], [])
+
+        await self.websocket.set_message_callback(Callback())
+        construction = ScConstruction()
+        construction.create_node(sc_types.NODE_CONST, alias="node_src")
+        construction.create_link(
+            sc_types.LINK_CONST, ScLinkContent("link content", ScLinkContentType.STRING), alias="link_trg"
+        )
+        construction.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, src="node_src", trg="link_trg")
+        addrs = await self.client.create_elements(construction)
+        self.assertEqual(len(addrs), 3)
+        self.assertEqual(addrs, [ScAddr(1), ScAddr(2), ScAddr(3)])
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScConstruction")):
+            # noinspection PyTypeChecker
+            await self.client.create_elements("fake_construction")
+
+    async def test_empty_construction(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        construction = ScConstruction()
+        result = await self.client.create_elements(construction)
+        self.assertEqual(result, [])
+
+
+class CreateElementsBySCsTestCase(AsyncScClientActionsTestCase):
+    async def test_ok(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == RequestType.CREATE_ELEMENTS_BY_SCS
+                assert payload_ == [
+                    {common.OUTPUT_STRUCTURE: 0, common.SCS: "concept1 -> node1;;"},
+                    {common.OUTPUT_STRUCTURE: 0, common.SCS: "concept2 -> node2;;"},
+                ]
+                return Response(id_, True, False, [1, 2], [])
+
+        await self.websocket.set_message_callback(Callback())
+        addrs = await self.client.create_elements_by_scs(["concept1 -> node1;;", "concept2 -> node2;;"])
+        self.assertEqual(addrs, [True, True])
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("string or SCs")):
+            # noinspection PyTypeChecker
+            await self.client.create_elements_by_scs("wrong type here")
+            # noinspection PyTypeChecker
+            await self.client.create_elements_by_scs([1])
+
+    async def test_error_params(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                # pylint: disable=unused-argument
+                return Response(id_, False, False, [0], [{"message": "Parse error ...", "ref": 0}])
+
+        await self.websocket.set_message_callback(Callback())
+        with self.assertRaisesRegex(ScServerError, ErrorNotes.GOT_ERROR.format(repr("Parse error ..."))):
+            await self.client.create_elements_by_scs(["concept1 -> ;;"])
+
+    async def test_empty_params(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        result = await self.client.create_elements_by_scs([])
+        self.assertEqual(result, [])
