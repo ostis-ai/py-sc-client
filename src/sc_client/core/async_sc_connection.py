@@ -11,7 +11,7 @@ from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from sc_client.constants import common, config
 from sc_client.models import AsyncScEvent, Response, ScAddr
-from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
+from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScEventError, ScServerError
 
 
 class AsyncScConnection:
@@ -46,8 +46,11 @@ class AsyncScConnection:
 
     async def _handle_messages(self) -> None:
         try:
-            async for message in self._websocket:
-                await self._on_message(str(message))
+            async for response_json in self._websocket:
+                try:
+                    await self._on_message(str(response_json))
+                except (ScServerError, RuntimeError, ValueError) as e:
+                    self._logger.error(e, exc_info=True)
         except ConnectionClosedOK:
             return  # Connection closed by user
         except ConnectionClosed as e:
@@ -55,16 +58,21 @@ class AsyncScConnection:
             await self.on_error(e)
             raise ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST) from e
 
-    async def _on_message(self, response: str) -> None:
-        response = Response.load(response)
+    async def _on_message(self, response_json: str) -> None:
+        response = Response.load(response_json)
         if response.event:
-            if event := self.get_event(response.id):
-                self._logger.debug(f"Started {str(event)}")
-                addrs: list[ScAddr] = [ScAddr(value) for value in response.payload]
-                asyncio.create_task(event.callback(*addrs))
-                await asyncio.sleep(0)
+            await self._on_event(response)
         else:
             self._responses_dict[response.id] = response
+
+    async def _on_event(self, response: Response):
+        event = self.get_event(response.id)
+        if event is None:
+            raise ScEventError(ErrorNotes.EVENT_IS_NOT_FOUND, response.id)
+        self._logger.debug(f"Started {str(event)}")
+        addrs: list[ScAddr] = [ScAddr(value) for value in response.payload]
+        asyncio.create_task(event.callback(*addrs), name=f"ScEvent({event.id})")
+        await asyncio.sleep(0)
 
     def set_event(self, sc_event: AsyncScEvent) -> None:
         self._events_dict[sc_event.id] = sc_event

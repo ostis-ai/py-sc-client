@@ -8,8 +8,7 @@ from sc_client.constants import common
 from sc_client.core import AsyncScClient
 from sc_client.models import Response
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
-from sc_client.testing.response_callback import ResponseCallback
-from sc_client.testing.websocket_stub import WebsocketStub, websockets_client_connect_patch
+from sc_client.testing import ResponseCallback, WebsocketStub, websockets_client_connect_patch
 
 logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
@@ -55,6 +54,7 @@ class AsyncScClientActionsTestCase(IsolatedAsyncioTestCase):
                 assert type_ == common.RequestType.CHECK_ELEMENTS
                 return Response(id_, True, False, [11, 22], None)
 
-        await self.websocket.set_message_callback(Callback())
+        callback = Callback()
+        await self.websocket.set_message_callback(callback)
         result = await self.client.check_elements(addr1, addr2)
         self.assertEqual(result, [ScType(11), ScType(22)])

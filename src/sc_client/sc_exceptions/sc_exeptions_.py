@@ -19,6 +19,10 @@ class PayloadMaxSizeError(ScServerError):
     default_message = ErrorDefaultMessages.PAYLOAD_MAX_SIZE
 
 
+class ScEventError(ScServerError):
+    default_message = ErrorDefaultMessages.EVENT_ERROR
+
+
 class InvalidValueError(ScException):
     default_message = ErrorDefaultMessages.INVALID_VALUE
 

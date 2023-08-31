@@ -11,8 +11,7 @@ from sc_client.constants.config import MAX_PAYLOAD_SIZE
 from sc_client.core.async_sc_connection import AsyncScConnection
 from sc_client.models import AsyncScEvent, Response
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
-from sc_client.testing import WebsocketStub, websockets_client_connect_patch
-from sc_client.testing.response_callback import ResponseCallback
+from sc_client.testing import ResponseCallback, WebsocketStub, websockets_client_connect_patch
 
 logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 

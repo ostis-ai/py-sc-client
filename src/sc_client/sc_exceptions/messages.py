@@ -9,6 +9,7 @@ class ErrorDefaultMessages:
     LINK_OVERSIZE = "Link content exceeds permitted value"
     SC_SERVER_ERROR = "Sc-server error"
     PAYLOAD_MAX_SIZE = "Payload max size error"
+    EVENT_ERROR = "ScEvent error"
 
 
 class ErrorNotes:
@@ -26,3 +27,4 @@ class ErrorNotes:
     ALIAS_MUST_BE_STR = "Alias must be str"
     VALUE_WITH_ALIAS_MUST_BE_SC_ADDR = "Value with alias must be ScAddr"
     VAR_TYPE_IN_TEMPLTE = "You should to use variable types in template"
+    EVENT_IS_NOT_FOUND = "Event id={} is not found or was dropped"

@@ -1,1 +1,2 @@
+from sc_client.testing.response_callback import ResponseCallback
 from sc_client.testing.websocket_stub import WebsocketStub, websockets_client_connect_patch

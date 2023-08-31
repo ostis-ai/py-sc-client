@@ -4,6 +4,7 @@ from sc_client.sc_exceptions.sc_exeptions_ import (
     InvalidValueError,
     LinkContentOversizeError,
     PayloadMaxSizeError,
+    ScEventError,
     ScException,
     ScServerError,
 )
