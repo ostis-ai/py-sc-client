@@ -117,7 +117,7 @@ class AsyncScClient:
         if not isinstance(scs_text, list) or not all(isinstance(n, (str, SCs)) for n in scs_text):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "string or SCs")
         if not scs_text:
-            self._logger.warning("create_elements: empty SCsText")
+            self._logger.warning("create_elements_by_scs: empty SCsText")
             return []
         payload = [
             {
@@ -138,7 +138,7 @@ class AsyncScClient:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         if not addrs:
-            self._logger.warning("check_elements: empty params")
+            self._logger.warning("delete_elements: empty params")
             return True
         payload = [addr.value for addr in addrs]
         response = await self._send_message(RequestType.DELETE_ELEMENTS, payload)
@@ -146,7 +146,10 @@ class AsyncScClient:
 
     async def set_link_contents(self, *contents: ScLinkContent) -> bool:
         if not all(isinstance(content, ScLinkContent) for content in contents):
-            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScLinkContent"))
+        if not contents:
+            self._logger.warning("set_link_contents: empty params")
+            return True
         payload = [
             {
                 common.COMMAND: CommandTypes.SET,
@@ -162,6 +165,9 @@ class AsyncScClient:
     async def get_link_content(self, *addrs: ScAddr) -> list[ScLinkContent]:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
+        if not addrs:
+            self._logger.warning("get_link_content: empty params")
+            return []
         payload = [
             {
                 common.COMMAND: CommandTypes.GET,
@@ -355,6 +361,6 @@ class AsyncScClient:
                 payload_part = f"\nPayload: {payload[int(error.get(common.REF))]}" if error.get(common.REF) else ""
                 error_msgs.append(error.get(common.MESSAGE) + payload_part)
         error_msg = "\n".join(error_msgs)
-        error = ScServerError(ErrorNotes.GOT_ERROR, repr(error_msg))
+        error = ScServerError(ErrorNotes.GOT_ERROR, error_msg)
         self._logger.error(error, exc_info=True)
         raise error

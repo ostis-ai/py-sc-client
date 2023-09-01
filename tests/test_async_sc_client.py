@@ -176,7 +176,7 @@ class CreateElementsBySCsTestCase(AsyncScClientActionsTestCase):
                 return Response(id_, False, False, [0], [{"message": "Parse error ...", "ref": 0}])
 
         await self.websocket.set_message_callback(Callback())
-        with self.assertRaisesRegex(ScServerError, ErrorNotes.GOT_ERROR.format(repr("Parse error ..."))):
+        with self.assertRaisesRegex(ScServerError, ErrorNotes.GOT_ERROR.format("Parse error ...")):
             await self.client.create_elements_by_scs(["concept1 -> ;;"])
 
     async def test_empty_params(self):
@@ -187,3 +187,98 @@ class CreateElementsBySCsTestCase(AsyncScClientActionsTestCase):
         await self.websocket.set_message_callback(NoRunCallback())
         result = await self.client.create_elements_by_scs([])
         self.assertEqual(result, [])
+
+
+class GetLinksContentTestCase(AsyncScClientActionsTestCase):
+    async def test_ok(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == RequestType.CONTENT
+                assert payload_ == [
+                    {common.ADDR: 1, common.COMMAND: common.CommandTypes.GET},
+                    {common.ADDR: 2, common.COMMAND: common.CommandTypes.GET},
+                    {common.ADDR: 3, common.COMMAND: common.CommandTypes.GET},
+                ]
+                payload_response = [
+                    {common.TYPE: ScLinkContentType.STRING.name.lower(), common.VALUE: "str1"},
+                    {common.TYPE: ScLinkContentType.INT.name.lower(), common.VALUE: 1},
+                    {common.TYPE: ScLinkContentType.FLOAT.name.lower(), common.VALUE: 1.0},
+                ]
+                return Response(id_, True, False, payload_response, [])
+
+        await self.websocket.set_message_callback(Callback())
+        contents_received = await self.client.get_link_content(ScAddr(1), ScAddr(2), ScAddr(3))
+        self.assertEqual(
+            contents_received,
+            [
+                ScLinkContent("str1", content_type=ScLinkContentType.STRING),
+                ScLinkContent(1, content_type=ScLinkContentType.INT),
+                ScLinkContent(1.0, content_type=ScLinkContentType.FLOAT),
+            ],
+        )
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR):
+            # noinspection PyTypeChecker
+            await self.client.get_link_content(12)
+
+    async def test_error_params(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                # pylint: disable=unused-argument
+                return Response(id_, False, False, None, "Invalid state ...")
+
+        await self.websocket.set_message_callback(Callback())
+        with self.assertRaisesRegex(ScServerError, ErrorNotes.GOT_ERROR.format("Invalid state ...")):
+            await self.client.get_link_content(ScAddr(111222))
+
+    async def test_empty_params(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        result = await self.client.get_link_content()
+        self.assertEqual(result, [])
+
+
+class SetLinksContentTestCase(AsyncScClientActionsTestCase):
+    # async def test_ok(self):
+    #     class Callback(ResponseCallback):
+    #         def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+    #             assert type_ == RequestType.CREATE_ELEMENTS_BY_SCS
+    #             assert payload_ == [...]
+    #             return Response(id_, True, False, [1], [])
+    #
+    #     await self.websocket.set_message_callback(Callback())
+    #     contents = [
+    #         ScLinkContent("str", content_type=ScLinkContentType.STRING),
+    #         ScLinkContent(2, content_type=ScLinkContentType.INT),
+    #         ScLinkContent(3.0, content_type=ScLinkContentType.FLOAT),
+    #     ]
+    #     addrs = await self.client.set_link_contents(*contents)
+    #     self.assertTrue(addrs)
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScLinkContent")):
+            # noinspection PyTypeChecker
+            await self.client.set_link_contents("wrong type here")
+
+    # async def test_error_params(self):
+    #     class Callback(ResponseCallback):
+    #         def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+    #             # pylint: disable=unused-argument
+    #             return Response(id_, False, False, [0], [{"message": "Parse error ...", "ref": 0}])
+    #
+    #     await self.websocket.set_message_callback(Callback())
+    #     with self.assertRaisesRegex(ScServerError, ErrorNotes.GOT_ERROR.format(repr("Parse error ..."))):
+    #         await self.client.create_elements_by_scs(["concept1 -> ;;"])
+
+    async def test_empty_params(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        result = await self.client.set_link_contents()
+        self.assertTrue(result)

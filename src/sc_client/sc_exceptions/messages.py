@@ -26,6 +26,6 @@ class ErrorNotes:
     EXPECTED_SC_TYPE = "Expected ScType: {}"
     ALIAS_MUST_BE_STR = "Alias must be str"
     VALUE_WITH_ALIAS_MUST_BE_SC_ADDR = "Value with alias must be ScAddr"
-    VAR_TYPE_IN_TEMPLTE = "You should to use variable types in template"
+    VAR_TYPE_IN_TEMPLATE = "You should to use variable types in template"
     EVENT_IS_NOT_FOUND = "Event id={} is not found or was dropped"
-    GOT_ERROR = "Got error from sc-server: {}"
+    GOT_ERROR = "Got error from sc-server: \n{}"
