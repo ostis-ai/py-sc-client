@@ -71,6 +71,33 @@ class CheckElementsTestCase(AsyncScClientActionsTestCase):
         self.assertEqual(result, [])
 
 
+class DeleteElementsTestCase(AsyncScClientActionsTestCase):
+    async def test_ok(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert payload_ == [1, 2]
+                assert type_ == common.RequestType.DELETE_ELEMENTS
+                return Response(id_, True, False, [1], [])
+
+        await self.websocket.set_message_callback(Callback())
+        result = await self.client.delete_elements(ScAddr(1), ScAddr(2))
+        self.assertTrue(result)
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR):
+            # noinspection PyTypeChecker
+            await self.client.delete_elements(1, 2)
+
+    async def test_empty_params(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        result = await self.client.delete_elements()
+        self.assertTrue(result)
+
+
 class CreateElementsTestCase(AsyncScClientActionsTestCase):
     async def test_ok(self):
         class Callback(ResponseCallback):

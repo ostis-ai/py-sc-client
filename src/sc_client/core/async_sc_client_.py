@@ -137,6 +137,9 @@ class AsyncScClient:
     async def delete_elements(self, *addrs: ScAddr) -> bool:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
+        if not addrs:
+            self._logger.warning("check_elements: empty params")
+            return True
         payload = [addr.value for addr in addrs]
         response = await self._send_message(RequestType.DELETE_ELEMENTS, payload)
         return response.status
@@ -268,7 +271,7 @@ class AsyncScClient:
     @classmethod
     def _create_template_payload(cls, template: ScTemplate | str | ScAddr, params: ScTemplateParams = None) -> any:
         if not isinstance(template, (ScTemplate, str, ScAddr)):
-            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScTemplate, str or ScArrd")
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScTemplate, str or ScAddr")
         if isinstance(template, ScAddr):
             payload_template = {
                 common.TYPE: common.Types.ADDR,
