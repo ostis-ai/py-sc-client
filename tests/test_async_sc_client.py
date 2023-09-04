@@ -300,3 +300,60 @@ class SetLinksContentTestCase(AsyncScClientActionsTestCase):
         await self.websocket.set_message_callback(NoRunCallback())
         result = await self.client.set_link_contents()
         self.assertTrue(result)
+
+
+class GetLinksTestCase(AsyncScClientActionsTestCase):
+    params = [
+        (AsyncScClient.get_links_by_content, common.CommandTypes.FIND),
+        (AsyncScClient.get_links_by_content_substring, common.CommandTypes.FIND_LINKS_BY_SUBSTRING),
+        (
+            AsyncScClient.get_links_contents_by_content_substring,
+            common.CommandTypes.FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING,
+        ),
+    ]
+
+    async def test_ok(self):
+        for method, command in self.params:
+            # pylint: disable=cell-var-from-loop
+            class Callback(ResponseCallback):
+                def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                    assert type_ == RequestType.CONTENT
+                    assert payload_ == [
+                        {common.COMMAND: command, common.DATA: data} for data in ("str_content", "str", 12, 3.14)
+                    ]
+                    return Response(id_, True, False, [[1], [2, 3]], None)
+
+            await self.websocket.set_message_callback(Callback())
+            contents = [ScLinkContent("str_content", ScLinkContentType.STRING), "str", 12, 3.14]
+            await method(self.client, *contents)
+
+    async def test_wrong_params(self):
+        for method, _ in self.params:
+            with self.assertRaisesRegex(
+                InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScLinkContent, str, int or float")
+            ):
+                # noinspection PyTypeChecker
+                await method(self.client, ("wrong type here",))
+
+    async def test_error_params(self):
+        for method, _ in self.params:
+
+            class Callback(ResponseCallback):
+                def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                    # pylint: disable=unused-argument
+                    return Response(id_, False, False, [0], [{"message": "Some error on sc-server ....", "ref": 0}])
+
+            await self.websocket.set_message_callback(Callback())
+            with self.assertRaisesRegex(ScServerError, ErrorNotes.GOT_ERROR.format("Some error on sc-server ....")):
+                await method(self.client, ScLinkContent("str", ScLinkContentType.INT))
+
+    async def test_empty_params(self):
+        for method, _ in self.params:
+
+            class NoRunCallback(ResponseCallback):
+                def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                    raise AssertionError
+
+            await self.websocket.set_message_callback(NoRunCallback())
+            result = await method(self.client)
+            self.assertEqual(result, [])

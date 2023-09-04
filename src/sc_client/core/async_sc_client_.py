@@ -198,6 +198,9 @@ class AsyncScClient:
     ) -> list[list[ScAddr]]:
         if not all(isinstance(content, (ScLinkContent, str, int, float)) for content in contents):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScLinkContent, str, int or float")
+        if not contents:
+            self._logger.warning("_process_get_links: empty params")
+            return []
         link_contents = []
         for content in contents:
             if isinstance(content, ScLinkContent):
@@ -216,8 +219,6 @@ class AsyncScClient:
             for content in link_contents
         ]
         response = await self._send_message(RequestType.CONTENT, payload)
-        if not response.payload:
-            return response.payload
         return [[ScAddr(addr_value) for addr_value in addr_list] for addr_list in response.payload]
 
     async def resolve_keynodes(self, *params: ScIdtfResolveParams) -> list[ScAddr]:
