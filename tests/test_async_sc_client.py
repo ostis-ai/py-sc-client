@@ -3,7 +3,7 @@ from typing import Any
 from unittest import IsolatedAsyncioTestCase
 from unittest.mock import patch
 
-from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, ScType
+from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, ScTemplate, ScType
 from sc_client.constants import common, sc_types
 from sc_client.constants.common import RequestType
 from sc_client.core import AsyncScClient
@@ -402,3 +402,36 @@ class ResolveKeynodesTestCase(AsyncScClientActionsTestCase):
         await self.websocket.set_message_callback(NoRunCallback())
         result = await self.client.resolve_keynodes()
         self.assertEqual(result, [])
+
+
+class TemplateTestCase(AsyncScClientActionsTestCase):
+    async def test_search_ok(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == common.RequestType.SEARCH_TEMPLATE
+                assert payload_ == {
+                    common.TEMPLATE: [
+                        [
+                            {common.TYPE: common.ADDR, common.VALUE: 1},
+                            {
+                                common.TYPE: common.TYPE,
+                                common.VALUE: sc_types.EDGE_ACCESS_VAR_POS_PERM.value,
+                                common.ALIAS: "edge",
+                            },
+                            {common.TYPE: common.TYPE, common.VALUE: sc_types.NODE_VAR.value},
+                        ]
+                    ],
+                    common.PARAMS: {},
+                }
+                return Response(id_, True, False, {common.ALIASES: {"edge": 2}, common.ADDRS: [[1, 2, 3]]}, None)
+
+        await self.websocket.set_message_callback(Callback())
+        template = ScTemplate().triple(ScAddr(1), sc_types.EDGE_ACCESS_VAR_POS_PERM >> "edge", sc_types.NODE_VAR)
+        result = (await self.client.template_search(template))[0]
+        self.assertEqual(result.addrs, [ScAddr(1), ScAddr(2), ScAddr(3)])
+        self.assertEqual(result.aliases, {"edge": 2})
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScTemplate")):
+            await self.client.template_search("wrong params")
+            await self.client.template_generate("wrong params")

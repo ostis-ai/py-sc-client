@@ -41,6 +41,11 @@ class ScTemplateTriple:
         self.edge = ScTemplateValue(edge)
         self.trg = ScTemplateValue(trg)
 
+    def __iter__(self) -> Iterator[ScTemplateValue]:
+        yield self.src
+        yield self.edge
+        yield self.trg
+
 
 class ScTemplate:
     def __init__(self) -> None:

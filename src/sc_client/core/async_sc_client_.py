@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from typing import Awaitable, Callable, get_origin
 
 from sc_client.constants import common
@@ -247,7 +246,7 @@ class AsyncScClient:
 
     async def template_search(
         self,
-        template: ScTemplate | str | ScAddr,
+        template: ScTemplate,
         params: ScTemplateParams = None,
     ) -> list[ScTemplateResult]:
         payload = self._create_template_payload(template, params)
@@ -264,7 +263,7 @@ class AsyncScClient:
 
     async def template_generate(
         self,
-        template: ScTemplate | str | ScAddr,
+        template: ScTemplate,
         params: ScTemplateParams = None,
     ) -> ScTemplateResult:
         payload = self._create_template_payload(template, params)
@@ -279,21 +278,10 @@ class AsyncScClient:
         return result
 
     @classmethod
-    def _create_template_payload(cls, template: ScTemplate | str | ScAddr, params: ScTemplateParams = None) -> any:
-        if not isinstance(template, (ScTemplate, str, ScAddr)):
-            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScTemplate, str or ScAddr")
-        if isinstance(template, ScAddr):
-            payload_template = {
-                common.TYPE: common.Types.ADDR,
-                common.VALUE: template.value,
-            }
-        elif isinstance(template, str) and re.match("^([a-z]|\\d|_)+", template):
-            payload_template = {common.TYPE: common.Types.IDTF, common.VALUE: template}
-        elif isinstance(template, str):
-            payload_template = template
-        else:
-            payload_template = cls._process_template(template)
-
+    def _create_template_payload(cls, template: ScTemplate, params: ScTemplateParams = None) -> any:
+        if not isinstance(template, ScTemplate):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScTemplate")
+        payload_template = [[cls._process_triple_item(item) for item in triple] for triple in template.triple_list]
         payload_params = {}
         if params is not None:
             if not isinstance(params, get_origin(ScTemplateParams)):
@@ -304,14 +292,6 @@ class AsyncScClient:
                 else:
                     payload_params.update({alias: str(addr)})
         return {common.TEMPLATE: payload_template, common.PARAMS: payload_params}
-
-    @classmethod
-    def _process_template(cls, template: ScTemplate) -> list[list[dict]]:
-        payload_template: list[list[dict]] = []
-        for triple in template.triple_list:
-            items = [triple.src, triple.edge, triple.trg]
-            payload_template.append([cls._process_triple_item(item) for item in items])
-        return payload_template
 
     @staticmethod
     def _process_triple_item(item: ScTemplateValue) -> dict:
