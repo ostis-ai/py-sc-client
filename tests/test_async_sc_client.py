@@ -7,7 +7,7 @@ from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, 
 from sc_client.constants import common, sc_types
 from sc_client.constants.common import RequestType
 from sc_client.core import AsyncScClient
-from sc_client.models import Response
+from sc_client.models import Response, ScIdtfResolveParams
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
 from sc_client.testing import ResponseCallback, WebsocketStub, websockets_client_connect_patch
 
@@ -357,3 +357,48 @@ class GetLinksTestCase(AsyncScClientActionsTestCase):
             await self.websocket.set_message_callback(NoRunCallback())
             result = await method(self.client)
             self.assertEqual(result, [])
+
+
+class ResolveKeynodesTestCase(AsyncScClientActionsTestCase):
+    async def test_ok(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == common.RequestType.KEYNODES
+                assert payload_ == [
+                    {
+                        common.COMMAND: common.CommandTypes.RESOLVE,
+                        common.ELEMENT_TYPE: sc_types.NODE_CONST_CLASS.value,
+                        common.IDTF: "some_class",
+                    },
+                    {
+                        common.COMMAND: common.CommandTypes.RESOLVE,
+                        common.ELEMENT_TYPE: sc_types.NODE_CONST.value,
+                        common.IDTF: "some_node",
+                    },
+                    {
+                        common.COMMAND: common.CommandTypes.FIND,
+                        common.IDTF: "some_existing_element",
+                    },
+                ]
+                return Response(id_, True, False, [1, 2], None)
+
+        await self.websocket.set_message_callback(Callback())
+        params = [
+            ScIdtfResolveParams("some_class", sc_types.NODE_CONST_CLASS),
+            ScIdtfResolveParams("some_node", sc_types.NODE_CONST),
+            ScIdtfResolveParams("some_existing_element", None),
+        ]
+        await self.client.resolve_keynodes(*params)
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScIdtfResolveParams")):
+            await self.client.resolve_keynodes(sc_types.NODE_CONST)
+
+    async def test_empty_params(self):
+        class NoRunCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                raise AssertionError
+
+        await self.websocket.set_message_callback(NoRunCallback())
+        result = await self.client.resolve_keynodes()
+        self.assertEqual(result, [])

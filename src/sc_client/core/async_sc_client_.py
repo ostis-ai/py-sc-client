@@ -224,6 +224,9 @@ class AsyncScClient:
     async def resolve_keynodes(self, *params: ScIdtfResolveParams) -> list[ScAddr]:
         if not all(isinstance(par, ScIdtfResolveParams) for par in params):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScIdtfResolveParams")
+        if not params:
+            self._logger.warning("resolve_keynodes: empty params")
+            return []
         payload = []
         for idtf_param in params:
             keynode_type = idtf_param.type
