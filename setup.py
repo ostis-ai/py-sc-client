@@ -12,6 +12,7 @@ CURRENT_PYTHON = sys.version_info[:2]
 REQUIRED_PYTHON = (3, 8)
 
 
+# pylint: disable=consider-using-f-string
 if CURRENT_PYTHON < REQUIRED_PYTHON:
     sys.stderr.write(
         """

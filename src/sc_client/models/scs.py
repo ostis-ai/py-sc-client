@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Union
 
-from sc_client.models import ScAddr
+from sc_client.models.sc_addr import ScAddr
 
 
 @dataclass

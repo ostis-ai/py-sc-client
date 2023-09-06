@@ -5,6 +5,8 @@ from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError
 
 
 class ScType:
+    # pylint: disable=too-many-public-methods
+
     def __init__(self, value: int = 0) -> None:
         if not isinstance(value, int):
             raise InvalidTypeError(ErrorNotes.INT_TYPE_INITIALIZATION)
@@ -27,13 +29,13 @@ class ScType:
         return self.value == other.value
 
     def is_equal(self, other: ScType) -> bool:
-        return self.__eq__(other)
+        return self == other
 
     def __bool__(self) -> bool:
         return self.value != 0
 
     def is_valid(self) -> bool:
-        return self.__bool__()
+        return bool(self)
 
     def has_constancy(self) -> bool:
         return (self.value & bitmasks.SC_TYPE_CONSTANCY_MASK) != 0

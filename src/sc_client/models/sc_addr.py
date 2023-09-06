@@ -28,13 +28,13 @@ class ScAddr:
         return self.value == other.value
 
     def is_equal(self, other: ScAddr) -> bool:
-        return self.__eq__(other)
+        return self == other
 
     def __bool__(self) -> bool:
         return self.value != 0
 
     def is_valid(self) -> bool:
-        return self.__bool__()
+        return bool(self)
 
     def __lt__(self, other: ScAddr) -> bool:
         return self.value < other.value

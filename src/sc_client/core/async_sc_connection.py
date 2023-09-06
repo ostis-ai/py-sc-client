@@ -15,6 +15,8 @@ from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScEventErro
 
 
 class AsyncScConnection:
+    # pylint: disable=too-many-instance-attributes
+
     def __init__(self) -> None:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         self._url: str | None = None
@@ -69,7 +71,7 @@ class AsyncScConnection:
         event = self.get_event(response.id)
         if event is None:
             raise ScEventError(ErrorNotes.EVENT_IS_NOT_FOUND, response.id)
-        self._logger.debug(f"Started {str(event)}")
+        self._logger.debug("Started %s", str(event))
         addrs: list[ScAddr] = [ScAddr(value) for value in response.payload]
         asyncio.create_task(event.callback(*addrs), name=f"ScEvent({event.id})")
         await asyncio.sleep(0)
@@ -123,7 +125,9 @@ class AsyncScConnection:
                 if retries <= 0:
                     raise ScServerError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND) from e
                 retries -= 1
-                self._logger.warning(f"Trying to reconnect in {self.reconnect_delay} seconds (retries left: {retries})")
+                self._logger.warning(
+                    "Trying to reconnect in %d seconds (retries left: %s)", self.reconnect_delay, retries
+                )
                 await asyncio.sleep(self.reconnect_delay)
                 try:
                     await self.connect()
