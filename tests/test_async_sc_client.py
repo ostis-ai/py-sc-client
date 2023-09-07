@@ -405,7 +405,7 @@ class ResolveKeynodesTestCase(AsyncScClientActionsTestCase):
 
 
 class TemplateTestCase(AsyncScClientActionsTestCase):
-    async def test_search_ok(self):
+    async def test_ok_search_sc_template(self):
         class Callback(ResponseCallback):
             def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
                 assert type_ == common.RequestType.SEARCH_TEMPLATE
@@ -431,7 +431,58 @@ class TemplateTestCase(AsyncScClientActionsTestCase):
         self.assertEqual(result.addrs, [ScAddr(1), ScAddr(2), ScAddr(3)])
         self.assertEqual(result.aliases, {"edge": 2})
 
+    async def test_ok_generate_sc_template(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == common.RequestType.GENERATE_TEMPLATE
+                assert payload_ == {
+                    common.TEMPLATE: [
+                        [
+                            {common.TYPE: common.ADDR, common.VALUE: 1},
+                            {
+                                common.TYPE: common.TYPE,
+                                common.VALUE: sc_types.EDGE_ACCESS_VAR_POS_PERM.value,
+                                common.ALIAS: "edge",
+                            },
+                            {common.TYPE: common.ADDR, common.VALUE: 3},
+                        ]
+                    ],
+                    common.PARAMS: {},
+                }
+                return Response(id_, True, False, {common.ALIASES: {"edge": 2}, common.ADDRS: [1, 2, 3]}, None)
+
+        await self.websocket.set_message_callback(Callback())
+        template = ScTemplate().triple(ScAddr(1), sc_types.EDGE_ACCESS_VAR_POS_PERM >> "edge", ScAddr(3))
+        result = await self.client.template_generate(template)
+        self.assertEqual(result.addrs, [ScAddr(1), ScAddr(2), ScAddr(3)])
+        self.assertEqual(result.aliases, {"edge": 2})
+
+    async def test_ok_search_scs_template(self):
+        class Callback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == common.RequestType.SEARCH_TEMPLATE
+                assert payload_ == {
+                    common.TEMPLATE: {
+                        common.TYPE: common.IDTF,
+                        common.VALUE: "person _-> .._p (* _=> nrel_email:: _[test@email.com] *);;",
+                    },
+                    common.PARAMS: {".._p": 5314},
+                }
+                return Response(id_, True, False, {common.ALIASES: {}, common.ADDRS: []}, None)
+
+        await self.websocket.set_message_callback(Callback())
+        template = "person _-> .._p (* _=> nrel_email:: _[test@email.com] *);;"
+        params = {".._p": ScAddr(5314)}
+        results = await self.client.template_search(template, params)
+        self.assertEqual(results, [])
+
+    # noinspection PyTypeChecker
     async def test_wrong_params(self):
         with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScTemplate")):
-            await self.client.template_search("wrong params")
-            await self.client.template_generate("wrong params")
+            await self.client.template_search(None)
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScTemplate")):
+            await self.client.template_generate(None)
+
+    async def test_wrong_template(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.VAR_TYPE_IN_TEMPLATE):
+            ScTemplate().triple(ScAddr(0), sc_types.EDGE_ACCESS_CONST_POS_PERM, ScAddr(0))
