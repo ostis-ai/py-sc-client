@@ -29,3 +29,15 @@ class ResponseCallback(abc.ABC):
         except AssertionError as e:
             response = Response(message[common.ID], False, False, None, str(e))
         return response.dump()
+
+
+class SimpleResponseCallback(ResponseCallback):
+    def __init__(self, status: bool, event: bool, payload: any, errors: any, delay: float = 0.0) -> None:
+        super().__init__(delay)
+        self.status = status
+        self.event = event
+        self.payload = payload
+        self.errors = errors
+
+    def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+        return Response(id_, self.status, self.event, self.payload, self.errors)

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from typing import Any
 from unittest import IsolatedAsyncioTestCase
@@ -5,11 +6,11 @@ from unittest.mock import patch
 
 from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, ScTemplate, ScType
 from sc_client.constants import common, sc_types
-from sc_client.constants.common import RequestType
+from sc_client.constants.common import RequestType, ScEventType
 from sc_client.core import AsyncScClient
-from sc_client.models import Response, ScIdtfResolveParams
+from sc_client.models import AsyncScEventParams, Response, ScIdtfResolveParams
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
-from sc_client.testing import ResponseCallback, WebsocketStub, websockets_client_connect_patch
+from sc_client.testing import ResponseCallback, SimpleResponseCallback, WebsocketStub, websockets_client_connect_patch
 
 logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
 
@@ -486,3 +487,64 @@ class TemplateTestCase(AsyncScClientActionsTestCase):
     async def test_wrong_template(self):
         with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.VAR_TYPE_IN_TEMPLATE):
             ScTemplate().triple(ScAddr(0), sc_types.EDGE_ACCESS_CONST_POS_PERM, ScAddr(0))
+
+
+class ScEventsTestCase(AsyncScClientActionsTestCase):
+    async def test_ok_create_and_destroy(self):
+        async def test_callback(*_):
+            pass
+
+        param = AsyncScEventParams(ScAddr(12), ScEventType.ADD_OUTGOING_EDGE, test_callback)
+
+        class CreateCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == common.RequestType.EVENTS
+                nonlocal param
+                assert payload_ == {
+                    common.CommandTypes.CREATE: [{common.TYPE: param.event_type.value, common.ADDR: param.addr.value}]
+                }
+                return Response(id_, True, False, [1], None)
+
+        await self.websocket.set_message_callback(CreateCallback())
+        events = await self.client.events_create(param)
+        self.assertTrue(self.client.is_event_valid(events[0]))
+
+        class DestroyCallback(ResponseCallback):
+            def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
+                assert type_ == common.RequestType.EVENTS
+                nonlocal events
+                assert payload_ == {common.CommandTypes.DELETE: [event.id for event in events]}
+                return Response(id_, True, False, None, None)
+
+        await self.websocket.set_message_callback(DestroyCallback())
+        is_event_deleted = await self.client.events_destroy(*events)
+        self.assertTrue(is_event_deleted)
+        self.assertFalse(self.client.is_event_valid(events[0]))
+
+    async def test_ok_create_and_run_event(self):
+        async def test_callback(src: ScAddr, *_):
+            nonlocal is_call_succesfull
+            is_call_succesfull = src == ScAddr(12)
+
+        is_call_succesfull = False
+        await self.websocket.set_message_callback(SimpleResponseCallback(True, False, [1], None))
+        events = await self.client.events_create(
+            AsyncScEventParams(ScAddr(12), ScEventType.ADD_OUTGOING_EDGE, test_callback)
+        )
+        await self.websocket.messages.put(
+            f'{{"id": {events[0].id}, "event": true, "status": true, "payload": [12, 0, 0], "errors": []}}'
+        )
+        await asyncio.sleep(0.001)
+        assert is_call_succesfull
+
+    async def test_wrong_params(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("AsyncScEventParams")):
+            await self.client.events_create("wrong type here")
+
+    async def test_is_event_valid_incorrect_arguments(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("AsyncScEvent")):
+            self.client.is_event_valid("wrong type here")
+
+    async def test_events_destroy_incorrect_arguments(self):
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.EXPECTED_OBJECT_TYPES.format("AsyncScEvent")):
+            await self.client.events_destroy("wrong type here")
