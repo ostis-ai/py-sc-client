@@ -28,6 +28,7 @@ from sc_client.models import (
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
 
 
+# pylint: disable=too-many-public-methods
 class AsyncScClient:
     def __init__(self) -> None:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -42,17 +43,17 @@ class AsyncScClient:
     async def disconnect(self) -> None:
         await self._sc_connection.disconnect()
 
-    def set_handlers(
-        self,
-        on_open: Callable[[], Awaitable[None]] = None,
-        on_close: Callable[[], Awaitable[None]] = None,
-        on_error: Callable[[Exception], Awaitable[None]] = None,
-        on_reconnect: Callable[[], Awaitable[None]] = None,
-    ) -> None:
-        self._sc_connection.on_open = on_open or self._sc_connection.on_open
-        self._sc_connection.on_close = on_close or self._sc_connection.on_close
-        self._sc_connection.on_error = on_error or self._sc_connection.on_error
-        self._sc_connection.on_reconnect = on_reconnect or self._sc_connection.on_reconnect
+    def set_on_open_handler(self, on_open: Callable[[], Awaitable[None]]) -> None:
+        self._sc_connection.on_open = on_open
+
+    def set_on_close_handler(self, on_close: Callable[[], Awaitable[None]]) -> None:
+        self._sc_connection.on_close = on_close
+
+    def set_on_error_handler(self, on_error: Callable[[Exception], Awaitable[None]]) -> None:
+        self._sc_connection.on_error = on_error
+
+    def set_on_reconnect_handler(self, on_reconnect: Callable[[], Awaitable[None]]) -> None:
+        self._sc_connection.on_reconnect = on_reconnect
 
     def set_reconnect_settings(self, retries: int = None, retry_delay: float = None) -> None:
         self._sc_connection.reconnect_retries = retries or self._sc_connection.reconnect_retries

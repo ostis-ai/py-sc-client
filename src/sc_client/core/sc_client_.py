@@ -30,6 +30,7 @@ from sc_client.models import (
 
 # noinspection PyProtectedMember
 # pylint: disable=protected-access
+# pylint: disable=too-many-public-methods
 class ScClient:
     def __init__(self) -> None:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
@@ -46,44 +47,29 @@ class ScClient:
     def disconnect(self) -> None:
         self._loop.run_until_complete(self._async_sc_client.disconnect())
 
-    def set_handlers(
-        self,
-        on_open: Callable[[], None] = None,
-        on_close: Callable[[], None] = None,
-        on_error: Callable[[Exception], None] = None,
-        on_reconnect: Callable[[], None] = None,
-    ) -> None:
-        if on_open is None:
-            async_on_open = self._async_sc_client._sc_connection.on_open
-        else:
+    def set_on_open_handler(self, on_open: Callable[[], None]) -> None:
+        async def async_on_open():
+            on_open()
 
-            async def async_on_open():
-                on_open()
+        self._async_sc_client.set_on_open_handler(async_on_open)
 
-        if on_close is None:
-            async_on_close = self._async_sc_client._sc_connection.on_close
-        else:
+    def set_on_close_handler(self, on_close: Callable[[], None]) -> None:
+        async def async_on_close():
+            on_close()
 
-            async def async_on_close():
-                on_close()
+        self._async_sc_client.set_on_close_handler(async_on_close)
 
-        if on_error is None:
-            async_on_error = self._async_sc_client._sc_connection.on_error
-        else:
+    def set_on_error_handler(self, on_error: Callable[[Exception], None]) -> None:
+        async def async_on_error(e: Exception):
+            on_error(e)
 
-            async def async_on_error(e: Exception):
-                on_error(e)
+        self._async_sc_client.set_on_error_handler(async_on_error)
 
-        if on_reconnect is None:
-            async_on_reconnect = self._async_sc_client._sc_connection.on_reconnect
-        else:
+    def set_on_reconnect_handler(self, on_reconnect: Callable[[], None]) -> None:
+        async def async_on_reconnect():
+            on_reconnect()
 
-            async def async_on_reconnect():
-                on_reconnect()
-
-        self._async_sc_client.set_handlers(
-            on_open=async_on_open, on_close=async_on_close, on_error=async_on_error, on_reconnect=async_on_reconnect
-        )
+        self._async_sc_client.set_on_reconnect_handler(async_on_reconnect)
 
     def set_reconnect_settings(self, retries: int = None, retry_delay: float = None) -> None:
         self._async_sc_client.set_reconnect_settings(retries, retry_delay)
