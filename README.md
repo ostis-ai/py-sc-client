@@ -21,8 +21,6 @@ High-level functionality implemented in **[py-sc-kpm](https://github.com/ostis-a
 - ScModule
 - ScServer
 
-*Warning: there are some of these classes in **py-sc-client** (deprecated)*
-
 ## Installation py-sc-client
 
 py-sc-client is available on [PyPI](https://pypi.org/project/py-sc-client/):
@@ -33,43 +31,85 @@ $ pip install py-sc-client
 
 py-sc-client officially supports Python 3.8+.
 
+## ScClient & AsyncScClient
+
+- *sc_client.core*.**AsyncScClient**
+- *sc_client.core*.**ScClient**
+
+There are no global functions in `py-sc-client>=0.4.0`.
+You need to initialize instance of `ScClient` or `AsyncScClient` and use their methods.
+There are two types of implementation: synchronous and asynchronous.
+Synchronous one uses asynchronous inside.
+
 ## Connection to the sc-server
 
-First you need connect to the sc-server.
-It's implemented using web-socket in another thread.
+First, you need to connect to the sc-server.
+It's implemented using web-socket in another task.
+
+- coroutine *AsyncScClient*.**connect**(url: str)
+- *ScClient*.**connect**(url: str)
+
+**Connect to the sc-server by *url*.**
+
+Then you can check the connection:
+
+- *AsyncScClient*.**is_connected**() -> *bool*
+- *ScClient*.**is_connected**()  -> *bool*
+
+**Return the status of the connection**
+
 Do not forget to disconnect after all operations.
 
-- *sc_client.client*.**connect**(url: str)
+- coroutine *AsyncScClient*.**disconnect**()
+- *ScClient*.**disconnect**()
 
-Connect to the sc-server by *url*.
+**Close the connection with the sc-server.**
 
-```python
-from sc_client.client import connect
-
-url = "ws://localhost:8090/ws_json"
-connect(url)
-```
-
-- *sc_client.client*.**disconnect**()
-
-Close the connection with the sc-server.
+Example of AsyncScClient connection:
 
 ```python
-from sc_client.client import disconnect
+import asyncio
 
-disconnect()
+from sc_client.core import AsyncScClient
+
+
+async def main():
+    client = AsyncScClient()
+    await client.connect("ws://localhost:8090/ws_json")
+    try:
+        print(f"1. {client.is_connected()=}")  # 1. client.is_connected()=True
+    finally:
+        await client.disconnect()
+        print(f"2. {client.is_connected()=}")  # 2. client.is_connected()=False
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
 
-- *sc_client.client*.**is_connected**()
-
-Returns boolean state of the connection with the sc-server.
+Example of sync ScClient connection:
 
 ```python
-from sc_client.client import is_connected
+from sc_client.core import ScClient
 
-if is_connected():
-    ...
+
+def main():
+    client = ScClient()
+    client.connect("ws://localhost:8090/ws_json")
+    try:
+        print(f"1. {client.is_connected()=}")  # 1. client.is_connected()=True
+    finally:
+        client.disconnect()
+        print(f"2. {client.is_connected()=}")  # 2. client.is_connected()=False
+
+
+if __name__ == "__main__":
+    main()
 ```
+
+## Handlers and reconnect settings
+
+***--------------------- I'm here ---------------------***
 
 - *sc_client.client*.**set_error_handler**(callback)
 
@@ -82,14 +122,14 @@ def on_error(e):
     if isinstance(e, AttributeError):
         print(e)
 
-set_error_handler(on_error)        
+set_error_handler(on_error)
 ...
 ```
 
 - *sc_client.client*.**set_reconnect_handler**(**reconnect_kwargs)
 
 Sets handler callback to reconnect on sc-server connection failure. Method takes the following arguments:
- 
+
 - `_reconnect_handler_` - handler callback function. Default value: `_session.default_reconnect_handler_`.
 - `_post_reconnect_callback_` - handler callback invoked after `_reconnect_handler_` has finished successfully.
 - `_reconnect_retries_` - amount of call tries of `_reconnect_handler_`. Default value: `5`.
@@ -112,7 +152,7 @@ set_reconnect_handler(
     post_reconnect_handler=None,
     reconnect_retries=5,
     reconnect_retry_delay=1.0 #seconds
-)        
+)
 ...
 ```
 
