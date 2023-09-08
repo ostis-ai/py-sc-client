@@ -1,5 +1,7 @@
 # py-sc-client
 
+[![PyPI Latest](https://img.shields.io/pypi/v/py-sc-client)](https://pypi.org/project/py-sc-client/)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/py-sc-client)
 ![Tests badge](https://github.com/ostis-ai/py-sc-client/actions/workflows/tests.yml/badge.svg?branch=main)
 ![Push badge](https://github.com/ostis-ai/py-sc-client/actions/workflows/push.yml/badge.svg?branch=main)
 
@@ -109,52 +111,67 @@ if __name__ == "__main__":
 
 ## Handlers and reconnect settings
 
-***--------------------- I'm here ---------------------***
+You can set handlers on open/close connection, on reconnect and on error.
+AsyncScClient receivers async functions, ScClient - sync
 
-- *sc_client.client*.**set_error_handler**(callback)
+- *AsyncScClient*.**set_on_open_handler**(on_open: Callable[[], Awaitable[None]])
+- *AsyncScClient*.**set_on_close_handler**(on_close: Callable[[], Awaitable[None]])
+- *AsyncScClient*.**set_on_error_handler**(on_error: Callable[[Exception], Awaitable[None]])
+- *AsyncScClient*.**set_on_reconnect_handler**(on_reconnect: Callable[[], Awaitable[None]])
 
-Sets a handler callback to manage client and server errors. Callback must take one argument - an exception object.
+- *ScClient*.**set_on_open_handler**(on_open: Callable[[], None])
+- *ScClient*.**set_on_close_handler**(on_close: Callable[[], None])
+- *ScClient*.**set_on_error_handler**(on_error: Callable[[Exception], None])
+- *ScClient*.**set_on_reconnect_handler**(on_reconnect: Callable[[], None])
 
-```python
-from sc_client.client import set_error_handler
+On open handler runs after any connection (before on_reconnect if it's successful).
+On close handler runs after disconnecting and losing connection.
+On error handler runs if sc-server returns response with an error.
+On reconnect handler runs after returning connection (and on_open handler).
 
-def on_error(e):
-    if isinstance(e, AttributeError):
-        print(e)
-
-set_error_handler(on_error)
-...
-```
-
-- *sc_client.client*.**set_reconnect_handler**(**reconnect_kwargs)
-
-Sets handler callback to reconnect on sc-server connection failure. Method takes the following arguments:
-
-- `_reconnect_handler_` - handler callback function. Default value: `_session.default_reconnect_handler_`.
-- `_post_reconnect_callback_` - handler callback invoked after `_reconnect_handler_` has finished successfully.
-- `_reconnect_retries_` - amount of call tries of `_reconnect_handler_`. Default value: `5`.
-- `_reconnect_retry_delay_` - period between call tries of `_reconnect_handler_` (in seconds). Default value: `2`.
-
-If the sc-server did not respond to one of the resent messages, after a requested `_reconnect_retry_delay_`
-the `_reconnect_handler_` is called, and the same message is sent again. This procedure is repeated for
-`_reconnect_retries_` times, until the message is sent and a response is received.
+Example of setting on_open and on_close handlers with AsyncScClient:
 
 ```python
-from sc_client.client import set_reconnect_handler
+import asyncio
+import logging
 
-url = "ws://localhost:8090/ws_json"
+from sc_client.core import AsyncScClient
 
-def on_reconnect():
-    connect(url)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger()
 
-set_reconnect_handler(
-    reconnect_handler=connect,
-    post_reconnect_handler=None,
-    reconnect_retries=5,
-    reconnect_retry_delay=1.0 #seconds
-)
-...
+
+async def on_open():
+    logger.info("Callback on open")
+
+
+async def on_close():
+    logger.info("Callback on close")
+
+
+async def main():
+    client = AsyncScClient()
+    client.set_on_open_handler(on_open)
+    client.set_on_close_handler(on_close)
+    await client.connect("ws://localhost:8090/ws_json")  # INFO:root:Callback on open
+    try:
+        ...
+    finally:
+        await client.disconnect()  # INFO:root:Callback on close
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 ```
+
+You can also set reconnect setting: retry times and delay between them.
+
+- *AsyncScClient*.**set_reconnect_settings**(retries: int = None, retry_delay: float = None)
+
+Default values are stored in *sc_client.constants.config*:
+
+- SERVER_RECONNECT_RETRIES = 5
+- SERVER_RECONNECT_RETRY_DELAY = 2.0
 
 ## Base classes
 
