@@ -800,7 +800,7 @@ sc_event: ScEvent
 status = sc_client.events_destroy(sc_event)
 ```
 
-## Logging
+# Logging
 
 Sometimes you might be in a situation where you deal with data that should be correct, but actually is not.
 You may still want to log that something fishy happened. This is where loggers come in handy.
@@ -832,3 +832,51 @@ client.disconnect()
 ```
 
 See [logging documentation](https://docs.python.org/3/library/logging.html#module-logging) for more information.
+
+# Testing
+
+There is the ability to test sc-client-based projects without real connection to sc-server.
+You can emulate responses from sc-server using the websocket patching:
+
+Patch the test class, function or setUp method:
+`@patch("websockets.client.connect", websockets_client_connect_patch)`.
+Then you need to initialize a client and get its websocket stub.
+You can add a message response using ResponseCallback and methods:
+
+- *WebsocketStub*.**sync_set_message_callback**(callback: ResponseCallback)
+- coroutine *WebsocketStub*.**set_message_callback**(callback: ResponseCallback)
+
+It adds response callback to the queue
+
+```python
+from unittest import TestCase
+from unittest.mock import patch
+
+from sc_client import ScAddr, ScType
+from sc_client.core import ScClient
+from sc_client.testing import SimpleResponseCallback, WebsocketStub, websockets_client_connect_patch
+
+
+class ScClientActionsTestCase(TestCase):
+    client: ScClient
+    websocket: WebsocketStub
+
+    @patch("websockets.client.connect", websockets_client_connect_patch)
+    def setUp(self) -> None:
+        self.client = ScClient()
+        self.client.connect("url")
+        self.websocket = WebsocketStub.of(self.client)
+
+    def tearDown(self) -> None:
+        self.client.disconnect()
+
+    def test_check_elements(self):
+        self.websocket.sync_set_message_callback(SimpleResponseCallback(True, False, [11, 22], None))
+        results = self.client.check_elements(ScAddr(1), ScAddr(2))
+        self.assertEqual(results, [ScType(11), ScType(22)])
+```
+
+Check the other variants of testing here:
+
+- [Sync testing](./examples/sync_testing.py)
+- [Async testing](./examples/async_testing.py)
