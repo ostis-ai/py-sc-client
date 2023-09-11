@@ -6,7 +6,7 @@ from typing import Any
 
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
-from sc_client.core import AsyncScClient
+from sc_client.core import AsyncScClient, ScClient
 from sc_client.core.async_sc_connection import AsyncScConnection
 from sc_client.testing.response_callback import ResponseCallback
 
@@ -73,14 +73,21 @@ class WebsocketStub:
     async def __anext__(self):
         return await self.receive()
 
+    # noinspection PyProtectedMember
+    # pylint: disable=protected-access
     @classmethod
-    def of(cls, obj: AsyncScConnection | AsyncScClient) -> WebsocketStub:
-        # noinspection PyProtectedMember
-        # pylint: disable=protected-access
-        return (obj if isinstance(obj, AsyncScConnection) else obj._sc_connection)._websocket
+    def of(cls, obj: AsyncScConnection | AsyncScClient | ScClient) -> WebsocketStub:
+        return (
+            obj
+            if isinstance(obj, AsyncScConnection)
+            else (obj if isinstance(obj, AsyncScClient) else obj._async_sc_client)._sc_connection
+        )._websocket
 
     async def set_message_callback(self, callback: ResponseCallback) -> None:
         await self.message_callbacks.put(callback)
+
+    def sync_set_message_callback(self, callback: ResponseCallback) -> None:
+        asyncio.get_event_loop().run_until_complete(self.message_callbacks.put(callback))
 
     @staticmethod
     def lose_connection() -> ConnectionEstablisher:

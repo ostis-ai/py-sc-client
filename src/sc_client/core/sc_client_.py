@@ -2,13 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import logging
-import time
 from typing import Callable
 
 import nest_asyncio
 
-from sc_client import ScEventType
-from sc_client.constants import sc_types
 from sc_client.core.async_sc_client_ import AsyncScClient
 from sc_client.models import (
     AsyncScEvent,
@@ -26,6 +23,7 @@ from sc_client.models import (
     ScTemplateResult,
     ScType,
 )
+from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError
 
 
 # noinspection PyProtectedMember
@@ -122,6 +120,8 @@ class ScClient:
 
     # pylint: disable=cell-var-from-loop
     def events_create(self, *params: ScEventParams) -> list[ScEvent]:
+        if not all(isinstance(param, ScEventParams) for param in params):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEventParams")
         async_params: list[AsyncScEventParams] = []
         for param in params:
 
@@ -142,52 +142,12 @@ class ScClient:
         return events
 
     def events_destroy(self, *events: ScEvent) -> bool:
+        if not all(isinstance(event, ScEvent) for event in events):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
         async_events = [AsyncScEvent(event.id) for event in events]
         return self._loop.run_until_complete(self._async_sc_client.events_destroy(*async_events))
 
     def is_event_valid(self, event: ScEvent) -> bool:
+        if not isinstance(event, ScEvent):
+            raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
         return self._async_sc_client.is_event_valid(AsyncScEvent(event.id))
-
-
-def main():
-    client = ScClient()
-    client.connect("ws://localhost:8090/ws_json")
-    constr = ScConstruction()
-    constr.create_node(sc_types.NODE_CONST)
-    start = time.time()
-    res = [client.create_elements(constr) for _ in range(100)]
-    timedelta = time.time() - start
-    print(f"Created element: {res}\nin {timedelta} sec")
-    client.disconnect()
-
-
-def main_event():
-    client = ScClient()
-    client.connect("ws://localhost:8090/ws_json")
-
-    constr = ScConstruction()
-    constr.create_node(sc_types.NODE_CONST)
-    constr.create_node(sc_types.NODE_CONST)
-    results = client.create_elements(constr)
-    src, trg = results
-
-    def callback(*arrds: ScAddr):
-        print(f"Call {arrds}")
-        assert arrds[0] == src
-        assert arrds[2] == trg
-
-    param = ScEventParams(src, ScEventType.ADD_OUTGOING_EDGE, callback)
-    event = client.events_create(param)[0]
-    constr_call = ScConstruction()
-    constr_call.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, src, trg)
-    client.create_elements(constr_call)
-
-    client.events_destroy(event)
-    client.create_elements(constr_call)
-
-    client.disconnect()
-
-
-if __name__ == "__main__":
-    logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(levelname)s | %(name)s | %(message)s")
-    main_event()
