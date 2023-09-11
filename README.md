@@ -111,13 +111,14 @@ if __name__ == "__main__":
 
 ## Handlers and reconnect settings
 
-You can set handlers on open/close connection, on reconnect and on error.
+You can set handlers on open/close connection, on reconnecting and on error.
 AsyncScClient receivers async functions, ScClient - sync
 
 - *AsyncScClient*.**set_on_open_handler**(on_open: Callable[[], Awaitable[None]])
 - *AsyncScClient*.**set_on_close_handler**(on_close: Callable[[], Awaitable[None]])
 - *AsyncScClient*.**set_on_error_handler**(on_error: Callable[[Exception], Awaitable[None]])
 - *AsyncScClient*.**set_on_reconnect_handler**(on_reconnect: Callable[[], Awaitable[None]])
+
 
 - *ScClient*.**set_on_open_handler**(on_open: Callable[[], None])
 - *ScClient*.**set_on_close_handler**(on_close: Callable[[], None])
@@ -127,7 +128,7 @@ AsyncScClient receivers async functions, ScClient - sync
 On open handler runs after any connection (before on_reconnect if it's successful).
 On close handler runs after disconnecting and losing connection.
 On error handler runs if sc-server returns response with an error.
-On reconnect handler runs after returning connection (and on_open handler).
+On reconnect handler runs after connection restoration (and on_open handler).
 
 Example of setting on_open and on_close handlers with AsyncScClient:
 
@@ -138,15 +139,14 @@ import logging
 from sc_client.core import AsyncScClient
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 
 
 async def on_open():
-    logger.info("Callback on open")
+    logging.info("Callback on open")
 
 
 async def on_close():
-    logger.info("Callback on close")
+    logging.info("Callback on close")
 
 
 async def main():
@@ -164,7 +164,7 @@ if __name__ == "__main__":
     asyncio.run(main())
 ```
 
-You can also set reconnect setting: retry times and delay between them.
+You can also set reconnect setting: number of retries and delay between them.
 
 - *AsyncScClient*.**set_reconnect_settings**(retries: int = None, retry_delay: float = None)
 

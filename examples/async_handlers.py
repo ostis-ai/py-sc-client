@@ -4,15 +4,14 @@ import logging
 from sc_client.core import AsyncScClient
 
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger()
 
 
 async def on_open():
-    logger.info("Callback on open")
+    logging.info("Callback on open")
 
 
 async def on_close():
-    logger.info("Callback on close")
+    logging.info("Callback on close")
 
 
 async def main():
