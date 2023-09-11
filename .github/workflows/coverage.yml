@@ -1,0 +1,39 @@
+name: Coverage
+
+on:
+  pull_request:
+    branches: [ main ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  run_coverage:
+    name: Coverage
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: [ 3.9 ]
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v3
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Update pip
+        run: |
+          pip install -U wheel
+          pip install -U setuptools
+          python -m pip install -U pip
+          pip install -r requirements-dev.txt
+          pip install coverage codecov
+
+      - name: Run codecov
+        run: |
+          python3 -m coverage run --source=${pwd} -m pytest && python3 -m coverage report
+        env:
+          super_secret: ${{ secrets.CODECOV_TOKEN }}
+
