@@ -38,7 +38,7 @@ class AsyncScConnection:
         self._url = url or self._url
         try:
             self._websocket = await websockets.client.connect(self._url)
-            self._logger.info("connected")
+            self._logger.info("Connection opened")
             await self.on_open()
             asyncio.create_task(self._handle_messages(), name="Handle messages")
             await asyncio.sleep(0)
