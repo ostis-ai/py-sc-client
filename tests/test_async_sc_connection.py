@@ -111,17 +111,15 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
 
         class Callback(ResponseCallback):
             def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
-                raise AssertionError
+                return Response(id_, True, False, "2", None)
 
-        await websocket.set_message_callback(Callback(0.2))
+        await websocket.set_message_callback(Callback(0.02))
         send_message_coroutine = connection.send_message(RequestType.CHECK_ELEMENTS, None)
         task = asyncio.create_task(send_message_coroutine)
-        await asyncio.sleep(0)
+        await asyncio.sleep(0.01)
         async with websocket.lose_connection():
-            pass  # Lose connection after sending and before receiving
-        with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
-            await task
-        websocket.lose_connection()
+            with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
+                await task  # Lose connection after sending and before receiving
         await connection.disconnect()
 
     async def test_payload_max_size(self):

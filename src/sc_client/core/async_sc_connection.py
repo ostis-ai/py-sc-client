@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
+from asyncio import Future
 from typing import Awaitable, Callable
 
 import websockets
@@ -22,7 +23,7 @@ class AsyncScConnection:
         self._url: str | None = None
         self._websocket = websockets.client.WebSocketClientProtocol()
 
-        self._responses_dict: dict[int, Response] = {}
+        self._response_futures: dict[int, Future[Response]] = {}
         self._events_dict: dict[int, AsyncScEvent] = {}
         self._command_id: int = 0
 
@@ -58,6 +59,10 @@ class AsyncScConnection:
         except ConnectionClosed as e:
             self._logger.error(e, exc_info=True)
             await self.on_error(e)
+            exception = ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST)
+            for response_future in self._response_futures.values():
+                response_future.set_exception(exception)
+            self._response_futures.clear()
             raise ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST) from e
 
     async def _on_message(self, response_json: str) -> None:
@@ -65,7 +70,7 @@ class AsyncScConnection:
         if response.event:
             await self._on_event(response)
         else:
-            self._responses_dict[response.id] = response
+            self._response_futures[response.id].set_result(response)
 
     async def _on_event(self, response: Response):
         event = self.get_event(response.id)
@@ -136,11 +141,9 @@ class AsyncScConnection:
                     pass
 
     async def _receive(self, command_id: int) -> Response:
-        while (answer := self._responses_dict.get(command_id)) is None and self._websocket.open:
-            await asyncio.sleep(config.SERVER_ANSWER_CHECK_TIME)
-        if answer is None:
-            raise ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST)
-        del self._responses_dict[command_id]
+        response_future = Future()
+        self._response_futures[command_id] = response_future
+        answer = await response_future
         return answer
 
     async def _on_open_default(self) -> None:
