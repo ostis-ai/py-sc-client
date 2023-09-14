@@ -7,10 +7,10 @@ from typing import Awaitable, Callable, get_origin
 from sc_client.constants import common
 from sc_client.constants.common import CommandTypes, RequestType
 from sc_client.core.async_sc_connection import AsyncScConnection
+from sc_client.core.response import Response
 from sc_client.models import (
     AsyncScEvent,
     AsyncScEventParams,
-    Response,
     ScAddr,
     ScConstruction,
     ScIdtfResolveParams,

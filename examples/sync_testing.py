@@ -5,7 +5,7 @@ from unittest.mock import patch
 from sc_client import ScAddr, ScType
 from sc_client.constants import common
 from sc_client.core import ScClient
-from sc_client.models import Response
+from sc_client.core.response import Response
 from sc_client.testing import ResponseCallback, SimpleResponseCallback, WebsocketStub, websockets_client_connect_patch
 
 

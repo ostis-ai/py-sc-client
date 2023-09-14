@@ -8,7 +8,8 @@ from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, 
 from sc_client.constants import common, sc_types
 from sc_client.constants.common import RequestType, ScEventType
 from sc_client.core import AsyncScClient
-from sc_client.models import AsyncScEventParams, Response, ScIdtfResolveParams
+from sc_client.core.response import Response
+from sc_client.models import AsyncScEventParams, ScIdtfResolveParams
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
 from sc_client.testing import ResponseCallback, SimpleResponseCallback, WebsocketStub, websockets_client_connect_patch
 

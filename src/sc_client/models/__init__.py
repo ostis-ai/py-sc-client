@@ -1,6 +1,5 @@
 from sc_client.models.sc_addr import ScAddr
 from sc_client.models.sc_construction import (
-    Response,
     ScConstruction,
     ScConstructionCommand,
     ScIdtfResolveParams,

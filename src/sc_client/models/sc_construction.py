@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from enum import Enum
 from typing import Union
 
 from sc_client.constants import common
-from sc_client.constants.common import ERRORS, EVENT, ID, PAYLOAD, STATUS
 from sc_client.constants.config import LINK_CONTENT_MAX_SIZE
 from sc_client.models.sc_addr import ScAddr
 from sc_client.models.sc_type import ScType
@@ -85,35 +83,3 @@ class ScLinkContent:
 
     def type_to_str(self) -> str:
         return self.content_type.name.lower()
-
-
-@dataclass
-class Response:
-    id: int
-    status: bool
-    event: bool
-    payload: any
-    errors: any
-
-    @classmethod
-    def load(cls, response: str) -> Response:
-        response: dict[str, any] = json.loads(response)
-        instance = cls(
-            id=response.get(ID),
-            status=bool(response.get(STATUS)),
-            event=bool(response.get(EVENT)),
-            payload=response.get(PAYLOAD),
-            errors=response.get(ERRORS),
-        )
-        return instance
-
-    def dump(self) -> str:
-        return json.dumps(
-            {
-                common.ID: self.id,
-                common.STATUS: int(self.status),
-                common.EVENT: int(self.event),
-                common.PAYLOAD: self.payload,
-                common.ERRORS: self.errors,
-            }
-        )

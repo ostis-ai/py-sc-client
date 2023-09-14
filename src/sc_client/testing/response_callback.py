@@ -4,7 +4,7 @@ import json
 from typing import Any, Dict
 
 from sc_client.constants import common
-from sc_client.models import Response
+from sc_client.core.response import Response
 
 
 class ResponseCallback(abc.ABC):

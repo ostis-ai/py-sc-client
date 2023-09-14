@@ -11,7 +11,8 @@ import websockets.client
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from sc_client.constants import common, config
-from sc_client.models import AsyncScEvent, Response, ScAddr
+from sc_client.core.response import Response
+from sc_client.models import AsyncScEvent, ScAddr
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScEventError, ScServerError
 
 
