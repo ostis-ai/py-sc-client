@@ -41,9 +41,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         for task in asyncio.all_tasks():
             if task.get_name() == "Handle messages":
                 async with websocket.lose_connection():
-                    exception = task.exception()
-                    self.assertIsInstance(exception, ScServerError)
-                    self.assertIn(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST, exception.args[0])
+                    self.assertIsNone(task.result())
                     break
         else:
             raise AssertionError("Task 'Handle messages' wasn't found")
@@ -77,7 +75,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         async with websocket.lose_connection():
             with self.assertRaisesRegex(ScServerError, ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND):
                 await connection.send_message(RequestType.CHECK_ELEMENTS, None)
-            await connection.disconnect()
+        await connection.disconnect()
 
     async def test_reconnect(self):
         connection = AsyncScConnection()
@@ -120,6 +118,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await asyncio.sleep(0.01)
         async with websocket.lose_connection():
             with self.assertRaisesRegex(ScServerError, ErrorNotes.CONNECTION_TO_SC_SERVER_LOST):
+                await asyncio.sleep(0.02)
                 await task  # Lose connection after sending and before receiving
         await connection.disconnect()
 
@@ -127,7 +126,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         connection = AsyncScConnection()
         await connection.connect("url")
         with self.assertRaises(PayloadMaxSizeError):
-            await connection.send_message(RequestType.CHECK_ELEMENTS, "0" * MAX_PAYLOAD_SIZE)
+            await connection.send_message(RequestType.CHECK_ELEMENTS, "0" * (MAX_PAYLOAD_SIZE + 1))
         await connection.disconnect()
 
     async def test_event(self):

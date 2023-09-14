@@ -13,7 +13,7 @@ from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 from sc_client.constants import common, config
 from sc_client.core.response import Response
 from sc_client.models import AsyncScEvent, ScAddr
-from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScEventError, ScServerError
+from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
 
 
 class AsyncScConnection:
@@ -40,13 +40,33 @@ class AsyncScConnection:
         self._url = url or self._url
         try:
             self._websocket = await websockets.client.connect(self._url)
-            self._logger.info("Connection opened")
+            self._logger.info("Connection open at url '%s'", self._url)
             await self.on_open()
             asyncio.create_task(self._handle_messages(), name="Handle messages")
             await asyncio.sleep(0)
-        except ConnectionRefusedError as e:
-            self._logger.error("Cannot to connect to sc-server")
-            raise ScServerError(ErrorNotes.CANNOT_CONNECT_TO_SC_SERVER) from e
+        except ConnectionRefusedError:
+            self._logger.error(ErrorNotes.CANNOT_CONNECT_TO_SC_SERVER)
+            exception = ScServerError(ErrorNotes.CANNOT_CONNECT_TO_SC_SERVER)
+            await self.on_error(exception)
+            raise exception from None
+
+    def is_connected(self) -> bool:
+        return self._websocket.open
+
+    async def _reconnect(self) -> None:
+        try:
+            await self.connect()
+            await self.on_reconnect()
+        except ScServerError:
+            pass
+
+    async def disconnect(self) -> None:
+        if self.is_connected():
+            await self._websocket.close()
+            self._logger.info("Connection closed")
+            await self.on_close()
+        else:
+            self._logger.info("Connection was already closed")
 
     async def _handle_messages(self) -> None:
         try:
@@ -55,16 +75,19 @@ class AsyncScConnection:
                     await self._on_message(str(response_json))
                 except (ScServerError, RuntimeError, ValueError) as e:
                     self._logger.error(e, exc_info=True)
-        except ConnectionClosedOK:
-            return  # Connection closed by user
-        except ConnectionClosed as e:
-            self._logger.error(e, exc_info=True)
-            await self.on_error(e)
+        except ConnectionClosedOK:  # Connection closed by user
+            for response_future in self._response_futures.values():
+                response_future.cancel()
+            self._response_futures.clear()
+            return
+        except ConnectionClosed:
+            self._logger.error(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST)
             exception = ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST)
+            await self.on_error(exception)
             for response_future in self._response_futures.values():
                 response_future.set_exception(exception)
             self._response_futures.clear()
-            raise ScServerError(ErrorNotes.CONNECTION_TO_SC_SERVER_LOST) from e
+            return
 
     async def _on_message(self, response_json: str) -> None:
         response = Response.load(response_json)
@@ -76,7 +99,8 @@ class AsyncScConnection:
     async def _on_event(self, response: Response):
         event = self.get_event(response.id)
         if event is None:
-            raise ScEventError(ErrorNotes.EVENT_IS_NOT_FOUND, response.id)
+            self._logger.warning("Event id=%d is not found and cannot be executed", response.id)
+            return
         self._logger.debug("Started %s", str(event))
         addrs: list[ScAddr] = [ScAddr(value) for value in response.payload]
         asyncio.create_task(event.callback(*addrs), name=f"ScEvent({event.id})")
@@ -91,17 +115,6 @@ class AsyncScConnection:
     def drop_event(self, event_id: int) -> None:
         del self._events_dict[event_id]
 
-    async def disconnect(self) -> None:
-        if self.is_connected():
-            await self._websocket.close()
-            self._logger.info("Connection closed")
-            await self.on_close()
-        else:
-            self._logger.info("Connection was already closed")
-
-    def is_connected(self) -> bool:
-        return self._websocket.open
-
     async def send_message(self, request_type: common.RequestType, payload: any) -> Response:
         self._command_id += 1
         command_id = self._command_id
@@ -114,7 +127,9 @@ class AsyncScConnection:
         )
         len_data = len(bytes(data, "utf-8"))
         if len_data > config.MAX_PAYLOAD_SIZE:
-            raise PayloadMaxSizeError(f"Data is too large: {len_data} > {config.MAX_PAYLOAD_SIZE} bytes")
+            exception = PayloadMaxSizeError(f"Data is too large: {len_data} > {config.MAX_PAYLOAD_SIZE} bytes")
+            await self.on_error(exception)
+            raise exception
         await self._send_with_reconnect(data)
         response = await self._receive(command_id)
         return response
@@ -125,21 +140,21 @@ class AsyncScConnection:
             try:
                 await self._websocket.send(data)
                 return
-            except ConnectionClosedOK as e:
-                raise ScServerError(ErrorNotes.ALREADY_DISCONNECTED) from e
-            except ConnectionClosed as e:
+            except ConnectionClosedOK:
+                exception = ScServerError(ErrorNotes.ALREADY_DISCONNECTED)
+                await self.on_error(exception)
+                raise exception from None
+            except ConnectionClosed:
                 if retries <= 0:
-                    raise ScServerError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND) from e
+                    exception = ScServerError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND)
+                    await self.on_error(exception)
+                    raise exception from None
                 retries -= 1
                 self._logger.warning(
                     "Trying to reconnect in %d seconds (retries left: %s)", self.reconnect_delay, retries
                 )
                 await asyncio.sleep(self.reconnect_delay)
-                try:
-                    await self.connect()
-                    await self.on_reconnect()
-                except ScServerError:
-                    pass
+                await self._reconnect()
 
     async def _receive(self, command_id: int) -> Response:
         response_future = Future()
@@ -153,7 +168,7 @@ class AsyncScConnection:
     async def _on_close_default(self) -> None:
         pass
 
-    async def _on_error_default(self, e: Exception) -> None:
+    async def _on_error_default(self, exception: Exception) -> None:
         pass
 
     async def _on_reconnect_default(self) -> None:

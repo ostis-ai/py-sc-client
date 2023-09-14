@@ -1,5 +1,4 @@
 import abc
-import asyncio
 import json
 from typing import Any, Dict
 
@@ -17,7 +16,6 @@ class ResponseCallback(abc.ABC):
         pass
 
     async def process_response(self, message_json: str) -> str:
-        await asyncio.sleep(self.delay)
         self.call_times += 1
         message: Dict[str, any] = json.loads(message_json)
         try:

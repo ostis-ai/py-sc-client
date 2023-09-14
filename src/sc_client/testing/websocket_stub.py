@@ -50,6 +50,11 @@ class WebsocketStub:
 
     async def _add_response(self, message: str) -> None:
         callback = await self.message_callbacks.get()
+        await asyncio.sleep(callback.delay)
+        try:
+            self._assert_connection()
+        except ConnectionClosed:
+            return
         response = await callback.process_response(message)
         await self.messages.put(response)
 
