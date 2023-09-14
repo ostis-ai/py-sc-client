@@ -63,7 +63,6 @@ class AsyncScClient:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         if not addrs:
-            self._logger.warning("check_elements: empty params")
             return []
         payload = [addr.value for addr in addrs]
         response = await self._send_message(RequestType.CHECK_ELEMENTS, payload)
@@ -74,7 +73,6 @@ class AsyncScClient:
         if not isinstance(constr, ScConstruction):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScConstruction")
         if not constr.commands:
-            self._logger.warning("create_elements: empty ScConstruction")
             return []
         payload = []
         for command in constr.commands:
@@ -118,7 +116,6 @@ class AsyncScClient:
         if not isinstance(scs_text, list) or not all(isinstance(n, (str, SCs)) for n in scs_text):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "string or SCs")
         if not scs_text:
-            self._logger.warning("create_elements_by_scs: empty SCsText")
             return []
         payload = [
             {
@@ -139,7 +136,6 @@ class AsyncScClient:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         if not addrs:
-            self._logger.warning("delete_elements: empty params")
             return True
         payload = [addr.value for addr in addrs]
         response = await self._send_message(RequestType.DELETE_ELEMENTS, payload)
@@ -149,7 +145,6 @@ class AsyncScClient:
         if not all(isinstance(content, ScLinkContent) for content in contents):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES.format("ScLinkContent"))
         if not contents:
-            self._logger.warning("set_link_contents: empty params")
             return True
         payload = [
             {
@@ -167,7 +162,6 @@ class AsyncScClient:
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES_SC_ADDR)
         if not addrs:
-            self._logger.warning("get_link_content: empty params")
             return []
         payload = [
             {
@@ -200,7 +194,6 @@ class AsyncScClient:
         if not all(isinstance(content, (ScLinkContent, str, int, float)) for content in contents):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScLinkContent, str, int or float")
         if not contents:
-            self._logger.warning("_process_get_links: empty params")
             return []
         link_contents = []
         for content in contents:
@@ -226,7 +219,6 @@ class AsyncScClient:
         if not all(isinstance(par, ScIdtfResolveParams) for par in params):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScIdtfResolveParams")
         if not params:
-            self._logger.warning("resolve_keynodes: empty params")
             return []
         payload = []
         for idtf_param in params:
