@@ -33,17 +33,17 @@ $ pip install py-sc-client
 
 py-sc-client officially supports Python 3.8+.
 
-# ScClient & AsyncScClient
+# ScClient & AScClient
 
 The user interacts with py-sc-client using common classes that include needed methods.
 There are two types of implementation: synchronous and asynchronous.
 Synchronous one uses asynchronous inside.
 
 - *sc_client.core*.**ScClient**
-- *sc_client.core*.**AsyncScClient**
+- *sc_client.core*.**AScClient**
 
-You need to initialize instance of `ScClient` or `AsyncScClient` and use their methods.
-There are no global functions like in version `0.3.0` and earlier.
+You need to initialize `ScClient` or `AScClient` and use their methods, or
+use global instances like in version `0.3.0` and earlier in `sc_client.core.(a)sc_client_instance`.
 
 ## Connection to the sc-server
 
@@ -51,38 +51,37 @@ First, you need to connect to the sc-server.
 It's implemented using web-socket in another task.
 
 - *ScClient*.**connect**(url: str)
-- coroutine *AsyncScClient*.**connect**(url: str)
+- coroutine *AScClient*.**connect**(url: str)
 
 **Connect to the sc-server by *url*.**
 
 Then you can check the connection:
 
 - *ScClient*.**is_connected**()  -> *bool*
-- *AsyncScClient*.**is_connected**() -> *bool*
+- *AScClient*.**is_connected**() -> *bool*
 
 **Return the status of the connection**
 
 Do not forget to disconnect after all operations.
 
 - *ScClient*.**disconnect**()
-- coroutine *AsyncScClient*.**disconnect**()
+- coroutine *AScClient*.**disconnect**()
 
 **Close the connection with the sc-server.**
 
 Example of sync ScClient connection:
 
 ```python
-from sc_client.core import ScClient
+from sc_client.core.sc_client_instance import sc_client
 
 
 def main():
-    client = ScClient()
-    client.connect("ws://localhost:8090/ws_json")
+    sc_client.connect("ws://localhost:8090/ws_json")
     try:
-        print(f"1. {client.is_connected()=}")  # 1. client.is_connected()=True
+        print(f"1. {sc_client.is_connected()=}")  # 1. client.is_connected()=True
     finally:
-        client.disconnect()
-        print(f"2. {client.is_connected()=}")  # 2. client.is_connected()=False
+        sc_client.disconnect()
+        print(f"2. {sc_client.is_connected()=}")  # 2. client.is_connected()=False
 
 
 if __name__ == "__main__":
@@ -114,7 +113,7 @@ if __name__ == "__main__":
 ## Handlers and reconnect settings
 
 You can set handlers on open/close connection, on reconnecting and on error.
-AsyncScClient receivers async functions, ScClient - sync
+AScClient receivers async functions, ScClient - sync
 
 - *ScClient*.**set_on_open_handler**(on_open: Callable[[], None])
 - *ScClient*.**set_on_close_handler**(on_close: Callable[[], None])
@@ -122,10 +121,10 @@ AsyncScClient receivers async functions, ScClient - sync
 - *ScClient*.**set_on_reconnect_handler**(on_reconnect: Callable[[], None])
 
 
-- *AsyncScClient*.**set_on_open_handler**(on_open: Callable[[], Awaitable[None]])
-- *AsyncScClient*.**set_on_close_handler**(on_close: Callable[[], Awaitable[None]])
-- *AsyncScClient*.**set_on_error_handler**(on_error: Callable[[Exception], Awaitable[None]])
-- *AsyncScClient*.**set_on_reconnect_handler**(on_reconnect: Callable[[], Awaitable[None]])
+- *AScClient*.**set_on_open_handler**(on_open: Callable[[], Awaitable[None]])
+- *AScClient*.**set_on_close_handler**(on_close: Callable[[], Awaitable[None]])
+- *AScClient*.**set_on_error_handler**(on_error: Callable[[Exception], Awaitable[None]])
+- *AScClient*.**set_on_reconnect_handler**(on_reconnect: Callable[[], Awaitable[None]])
 
 On open handler runs after any connection (before on_reconnect if it's successful).
 On close handler runs after disconnecting and losing connection.
@@ -202,7 +201,7 @@ if __name__ == "__main__":
 You can also set reconnect setting: number of retries and delay between them.
 
 - *ScClient*.**set_reconnect_settings**(retries: int = None, retry_delay: float = None)
-- *AsyncScClient*.**set_reconnect_settings**(retries: int = None, retry_delay: float = None)
+- *AScClient*.**set_reconnect_settings**(retries: int = None, retry_delay: float = None)
 
 Default values are stored in *sc_client.constants.config*:
 
@@ -278,7 +277,7 @@ assert not sc_type_struct.is_tuple()
 
 Structure classes are used to work with many sc-elements.
 ScConstruction uses individual elements such as nodes and edges.
-ScTemplate uses triples to search or generatate complex structure.
+ScTemplate uses triples to search or generate complex structure.
 
 ### ScConstruction
 
@@ -296,7 +295,7 @@ Methods:
 ScConstruction doesn't create elements. To do it use function:
 
 - *ScClient*.**create_elements**(constr: ScConstruction)
-- coroutine *AsyncScClient*.**create_elements**(constr: ScConstruction)
+- coroutine *AScClient*.**create_elements**(constr: ScConstruction)
 
 It returns a list of all elements by ScConstruction *constr*.
 
@@ -305,7 +304,7 @@ from sc_client.constants import sc_types
 from sc_client.models import ScConstruction
 from sc_client.models import ScLinkContent, ScLinkContentType
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 construction = ScConstruction()  # First, you need to initialize
 
@@ -318,7 +317,7 @@ construction.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
 # Create unaliased edge between previous node
 
 addrs = sc_client.create_elements(construction)  # List of elements
-assert len(addrs) == 3  # Assert that there is 3 elements as in the construction
+assert len(addrs) == 3  # Assert that there are three elements as in the construction
 assert all(addrs)  # Assert that they are all valid
 ```
 
@@ -351,7 +350,7 @@ After setting alias, you use it without an element
 #### Search template
 
 - *ScClient*.**template_search**(template: ScTemplate, params: ScTemplateParams = None)
-- coroutine *AsyncScClient*.**template_search**(template: ScTemplate, params: ScTemplateParams = None)
+- coroutine *AScClient*.**template_search**(template: ScTemplate, params: ScTemplateParams = None)
 
 Returns list of ScTemplateResult by *template*.
 
@@ -359,7 +358,7 @@ Returns list of ScTemplateResult by *template*.
 from sc_client.constants import sc_types
 from sc_client.models import ScTemplate, ScAddr
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 action_node: ScAddr
 question_node: ScAddr
@@ -385,7 +384,7 @@ Search by sc-template address.
 ```python
 from sc_client.models import ScAddr
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 template: ScAddr  # Template from sc-memory
 search_results = sc_client.template_search(template)
@@ -399,19 +398,19 @@ Search by sc-template system identifier.
 ```python
 from sc_client.models import ScAddr
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 link_node: ScAddr
 search_params = {'_link': link_node, '_var_node': 'node_idtf'}
-search_results = template_search('my_template', search_params)
+search_results = sc_client.template_search('my_template', search_params)
 search_result = search_results[0]
 
 ```
 
-Search by scs sc-template.
+Search by scs-template.
 
 ```python
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 search_results = sc_client.template_search('class _-> _node;;')
 search_result = search_results[0]
@@ -420,7 +419,7 @@ search_result = search_results[0]
 #### Generate template
 
 - *ScClient*.**template_generate**(template: ScTemplate, params: ScTemplateParams = None)
-- coroutine *AsyncScClient*.**template_generate**(template: ScTemplate, params: ScTemplateParams = None)
+- coroutine *AScClient*.**template_generate**(template: ScTemplate, params: ScTemplateParams = None)
 
 Returns ScTemplateResult by *template*.
 
@@ -428,12 +427,12 @@ Returns ScTemplateResult by *template*.
 from sc_client.constants import sc_types
 from sc_client.models import ScTemplate, ScAddr
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 main_node: ScAddr
 relation_node: ScAddr
 link_node: ScAddr
-# Some ScAddrs for example
+# Some ScAddrs, for example
 
 template = ScTemplate()
 template.triple_with_relation(
@@ -497,17 +496,17 @@ for src, edge, trg in template_result:
 ### Check element types
 
 - *ScClient*.**check_elements**(*addrs: ScAddr)
-- coroutine *AsyncScClient*.**check_elements**(*addrs: ScAddr)
+- coroutine *AScClient*.**check_elements**(*addrs: ScAddr)
 
 Returns list of ScTypes for given elements.
 
 ```python
+from sc_client.core.sc_client_instance import sc_client
+
 from sc_client.constants import sc_types
 from sc_client.models import ScConstruction
 
-from your_module.client import sc_client
-
-construction = ScConstruction()  # Create elements for example
+construction = ScConstruction()  # Create elements, for example
 construction.create_node(sc_types.NODE_CONST)
 construction.create_node(sc_types.NODE_VAR)
 elements = sc_client.create_elements(construction)
@@ -521,24 +520,24 @@ assert elements_types[1].is_var()
 ### Create elements by SCS
 
 - *ScClient*.**create_elements_by_scs**(texts: List[Union[str, SCs]])
-- coroutine *AsyncScClient*.**create_elements_by_scs**(texts: List[Union[str, SCs]])
+- coroutine *AScClient*.**create_elements_by_scs**(texts: List[Union[str, SCs]])
 
 Create elements by scs texts in the KB memory, put them in structure and return boolean statuses.
 
 ```python
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 results = sc_client.create_elements_by_scs(["concept1 -> node1;;", "concept1 -> ;;"])
 assert results == [True, False]  # Warning: it doesn't return False, it raised error
 ```
 
 ```python
+from sc_client.core.sc_client_instance import sc_client
+
 from sc_client.constants import sc_types
-from sc_client.models import SCs, ScConstruction
+from sc_client.models import ScConstruction, SCs
 
-from your_module.client import sc_client
-
-construction = ScConstruction()  # Create output_struct for example
+construction = ScConstruction()  # Create output_struct, for example
 construction.create_node(sc_types.NODE_CONST)
 output_struct = sc_client.create_elements(construction)[0]
 
@@ -549,17 +548,17 @@ assert results == [True, True]
 ### Delete elements
 
 - *ScClient*.**delete_elements**(*addrs: ScAddr)
-- coroutine *AsyncScClient*.**delete_elements**(*addrs: ScAddr)
+- coroutine *AScClient*.**delete_elements**(*addrs: ScAddr)
 
 Delete *addrs* from the KB memory and returns boolean status.
 
 ```python
+from sc_client.core.sc_client_instance import sc_client
+
 from sc_client.constants import sc_types
 from sc_client.models import ScConstruction, ScLinkContent, ScLinkContentType
 
-from your_module.client import sc_client
-
-construction = ScConstruction()  # Create link for example
+construction = ScConstruction()  # Create a link for example
 construction.create_link(sc_types.LINK_CONST, ScLinkContent("One", ScLinkContentType.STRING))
 link = sc_client.create_elements(construction)[0]
 
@@ -571,7 +570,7 @@ assert status
 ### Resolve keynodes
 
 - *ScClient*.**resolve_keynodes**(*params: ScIdtfResolveParams)
-- coroutine *AsyncScClient*.**resolve_keynodes**(*params: ScIdtfResolveParams)
+- coroutine *AScClient*.**resolve_keynodes**(*params: ScIdtfResolveParams)
 
 Resolve keynodes from the KB memory by ScIdtfResolveParams and return list of ScAddrs. If it doesn't exist, then create
 a new one.
@@ -586,7 +585,7 @@ Typed-dict class that contains *idtf* and optional *type*
 from sc_client.constants import sc_types
 from sc_client.models import ScIdtfResolveParams
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 params = ScIdtfResolveParams(idtf='new_keynode_that_doesnt_exist', type=sc_types.NODE_CONST)
 addrs = sc_client.resolve_keynodes(params)  # list with 1 new keynode addr
@@ -625,7 +624,7 @@ deprecated_type = ScLinkContent("use enum without .value", ScLinkContentType.STR
 ### Set links content
 
 - *ScClient*.**set_link_contents**(*contents: ScLinkContent)
-- coroutine *AsyncScClient*.**set_link_contents**(*contents: ScLinkContent)
+- coroutine *AScClient*.**set_link_contents**(*contents: ScLinkContent)
 
 Set the new content to corresponding links and return boolean status.
 
@@ -633,9 +632,9 @@ Set the new content to corresponding links and return boolean status.
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
-construction = ScConstruction()  # Create a link for example
+construction = ScConstruction()  # Create a link, for example
 link_content1 = ScLinkContent("One", ScLinkContentType.STRING)
 construction.create_link(sc_types.LINK_CONST, link_content1)
 link = sc_client.create_elements(construction)[0]
@@ -648,7 +647,7 @@ assert status
 ### Get links content
 
 - *ScClient*.**get_link_contents**(*addr: ScAddr)
-- coroutine *AsyncScClient*.**get_link_contents**(*addr: ScAddr)
+- coroutine *AScClient*.**get_link_contents**(*addr: ScAddr)
 
 Get a content list of the given links.
 
@@ -656,9 +655,9 @@ Get a content list of the given links.
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
-construction = ScConstruction()  # Create link for example
+construction = ScConstruction()  # Create a link for example
 link_content1 = ScLinkContent("One", ScLinkContentType.STRING)
 construction.create_link(sc_types.LINK_CONST, link_content1)
 link = sc_client.create_elements(construction)[0]
@@ -670,7 +669,7 @@ assert link_content.data == link_content1.data
 ### Get links by content
 
 - *ScClient*.**get_links_by_content**(*contents: ScLinkContent | str | int)
-- coroutine *ASyncScClient*.**get_links_by_content**(*contents: ScLinkContent | str | int)
+- coroutine *AScClient*.**get_links_by_content**(*contents: ScLinkContent | str | int)
 
 Get a nested list of links for every content.
 
@@ -678,11 +677,11 @@ Get a nested list of links for every content.
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 search_string = "search string"
 
-construction = ScConstruction()  # Create link with search string
+construction = ScConstruction()  # Create a link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
 construction.create_link(sc_types.LINK_CONST, link_content1)
 link = sc_client.create_elements(construction)[0]
@@ -694,7 +693,7 @@ assert link in links
 ### Get links by content substring
 
 - *ScClient*.**get_links_by_content_substring**(*contents: ScLinkContent | str | int)
-- coroutine *AsyncScClient*.**get_links_by_content_substring**(*contents: ScLinkContent | str | int)
+- coroutine *AScClient*.**get_links_by_content_substring**(*contents: ScLinkContent | str | int)
 
 Get a nested list of links for every content substring.
 
@@ -702,11 +701,11 @@ Get a nested list of links for every content substring.
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 search_string = "substring1 substring2"
 
-construction = ScConstruction()  # Create link with search string
+construction = ScConstruction()  # Create a link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
 construction.create_link(sc_types.LINK_CONST, link_content1)
 link = sc_client.create_elements(construction)[0]
@@ -718,7 +717,7 @@ assert all(link in links for links in links_list)
 ### Get links contents by content substring
 
 - *ScClient*.**get_links_contents_by_content_substring**(*contents: ScLinkContent | str | int)
-- coroutine *AsyncScClient*.**get_links_contents_by_content_substring**(*contents: ScLinkContent | str | int)
+- coroutine *AScClient*.**get_links_contents_by_content_substring**(*contents: ScLinkContent | str | int)
 
 Get a nested list of links for the given content substrings.
 
@@ -726,11 +725,11 @@ Get a nested list of links for the given content substrings.
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 search_string = "substring1 substring2"
 
-construction = ScConstruction()  # Create link with search string
+construction = ScConstruction()  # Create a link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
 construction.create_link(sc_types.LINK_CONST, link_content1)
 link_addr = sc_client.create_elements(construction)[0]
@@ -744,7 +743,7 @@ assert all(link_addr.value in links for links in links_list)
 ### Create events
 
 - *ScClient*.**events_create**(*events: ScEventParams)
-- coroutine *AsyncScClient*.**events_create**(*events: AsyncScEventParams)
+- coroutine *AScClient*.**events_create**(*events: AScEventParams)
 
 Create an event in the KB memory by ScEventParams and return list of ScEvents.
 
@@ -752,7 +751,7 @@ Create an event in the KB memory by ScEventParams and return list of ScEvents.
 from sc_client.constants.common import ScEventType
 from sc_client.models import ScEventParams, ScAddr
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 
 def event_callback(src: ScAddr, edge: ScAddr, trg: ScAddr):
@@ -768,7 +767,7 @@ sc_event = sc_client.events_create(event_params)
 ### Check event validity
 
 - *ScClient*.**is_event_valid**(event: ScEvent)
-- *AsyncScClient*.**is_event_valid**(event: AsyncScEvent)
+- *AScClient*.**is_event_valid**(event: AScEvent)
 
 Return boolean status if *event* is active and or not.
 
@@ -778,7 +777,7 @@ Return boolean status if *event* is active and or not.
 ```python
 from sc_client.models import ScEvent
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 sc_event: ScEvent
 status = sc_client.is_event_valid(sc_event)
@@ -787,14 +786,14 @@ status = sc_client.is_event_valid(sc_event)
 ### Destroy events
 
 - *ScClient*.**events_destroy**(*events: ScEvent)
-- coroutine *AsyncScClient*.**events_destroy**(*events: AsyncScEvent)
+- coroutine *AScClient*.**events_destroy**(*events: AScEvent)
 
 Destroy *events* in the KB memory and return boolean status.
 
 ```python
 from sc_client.models import ScEvent
 
-from your_module.client import sc_client
+from sc_client.core.sc_client_instance import sc_client
 
 sc_event: ScEvent
 status = sc_client.events_destroy(sc_event)
