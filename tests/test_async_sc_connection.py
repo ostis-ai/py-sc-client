@@ -8,9 +8,9 @@ from sc_client import ScAddr
 from sc_client.constants import common
 from sc_client.constants.common import RequestType, ScEventType
 from sc_client.constants.config import MAX_PAYLOAD_SIZE
-from sc_client.core.async_sc_connection import AsyncScConnection
+from sc_client.core.asc_connection import AScConnection
 from sc_client.core.response import Response
-from sc_client.models import AsyncScEvent
+from sc_client.models import AScEvent
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
 from sc_client.testing import ResponseCallback, WebsocketStub, websockets_client_connect_patch
 
@@ -20,7 +20,7 @@ logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(lev
 @patch("websockets.client.connect", websockets_client_connect_patch)
 class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
     async def test_connection(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         await connection.connect("url")
         self.assertTrue(connection.is_connected())
         await connection.disconnect()
@@ -28,13 +28,13 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
 
     async def test_wrong_connection(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         with self.assertRaisesRegex(ScServerError, ErrorNotes.CANNOT_CONNECT_TO_SC_SERVER):
             await connection.connect("")
         self.assertFalse(connection.is_connected())
 
     async def test_lose_connection(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         await connection.connect("url")
         self.assertTrue(connection.is_connected())
         websocket = WebsocketStub.of(connection)
@@ -48,7 +48,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
 
     async def test_send_receive(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         await connection.connect("url")
         websocket = WebsocketStub.of(connection)
         request_type = RequestType.CHECK_ELEMENTS
@@ -67,7 +67,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
 
     async def test_sc_server_doesnt_response(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         connection.reconnect_retries = 1
         connection.reconnect_delay = 0
         await connection.connect("url")
@@ -78,7 +78,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
 
     async def test_reconnect(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         connection.reconnect_retries = 5
         connection.reconnect_delay = 0.1
         await connection.connect("url")
@@ -102,7 +102,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
 
     async def test_lose_connection_while_receiving(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         connection.reconnect_retries = 5
         connection.reconnect_delay = 0.1
         await connection.connect("url")
@@ -123,14 +123,14 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
         await connection.disconnect()
 
     async def test_payload_max_size(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         await connection.connect("url")
         with self.assertRaises(PayloadMaxSizeError):
             await connection.send_message(RequestType.CHECK_ELEMENTS, "0" * (MAX_PAYLOAD_SIZE + 1))
         await connection.disconnect()
 
     async def test_event(self):
-        connection = AsyncScConnection()
+        connection = AScConnection()
         await connection.connect("url")
         websocket = WebsocketStub.of(connection)
 
@@ -141,7 +141,7 @@ class AsyncScConnectionTestCase(IsolatedAsyncioTestCase):
             nonlocal event_run_times
             event_run_times += 1
 
-        event = AsyncScEvent(20, ScEventType.ADD_OUTGOING_EDGE, event_callback)
+        event = AScEvent(20, ScEventType.ADD_OUTGOING_EDGE, event_callback)
         connection.set_event(event)
         event_same = connection.get_event(20)
         await websocket.messages.put(Response(20, True, True, [1, 2, 3], None).dump())

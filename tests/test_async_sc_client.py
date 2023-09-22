@@ -7,9 +7,9 @@ from unittest.mock import patch
 from sc_client import ScAddr, ScConstruction, ScLinkContent, ScLinkContentType, ScTemplate, ScType
 from sc_client.constants import common, sc_types
 from sc_client.constants.common import RequestType, ScEventType
-from sc_client.core import AsyncScClient
+from sc_client.core import AScClient
 from sc_client.core.response import Response
-from sc_client.models import AsyncScEventParams, ScIdtfResolveParams
+from sc_client.models import AScEventParams, ScIdtfResolveParams
 from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError, ScServerError
 from sc_client.testing import ResponseCallback, SimpleResponseCallback, WebsocketStub, websockets_client_connect_patch
 
@@ -19,26 +19,26 @@ logging.basicConfig(level=logging.DEBUG, force=True, format="%(asctime)s | %(lev
 @patch("websockets.client.connect", websockets_client_connect_patch)
 class AsyncScClientTestCase(IsolatedAsyncioTestCase):
     async def test_connection(self) -> None:
-        client = AsyncScClient()
+        client = AScClient()
         await client.connect("url")
         self.assertTrue(client.is_connected())
         await client.disconnect()
         self.assertFalse(client.is_connected())
 
     async def test_wrong_connection(self):
-        client = AsyncScClient()
+        client = AScClient()
         with self.assertRaisesRegex(ScServerError, ErrorNotes.CANNOT_CONNECT_TO_SC_SERVER):
             await client.connect("")
         self.assertFalse(client.is_connected())
 
 
 class AsyncScClientActionsTestCase(IsolatedAsyncioTestCase):
-    client: AsyncScClient
+    client: AScClient
     websocket: WebsocketStub
 
     @patch("websockets.client.connect", websockets_client_connect_patch)
     async def asyncSetUp(self) -> None:
-        self.client = AsyncScClient()
+        self.client = AScClient()
         await self.client.connect("url")
         self.websocket = WebsocketStub.of(self.client)
 
@@ -306,10 +306,10 @@ class SetLinksContentTestCase(AsyncScClientActionsTestCase):
 
 class GetLinksTestCase(AsyncScClientActionsTestCase):
     params = [
-        (AsyncScClient.get_links_by_content, common.CommandTypes.FIND),
-        (AsyncScClient.get_links_by_content_substring, common.CommandTypes.FIND_LINKS_BY_SUBSTRING),
+        (AScClient.get_links_by_content, common.CommandTypes.FIND),
+        (AScClient.get_links_by_content_substring, common.CommandTypes.FIND_LINKS_BY_SUBSTRING),
         (
-            AsyncScClient.get_links_contents_by_content_substring,
+            AScClient.get_links_contents_by_content_substring,
             common.CommandTypes.FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING,
         ),
     ]
@@ -495,7 +495,7 @@ class ScEventsTestCase(AsyncScClientActionsTestCase):
         async def test_callback(*_):
             pass
 
-        param = AsyncScEventParams(ScAddr(12), ScEventType.ADD_OUTGOING_EDGE, test_callback)
+        param = AScEventParams(ScAddr(12), ScEventType.ADD_OUTGOING_EDGE, test_callback)
 
         class CreateCallback(ResponseCallback):
             def callback(self, id_: int, type_: common.RequestType, payload_: Any) -> Response:
@@ -530,7 +530,7 @@ class ScEventsTestCase(AsyncScClientActionsTestCase):
         is_call_succesfull = False
         await self.websocket.set_message_callback(SimpleResponseCallback(True, False, [1], None))
         events = await self.client.events_create(
-            AsyncScEventParams(ScAddr(12), ScEventType.ADD_OUTGOING_EDGE, test_callback)
+            AScEventParams(ScAddr(12), ScEventType.ADD_OUTGOING_EDGE, test_callback)
         )
         await self.websocket.messages.put(
             f'{{"id": {events[0].id}, "event": true, "status": true, "payload": [12, 0, 0], "errors": []}}'

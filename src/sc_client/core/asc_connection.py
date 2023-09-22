@@ -12,11 +12,11 @@ from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
 from sc_client.constants import common, config
 from sc_client.core.response import Response
-from sc_client.models import AsyncScEvent, ScAddr
+from sc_client.models import AScEvent, ScAddr
 from sc_client.sc_exceptions import ErrorNotes, PayloadMaxSizeError, ScServerError
 
 
-class AsyncScConnection:
+class AScConnection:
     # pylint: disable=too-many-instance-attributes
 
     def __init__(self) -> None:
@@ -25,7 +25,7 @@ class AsyncScConnection:
         self._websocket = websockets.client.WebSocketClientProtocol()
 
         self._response_futures: dict[int, Future[Response]] = {}
-        self._events_dict: dict[int, AsyncScEvent] = {}
+        self._events_dict: dict[int, AScEvent] = {}
         self._command_id: int = 0
 
         self.on_open: Callable[[], Awaitable[None]] = self._on_open_default
@@ -106,10 +106,10 @@ class AsyncScConnection:
         asyncio.create_task(event.callback(*addrs), name=f"ScEvent({event.id})")
         await asyncio.sleep(0)
 
-    def set_event(self, sc_event: AsyncScEvent) -> None:
+    def set_event(self, sc_event: AScEvent) -> None:
         self._events_dict[sc_event.id] = sc_event
 
-    def get_event(self, event_id: int) -> AsyncScEvent | None:
+    def get_event(self, event_id: int) -> AScEvent | None:
         return self._events_dict.get(event_id)
 
     def drop_event(self, event_id: int) -> None:
@@ -135,8 +135,7 @@ class AsyncScConnection:
         return response
 
     async def _send_with_reconnect(self, data: str) -> None:
-        retries: int = self.reconnect_retries
-        while True:
+        for retries in range(self.reconnect_retries, -1, -1):
             try:
                 await self._websocket.send(data)
                 return
@@ -149,7 +148,6 @@ class AsyncScConnection:
                     exception = ScServerError(ErrorNotes.SC_SERVER_TAKES_A_LONG_TIME_TO_RESPOND)
                     await self.on_error(exception)
                     raise exception from None
-                retries -= 1
                 self._logger.warning(
                     "Trying to reconnect in %d seconds (retries left: %s)", self.reconnect_delay, retries
                 )

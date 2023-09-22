@@ -1,3 +1,4 @@
+from sc_client.models.asc_event import AScEvent, AScEventParams
 from sc_client.models.sc_addr import ScAddr
 from sc_client.models.sc_construction import (
     ScConstruction,
@@ -7,7 +8,7 @@ from sc_client.models.sc_construction import (
     ScLinkContentData,
     ScLinkContentType,
 )
-from sc_client.models.sc_event import AsyncScEvent, AsyncScEventParams, ScEvent, ScEventParams
+from sc_client.models.sc_event import ScEvent, ScEventParams
 from sc_client.models.sc_template import (
     ScTemplate,
     ScTemplateParam,

@@ -6,8 +6,8 @@ from typing import Any
 
 from websockets.exceptions import ConnectionClosed, ConnectionClosedOK
 
-from sc_client.core import AsyncScClient, ScClient
-from sc_client.core.async_sc_connection import AsyncScConnection
+from sc_client.core import AScClient, ScClient
+from sc_client.core.asc_connection import AScConnection
 from sc_client.testing.response_callback import ResponseCallback
 
 
@@ -81,11 +81,11 @@ class WebsocketStub:
     # noinspection PyProtectedMember
     # pylint: disable=protected-access
     @classmethod
-    def of(cls, obj: AsyncScConnection | AsyncScClient | ScClient) -> WebsocketStub:
+    def of(cls, obj: AScConnection | AScClient | ScClient) -> WebsocketStub:
         return (
             obj
-            if isinstance(obj, AsyncScConnection)
-            else (obj if isinstance(obj, AsyncScClient) else obj._async_sc_client)._sc_connection
+            if isinstance(obj, AScConnection)
+            else (obj if isinstance(obj, AScClient) else obj._asc_client)._sc_connection
         )._websocket
 
     async def set_message_callback(self, callback: ResponseCallback) -> None:

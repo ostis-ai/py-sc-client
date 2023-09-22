@@ -23,7 +23,7 @@ class ScTemplateValue:
             if not isinstance(alias, str):
                 raise InvalidTypeError(ErrorNotes.ALIAS_MUST_BE_STR)
             if not isinstance(param, (ScAddr, ScType)):
-                raise InvalidTypeError(ErrorNotes.VALUE_WITH_ALIAS_MUST_BE_SC_ADDR)
+                raise InvalidTypeError(ErrorNotes.VALUE_WITH_ALIAS_MUST_BE_SC_ADDR_OR_SC_TYPE)
             self.alias = alias
         if isinstance(param, ScType) and param.is_const():
             raise InvalidTypeError(ErrorNotes.VAR_TYPE_IN_TEMPLATE)

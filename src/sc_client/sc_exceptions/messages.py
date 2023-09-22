@@ -25,6 +25,6 @@ class ErrorNotes:
     EXPECTED_OBJECT_TYPES_SC_ADDR = "Expected object types: ScAddr"
     EXPECTED_SC_TYPE = "Expected ScType: {}"
     ALIAS_MUST_BE_STR = "Alias must be str"
-    VALUE_WITH_ALIAS_MUST_BE_SC_ADDR = "Value with alias must be ScAddr"
+    VALUE_WITH_ALIAS_MUST_BE_SC_ADDR_OR_SC_TYPE = "Value with alias must be ScAddr or ScType"
     VAR_TYPE_IN_TEMPLATE = "You should to use variable types in template"
     GOT_ERROR = "Got error from sc-server: \n{}"

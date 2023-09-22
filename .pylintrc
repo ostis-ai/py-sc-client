@@ -5,6 +5,7 @@ disable=
     invalid-name,
     too-few-public-methods,
     too-many-arguments,
+    duplicate-code
 
 [FORMAT]
 

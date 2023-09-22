@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from sc_client.core import AsyncScClient
+from sc_client.core import AScClient
 
 logging.basicConfig(level=logging.INFO)
 
@@ -15,7 +15,7 @@ async def on_close():
 
 
 async def main():
-    client = AsyncScClient()
+    client = AScClient()
     client.set_on_open_handler(on_open)
     client.set_on_close_handler(on_close)
     await client.connect("ws://localhost:8090/ws_json")  # INFO:root:Callback on open

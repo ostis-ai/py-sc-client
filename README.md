@@ -89,16 +89,16 @@ if __name__ == "__main__":
     main()
 ```
 
-Asyncronous version:
+Asynchronous version:
 
 ```python
 import asyncio
 
-from sc_client.core import AsyncScClient
+from sc_client.core import AScClient
 
 
 async def main():
-    client = AsyncScClient()
+    client = AScClient()
     await client.connect("ws://localhost:8090/ws_json")
     try:
         print(f"1. {client.is_connected()=}")  # 1. client.is_connected()=True
@@ -165,13 +165,13 @@ if __name__ == "__main__":
     main()
 ```
 
-Asyncronous version:
+Asynchronous version:
 
 ```python
 import asyncio
 import logging
 
-from sc_client.core import AsyncScClient
+from sc_client.core import AScClient
 
 logging.basicConfig(level=logging.INFO)
 
@@ -185,7 +185,7 @@ async def on_close():
 
 
 async def main():
-    client = AsyncScClient()
+    client = AScClient()
     client.set_on_open_handler(on_open)
     client.set_on_close_handler(on_close)
     await client.connect("ws://localhost:8090/ws_json")  # INFO:root:Callback on open

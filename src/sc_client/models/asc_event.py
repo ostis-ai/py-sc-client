@@ -1,24 +1,24 @@
 from dataclasses import dataclass
-from typing import Callable, Optional
+from typing import Any, Callable, Coroutine, Optional
 
 from sc_client.constants.common import ScEventType
 from sc_client.models.sc_addr import ScAddr
 
-ScEventCallback = Callable[[ScAddr, ScAddr, ScAddr], None]
+AScEventCallback = Callable[[ScAddr, ScAddr, ScAddr], Coroutine[Any, Any, None]]
 
 
 @dataclass
-class ScEventParams:
+class AScEventParams:
     addr: ScAddr
     event_type: ScEventType
-    callback: ScEventCallback
+    callback: AScEventCallback
 
 
 @dataclass
-class ScEvent:
+class AScEvent:
     id: int
     event_type: Optional[ScEventType] = None
-    callback: Optional[ScEventCallback] = None
+    callback: Optional[AScEventCallback] = None
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(id={self.id}, event_type={self.event_type})"

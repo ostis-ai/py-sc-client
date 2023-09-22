@@ -6,10 +6,10 @@ from typing import Callable
 
 import nest_asyncio
 
-from sc_client.core.async_sc_client_ import AsyncScClient
+from sc_client.core.asc_client_ import AScClient
 from sc_client.models import (
-    AsyncScEvent,
-    AsyncScEventParams,
+    AScEvent,
+    AScEventParams,
     ScAddr,
     ScConstruction,
     ScEvent,
@@ -33,104 +33,104 @@ class ScClient:
     def __init__(self) -> None:
         self._logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
         nest_asyncio.apply()
-        self._async_sc_client = AsyncScClient()
+        self._asc_client = AScClient()
         self._loop = asyncio.get_event_loop()
 
     def connect(self, url: str) -> None:
-        self._loop.run_until_complete(self._async_sc_client.connect(url))
+        self._loop.run_until_complete(self._asc_client.connect(url))
 
     def is_connected(self) -> bool:
-        return self._async_sc_client.is_connected()
+        return self._asc_client.is_connected()
 
     def disconnect(self) -> None:
-        self._loop.run_until_complete(self._async_sc_client.disconnect())
+        self._loop.run_until_complete(self._asc_client.disconnect())
 
     def set_on_open_handler(self, on_open: Callable[[], None]) -> None:
         async def async_on_open():
             on_open()
 
-        self._async_sc_client.set_on_open_handler(async_on_open)
+        self._asc_client.set_on_open_handler(async_on_open)
 
     def set_on_close_handler(self, on_close: Callable[[], None]) -> None:
         async def async_on_close():
             on_close()
 
-        self._async_sc_client.set_on_close_handler(async_on_close)
+        self._asc_client.set_on_close_handler(async_on_close)
 
     def set_on_error_handler(self, on_error: Callable[[Exception], None]) -> None:
         async def async_on_error(e: Exception):
             on_error(e)
 
-        self._async_sc_client.set_on_error_handler(async_on_error)
+        self._asc_client.set_on_error_handler(async_on_error)
 
     def set_on_reconnect_handler(self, on_reconnect: Callable[[], None]) -> None:
         async def async_on_reconnect():
             on_reconnect()
 
-        self._async_sc_client.set_on_reconnect_handler(async_on_reconnect)
+        self._asc_client.set_on_reconnect_handler(async_on_reconnect)
 
     def set_reconnect_settings(self, retries: int = None, retry_delay: float = None) -> None:
-        self._async_sc_client.set_reconnect_settings(retries, retry_delay)
+        self._asc_client.set_reconnect_settings(retries, retry_delay)
 
     def check_elements(self, *addrs: ScAddr) -> list[ScType]:
-        return self._loop.run_until_complete(self._async_sc_client.check_elements(*addrs))
+        return self._loop.run_until_complete(self._asc_client.check_elements(*addrs))
 
     def create_elements(self, constr: ScConstruction) -> list[ScAddr]:
-        return self._loop.run_until_complete(self._async_sc_client.create_elements(constr))
+        return self._loop.run_until_complete(self._asc_client.create_elements(constr))
 
     def create_elements_by_scs(self, scs_text: SCsText) -> list[bool]:
-        return self._loop.run_until_complete(self._async_sc_client.create_elements_by_scs(scs_text))
+        return self._loop.run_until_complete(self._asc_client.create_elements_by_scs(scs_text))
 
     def delete_elements(self, *addrs: ScAddr) -> bool:
-        return self._loop.run_until_complete(self._async_sc_client.delete_elements(*addrs))
+        return self._loop.run_until_complete(self._asc_client.delete_elements(*addrs))
 
     def set_link_contents(self, *contents: ScLinkContent) -> bool:
-        return self._loop.run_until_complete(self._async_sc_client.set_link_contents(*contents))
+        return self._loop.run_until_complete(self._asc_client.set_link_contents(*contents))
 
     def get_link_content(self, *addrs: ScAddr) -> list[ScLinkContent]:
-        return self._loop.run_until_complete(self._async_sc_client.get_link_content(*addrs))
+        return self._loop.run_until_complete(self._asc_client.get_link_content(*addrs))
 
     def get_links_by_content(self, *contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
-        return self._loop.run_until_complete(self._async_sc_client.get_links_by_content(*contents))
+        return self._loop.run_until_complete(self._asc_client.get_links_by_content(*contents))
 
     def get_links_by_content_substring(self, *contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
-        return self._loop.run_until_complete(self._async_sc_client.get_links_by_content_substring(*contents))
+        return self._loop.run_until_complete(self._asc_client.get_links_by_content_substring(*contents))
 
     def get_links_contents_by_content_substring(
         self, *contents: ScLinkContent | ScLinkContentData
     ) -> list[list[ScAddr]]:
-        return self._loop.run_until_complete(self._async_sc_client.get_links_contents_by_content_substring(*contents))
+        return self._loop.run_until_complete(self._asc_client.get_links_contents_by_content_substring(*contents))
 
     def resolve_keynodes(self, *params: ScIdtfResolveParams) -> list[ScAddr]:
-        return self._loop.run_until_complete(self._async_sc_client.resolve_keynodes(*params))
+        return self._loop.run_until_complete(self._asc_client.resolve_keynodes(*params))
 
     def template_search(
         self,
         template: ScTemplate | str | ScAddr,
         params: ScTemplateParams = None,
     ) -> list[ScTemplateResult]:
-        return self._loop.run_until_complete(self._async_sc_client.template_search(template, params))
+        return self._loop.run_until_complete(self._asc_client.template_search(template, params))
 
     def template_generate(
         self,
         template: ScTemplate | str | ScAddr,
         params: ScTemplateParams = None,
     ) -> ScTemplateResult:
-        return self._loop.run_until_complete(self._async_sc_client.template_generate(template, params))
+        return self._loop.run_until_complete(self._asc_client.template_generate(template, params))
 
     # pylint: disable=cell-var-from-loop
     def events_create(self, *params: ScEventParams) -> list[ScEvent]:
         if not all(isinstance(param, ScEventParams) for param in params):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEventParams")
-        async_params: list[AsyncScEventParams] = []
+        async_params: list[AScEventParams] = []
         for param in params:
 
             async def async_callback(*addrs: ScAddr) -> None:
                 param.callback(*addrs)
 
-            async_event = AsyncScEventParams(param.addr, param.event_type, async_callback)
+            async_event = AScEventParams(param.addr, param.event_type, async_callback)
             async_params.append(async_event)
-        async_events = self._loop.run_until_complete(self._async_sc_client.events_create(*async_params))
+        async_events = self._loop.run_until_complete(self._asc_client.events_create(*async_params))
         events: list[ScEvent] = []
         for async_event in async_events:
 
@@ -144,10 +144,10 @@ class ScClient:
     def events_destroy(self, *events: ScEvent) -> bool:
         if not all(isinstance(event, ScEvent) for event in events):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
-        async_events = [AsyncScEvent(event.id) for event in events]
-        return self._loop.run_until_complete(self._async_sc_client.events_destroy(*async_events))
+        async_events = [AScEvent(event.id) for event in events]
+        return self._loop.run_until_complete(self._asc_client.events_destroy(*async_events))
 
     def is_event_valid(self, event: ScEvent) -> bool:
         if not isinstance(event, ScEvent):
             raise InvalidTypeError(ErrorNotes.EXPECTED_OBJECT_TYPES, "ScEvent")
-        return self._async_sc_client.is_event_valid(AsyncScEvent(event.id))
+        return self._asc_client.is_event_valid(AScEvent(event.id))

@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 from sc_client import ScAddr, ScType
 from sc_client.constants import common
-from sc_client.core import AsyncScClient
+from sc_client.core import AScClient
 from sc_client.core.response import Response
 from sc_client.testing import ResponseCallback, SimpleResponseCallback, WebsocketStub, websockets_client_connect_patch
 
@@ -12,7 +12,7 @@ from sc_client.testing import ResponseCallback, SimpleResponseCallback, Websocke
 @patch("websockets.client.connect", websockets_client_connect_patch)
 class AsyncScClientTestCase(IsolatedAsyncioTestCase):
     async def test_connection(self) -> None:
-        client = AsyncScClient()
+        client = AScClient()
         await client.connect("url")
         self.assertTrue(client.is_connected())
         await client.disconnect()
@@ -20,12 +20,12 @@ class AsyncScClientTestCase(IsolatedAsyncioTestCase):
 
 
 class AsyncScClientActionsTestCase(IsolatedAsyncioTestCase):
-    client: AsyncScClient
+    client: AScClient
     websocket: WebsocketStub
 
     @patch("websockets.client.connect", websockets_client_connect_patch)
     async def asyncSetUp(self) -> None:
-        self.client = AsyncScClient()
+        self.client = AScClient()
         await self.client.connect("url")
         self.websocket = WebsocketStub.of(self.client)
 
