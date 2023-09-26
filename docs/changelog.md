@@ -4,9 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.4.0]
+### Added
+ - Async usage (AScConnection and AScClient)
+ - Opportunity to mock testing
+### Changed
+ - Object Oriented Programming style
+ - Connection handlers
+ - Exceptions
+ - Models small features
+   - Moved `ScType` to models directory
+   - Made `value` field for `ScAddr` and `ScType` as property and cannot be changed in runtime
+   - Add `__lt__` method for the ability to sort ScAddrs
+ - Constants
+ - Tests
+ - Logging
+ - Typing
+### Removed
+ - Storing of used sc-server responses
+ - Deprecated usage of a list in `ScTemplate` triplets (now tuple and operator `>>`)
+ - Deprecated methods of `ScTemplateResult`:
+   - `results.size()`, use `len(results)`
+   - `results.get(...)`, use `results[...]`
+   - `results.for_each_triple(...)`, use `for src, edge, trd in results ...`
+- `ScAgent`, `ScModule` and `ScKeynodes` (now in kpm)
+
 ## [0.3.0]
 ### Added
- - Reconnection retries to sc-server in send message
+ - Reconnection retries to sc-server in messages sending
  - OnReconnect handler setter
  - OnError handler setter
 ### Fixed

@@ -2,46 +2,14 @@ import unittest
 
 import pytest
 
-from sc_client.constants import ScType
 from sc_client.constants import sc_types as t
-from sc_client.constants.exceptions import CommonErrorMessages, InvalidTypeError
-from sc_client.models import ScAddr
-
-
-def init_logic(obj):
-    assert obj().value == 0
-    assert obj(0).value == 0
-    assert obj(1).value == 1
-    with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
-        obj("10")
-
-
-def is_valid_logic(obj):
-    assert obj().is_valid() is False and bool(obj()) is False
-    assert obj(0).is_valid() is False and bool(obj(0)) is False
-    assert obj(1).is_valid() and bool(obj(1))
-
-
-def is_equal_logic(obj):
-    assert obj().is_equal(obj()) and obj() == obj()
-    assert obj(1000).is_equal(obj(1000)) and obj(1000) == obj(1000)
-    addr = obj(2000)
-    assert addr.is_equal(addr)
-    assert addr != obj()
-
-
-class TestScAddr(unittest.TestCase):
-    def test_init(self):
-        init_logic(ScAddr)
-
-    def test_is_valid(self):
-        is_valid_logic(ScAddr)
-
-    def test_is_equal(self):
-        is_equal_logic(ScAddr)
+from sc_client.models import ScType
+from sc_client.sc_exceptions import ErrorNotes, InvalidTypeError
 
 
 class TestScType(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
+
     @classmethod
     def setUpClass(cls) -> None:
         cls.types = {
@@ -97,13 +65,42 @@ class TestScType(unittest.TestCase):
         }
 
     def test_init(self):
-        init_logic(ScType)
+        self.assertEqual(ScType().value, 0)
+        self.assertEqual(ScType(0).value, 0)
+        self.assertEqual(ScType(1).value, 1)
+        with self.assertRaisesRegex(InvalidTypeError, ErrorNotes.INT_TYPE_INITIALIZATION):
+            # noinspection PyTypeChecker
+            ScType("not int")
 
     def test_is_valid(self):
-        is_valid_logic(ScType)
+        self.assertFalse(ScType().is_valid())
+        self.assertFalse(bool(ScType()))
+        self.assertFalse(ScType(0).is_valid())
+        self.assertFalse(bool(ScType(0)))
+        self.assertTrue(ScType(1).is_valid())
+        self.assertTrue(bool(ScType(1)))
 
     def test_is_equal(self):
-        is_equal_logic(ScType)
+        self.assertTrue(ScType().is_equal(ScType()))
+        self.assertEqual(ScType(), ScType())
+        self.assertTrue(ScType(1).is_equal(ScType(1)))
+        self.assertEqual(ScType(1), ScType(1))
+        addr = ScType(2)
+        self.assertTrue(addr.is_equal(addr))
+        self.assertEqual(addr, addr)
+        self.assertFalse(ScType(1).is_equal(ScType(2)))
+        self.assertNotEqual(ScType(1), ScType(2))
+
+    def test_hash(self):
+        self.assertEqual(hash(ScType(1)), hash(ScType(1)))
+        self.assertNotEqual(hash(ScType(0)), hash(ScType(1)))
+        self.assertNotEqual(hash(ScType(3)), hash(3))
+
+    def test_rshift(self):
+        self.assertEqual(ScType(1) >> "alias", (ScType(1), "alias"))
+
+    def test_repr(self):
+        self.assertEqual(repr(ScType(0x821)), "ScType(0x821)")
 
     def test_is_node(self):
         node_types = {
@@ -358,7 +355,7 @@ class TestScType(unittest.TestCase):
 
     def test_merge(self):
         assert t.NODE_CONST.merge(t.NODE_CLASS) == t.NODE_CONST_CLASS
-        with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
+        with pytest.raises(InvalidTypeError):
             assert t.CONST.merge(t.NODE) == t.NODE_CONST
 
     def test_has_constancy(self):

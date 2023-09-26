@@ -6,12 +6,17 @@ from setuptools import find_packages, setup
 DIRECTORY_PATH = Path(__file__).parent
 README = (DIRECTORY_PATH / "README.md").read_text()
 
-VERSION = "0.3.0"
-INSTALL_REQUIRES = ["websocket-client>=1.0.1"]
+VERSION = "0.4.0"
+INSTALL_REQUIRES = [
+    "websocket-client>=1.0.1",
+    "websockets>=11.0.3",
+    "nest-asyncio>=1.5.7",
+]
 CURRENT_PYTHON = sys.version_info[:2]
 REQUIRED_PYTHON = (3, 8)
 
 
+# pylint: disable=consider-using-f-string
 if CURRENT_PYTHON < REQUIRED_PYTHON:
     sys.stderr.write(
         """
@@ -45,6 +50,7 @@ setup(
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
     keywords="sc-client, sc client",
     packages=find_packages(where="src", exclude=("tests",)),
