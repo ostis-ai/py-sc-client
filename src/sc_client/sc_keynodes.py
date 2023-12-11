@@ -4,19 +4,14 @@ Distributed under the MIT License
 (See an accompanying file LICENSE or a copy at http://opensource.org/licenses/MIT)
 """
 
-import warnings
 from enum import Enum
-from typing import List, Optional
+from typing import List
 
 from sc_client import client
-from sc_client.constants.sc_types import ScType
 from sc_client.models import ScAddr, ScIdtfResolveParams
 
 
 class ScKeynodes(dict):
-    warnings.warn(
-        "ScKeynodes moved to py-sc-kpm and will be removed from py-sc-client in version 0.3.0", DeprecationWarning
-    )
     # TODO: remove class in version 0.3.0
 
     _instance = {}
@@ -26,9 +21,14 @@ class ScKeynodes(dict):
             cls._instance = dict.__new__(cls)
         return cls._instance
 
-    def __getitem__(self, identifier: str, sc_type: Optional[ScType] = None) -> ScAddr:
+    def __getitem__(self, index) -> ScAddr:
+        if isinstance(index, tuple) and len(index) == 2:
+            identifier, sc_type = index
+        else:
+            identifier = index
+            sc_type = None
         addr = self._instance.get(identifier)
-        if addr is None:
+        if addr is None or addr.value == 0:
             params = ScIdtfResolveParams(idtf=identifier, type=sc_type)
             addr = client.resolve_keynodes(params)[0]
             self._instance[identifier] = addr

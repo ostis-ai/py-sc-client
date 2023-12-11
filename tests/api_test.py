@@ -32,6 +32,7 @@ from sc_client.models import (
     SCs,
     ScTemplate,
 )
+from sc_client.sc_keynodes import ScKeynodes
 
 # pylint: disable=W0212
 
@@ -361,6 +362,26 @@ class TestClientResolveElements(ScTest):
         assert addrs[2].value == 0
 
 
+class TestClientResolveKeynodes(ScTest):
+    def test_resolve_keynode_not_exist_node(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
+        keynodes = ScKeynodes()
+        mega_new_keynode = keynodes['mega_new_keynode', sc_types.NODE_CONST]
+        assert mega_new_keynode.value != 0
+
+    def test_resolve_keynode_not_exist_link(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
+        keynodes = ScKeynodes()
+        mega_new_keynode = keynodes['mega_new_keynode', sc_types.LINK_CONST]
+        assert mega_new_keynode.value != 0
+
+    def test_resolve_keynode_not_exist_without_type(self):
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
+        keynodes = ScKeynodes()
+        mega_new_keynode = keynodes['mega_new_keynode']
+        assert mega_new_keynode.value != 0
+
+
 class TestClientEvent(ScTest):
     def test_events_create_incorrect_arguments(self):
         with pytest.raises(InvalidTypeError):
@@ -562,6 +583,7 @@ client_test_cases = (
     TestClientCheckElements,
     TestClientDeleteElements,
     TestClientResolveElements,
+    TestClientResolveKeynodes,
     TestClientLinkContent,
     TestClientTemplate,
     TestClientEvent,
