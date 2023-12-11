@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - OnReconnect handler setter
  - OnError handler setter
 ### Fixed
+ - Undefined python interpreter version in CI
+ - Resolving keynodes with ScKeynodes class
  - Infinite loop when receiving response to message
 ### Removed
  - Reconnection to sc-server in separate thread by time
