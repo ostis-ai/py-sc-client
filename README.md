@@ -5,7 +5,7 @@
 
 The python implementation of the client for communication with
 [the OSTIS Technology web-oriented platform](https://github.com/ostis-ai/ostis-web-platform/blob/develop/docs/main.pdf).
-This library is compatible with `0.7.0` version of [sc-machine](https://github.com/ostis-ai/sc-machine).
+This library is compatible with `0.9.0` version of [sc-machine](https://github.com/ostis-ai/sc-machine).
 
 Low-level functionality implemented in **[py-sc-client](https://github.com/ostis-ai/py-sc-client)**:
 
