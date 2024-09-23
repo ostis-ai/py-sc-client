@@ -17,6 +17,13 @@ class ScConstruction:
         self.commands = []
 
     def create_node(self, sc_type: ScType, alias: str = None) -> None:
+        warnings.warn(
+            "ScConstruction 'create_edge' method is deprecated. Use `generate_connector` method instead.",
+            DeprecationWarning,
+        )
+        self.generate_node(sc_type, alias)
+
+    def generate_node(self, sc_type: ScType, alias: str = None) -> None:
         if not sc_type.is_node():
             raise InvalidTypeError("You should pass the node type here")
         cmd = ScConstructionCommand(sc_type, None)
@@ -27,18 +34,37 @@ class ScConstruction:
     def create_edge(
         self,
         sc_type: ScType,
-        src: str | ScAddr,
-        trg: str | ScAddr,
+        source: str | ScAddr,
+        target: str | ScAddr,
+        alias: str = None,
+    ) -> None:
+        warnings.warn(
+            "ScConstruction 'create_edge' method is deprecated. Use `generate_connector` method instead.",
+            DeprecationWarning,
+        )
+        self.generate_connector(sc_type, source, target, alias)
+
+    def generate_connector(
+        self,
+        sc_type: ScType,
+        source: str | ScAddr,
+        target: str | ScAddr,
         alias: str = None,
     ) -> None:
         if not sc_type.is_edge():
-            raise InvalidTypeError("You should pass the edge type here")
-        cmd = ScConstructionCommand(sc_type, {common.SOURCE: src, common.TARGET: trg})
+            raise InvalidTypeError("You should pass the connector type here")
+        cmd = ScConstructionCommand(sc_type, {common.SOURCE: source, common.TARGET: target})
         if alias:
             self.aliases[alias] = len(self.commands)
         self.commands.append(cmd)
 
     def create_link(self, sc_type: ScType, content: ScLinkContent, alias: str = None) -> None:
+        warnings.warn(
+            "ScConstruction 'create_link' method is deprecated. Use `generate_link` method instead.", DeprecationWarning
+        )
+        self.generate_link(sc_type, content, alias)
+
+    def generate_link(self, sc_type: ScType, content: ScLinkContent, alias: str = None) -> None:
         if not sc_type.is_link():
             raise InvalidTypeError("You should pass the link type here")
         cmd = ScConstructionCommand(sc_type, {common.CONTENT: content.data, common.TYPE: content.content_type.value})
@@ -79,12 +105,7 @@ class ScLinkContent:
     def __post_init__(self):
         if len(str(self.data)) > LINK_CONTENT_MAX_SIZE:
             raise LinkContentOversizeError
-        if isinstance(self.content_type, int):
-            warnings.warn(
-                "ScLinkContentType in ScLinkContent int is deprecated. Use enum type instead", DeprecationWarning
-            )
-            # TODO: remove check int in version 0.3.0
-            self.content_type = ScLinkContentType(self.content_type)
+        self.content_type = ScLinkContentType(self.content_type)
 
     def type_to_str(self) -> str:
         return self.content_type.name.lower()

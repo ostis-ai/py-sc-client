@@ -7,20 +7,20 @@ from sc_client.constants.exceptions import ServerError
 
 class Executor:
     _executor_mapper = {
-        ClientCommand.CREATE_ELEMENTS: RequestType.CREATE_ELEMENTS,
-        ClientCommand.CREATE_ELEMENTS_BY_SCS: RequestType.CREATE_ELEMENTS_BY_SCS,
-        ClientCommand.CHECK_ELEMENTS: RequestType.CHECK_ELEMENTS,
-        ClientCommand.DELETE_ELEMENTS: RequestType.DELETE_ELEMENTS,
-        ClientCommand.KEYNODES: RequestType.KEYNODES,
-        ClientCommand.GET_LINK_CONTENT: RequestType.CONTENT,
-        ClientCommand.GET_LINKS_BY_CONTENT: RequestType.CONTENT,
-        ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: RequestType.CONTENT,
-        ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: RequestType.CONTENT,
-        ClientCommand.SET_LINK_CONTENTS: RequestType.CONTENT,
-        ClientCommand.EVENTS_CREATE: RequestType.EVENTS,
-        ClientCommand.EVENTS_DESTROY: RequestType.EVENTS,
-        ClientCommand.GENERATE_TEMPLATE: RequestType.GENERATE_TEMPLATE,
-        ClientCommand.SEARCH_TEMPLATE: RequestType.SEARCH_TEMPLATE,
+        ClientCommand.GENERATE_ELEMENTS: RequestType.GENERATE_ELEMENTS,
+        ClientCommand.GENERATE_ELEMENTS_BY_SCS: RequestType.GENERATE_ELEMENTS_BY_SCS,
+        ClientCommand.GET_ELEMENT_TYPES: RequestType.GET_ELEMENT_TYPES,
+        ClientCommand.ERASE_ELEMENTS: RequestType.ERASE_ELEMENTS,
+        ClientCommand.SEARCH_KEYNODES: RequestType.SEARCH_KEYNODES,
+        ClientCommand.GET_LINK_CONTENT: RequestType.HANDLE_CONTENT,
+        ClientCommand.SEARCH_LINKS_BY_CONTENT: RequestType.HANDLE_CONTENT,
+        ClientCommand.SEARCH_LINKS_BY_CONTENT_SUBSTRING: RequestType.HANDLE_CONTENT,
+        ClientCommand.SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: RequestType.HANDLE_CONTENT,
+        ClientCommand.SET_LINK_CONTENTS: RequestType.HANDLE_CONTENT,
+        ClientCommand.CREATE_EVENT_SUBSCRIPTIONS: RequestType.HANDLE_EVENT_SUBSCRIPTIONS,
+        ClientCommand.DESTROY_EVENT_SUBSCRIPTIONS: RequestType.HANDLE_EVENT_SUBSCRIPTIONS,
+        ClientCommand.GENERATE_BY_TEMPLATE: RequestType.GENERATE_BY_TEMPLATE,
+        ClientCommand.SEARCH_BY_TEMPLATE: RequestType.SEARCH_BY_TEMPLATE,
     }
 
     def __init__(self):

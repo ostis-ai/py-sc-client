@@ -8,8 +8,8 @@ from sc_client.constants import common, exceptions
 from sc_client.models import (
     ScAddr,
     ScConstruction,
-    ScEvent,
-    ScEventParams,
+    ScEventSubscription,
+    ScEventSubscriptionParams,
     ScIdtfResolveParams,
     ScLinkContent,
     ScLinkContentType,
@@ -30,7 +30,7 @@ class BasePayloadCreator:
         raise NotImplementedError
 
 
-class CreateElementsPayloadCreator(BasePayloadCreator):
+class GenerateElementsPayloadCreator(BasePayloadCreator):
     def __call__(self, constr: ScConstruction, *_):
         if not isinstance(constr, ScConstruction):
             raise exceptions.InvalidTypeError("expected object types: ScConstruction")
@@ -54,7 +54,7 @@ class CreateElementsPayloadCreator(BasePayloadCreator):
                     }
 
                 payload_part = {
-                    common.ELEMENT: common.Elements.EDGE,
+                    common.ELEMENT: common.Elements.CONNECTOR,
                     common.TYPE: command.el_type.value,
                     common.SOURCE: solve_adj(command.data.get(common.SOURCE)),
                     common.TARGET: solve_adj(command.data.get(common.TARGET)),
@@ -72,7 +72,7 @@ class CreateElementsPayloadCreator(BasePayloadCreator):
         return payload
 
 
-class CreateElementsBySCsPayloadCreator(BasePayloadCreator):
+class GenerateElementsBySCsPayloadCreator(BasePayloadCreator):
     def __call__(self, scs_text: SCsText, *_):
         if not isinstance(scs_text, list) or not all(isinstance(n, (str, SCs)) for n in scs_text):
             raise exceptions.InvalidTypeError("expected object types: string or SCs(string, ScAddr)")
@@ -103,7 +103,7 @@ class CheckElementsPayloadCreator(BasePayloadCreator):
         return [addr.value for addr in addrs]
 
 
-class DeleteElementsPayloadCreator(BasePayloadCreator):
+class EraseElementsPayloadCreator(BasePayloadCreator):
     def __call__(self, *addrs: ScAddr):
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise exceptions.InvalidTypeError("expected object types: ScAddr")
@@ -140,7 +140,7 @@ class GetLinkContentPayloadCreator(BasePayloadCreator):
         return payload
 
 
-class GetLinksByContentPayloadCreator(BasePayloadCreator):
+class SearchLinksByContentPayloadCreator(BasePayloadCreator):
     def __call__(self, *contents: ScLinkContent | ScLinkContentData):
         if not all(isinstance(content, (ScLinkContent, str, int, float)) for content in contents):
             raise exceptions.InvalidTypeError("expected object types: ScLinkContent, str or int")
@@ -162,23 +162,23 @@ class GetLinksByContentPayloadCreator(BasePayloadCreator):
 
     def _form_payload_content(self, content):
         return {
-            common.COMMAND: common.CommandTypes.FIND,
+            common.COMMAND: common.CommandTypes.SEARCH,
             common.DATA: content.data,
         }
 
 
-class GetLinksByContentSubstringPayloadCreator(GetLinksByContentPayloadCreator):
+class SearchLinksByContentSubstringPayloadCreator(SearchLinksByContentPayloadCreator):
     def _form_payload_content(self, content):
         return {
-            common.COMMAND: common.CommandTypes.FIND_LINKS_BY_SUBSTRING,
+            common.COMMAND: common.CommandTypes.SEARCH_LINKS_BY_CONTENT_SUBSTRING,
             common.DATA: content.data,
         }
 
 
-class GetLinksContentsByContentSubstringPayloadCreator(GetLinksByContentPayloadCreator):
+class SearchLinksContentsByContentSubstringPayloadCreator(SearchLinksByContentPayloadCreator):
     def _form_payload_content(self, content):
         return {
-            common.COMMAND: common.CommandTypes.FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING,
+            common.COMMAND: common.CommandTypes.SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING,
             common.DATA: content.data,
         }
 
@@ -198,7 +198,7 @@ class ResolveKeynodesPayloadCreator(BasePayloadCreator):
                 }
             else:
                 payload_item = {
-                    common.COMMAND: common.CommandTypes.FIND,
+                    common.COMMAND: common.CommandTypes.SEARCH,
                     common.IDTF: idtf_param.get(common.IDTF),
                 }
             payload.append(payload_item)
@@ -240,44 +240,44 @@ class TemplatePayloadCreator(BasePayloadCreator):
     def _process_template(self, template: ScTemplate):
         payload_template = []
         for triple in template.triple_list:
-            items = [triple.src, triple.edge, triple.trg]
+            items = [triple.source, triple.connector, triple.target]
             payload_template.append([process_triple_item(item) for item in items])
         return payload_template
 
 
-class EventsCreatePayloadCreator(BasePayloadCreator):
-    def __call__(self, *events: ScEventParams):
-        if not all(isinstance(event, ScEventParams) for event in events):
-            raise exceptions.InvalidTypeError("expected object types: ScEventParams")
-        payload_create = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
-        payload = {common.CommandTypes.CREATE: payload_create}
+class CreateEventSubscriptionsPayloadCreator(BasePayloadCreator):
+    def __call__(self, *events: ScEventSubscriptionParams):
+        if not all(isinstance(event, ScEventSubscriptionParams) for event in events):
+            raise exceptions.InvalidTypeError("expected object types: ScEventSubscriptionParams")
+        payload_generate = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
+        payload = {common.CommandTypes.GENERATE: payload_generate}
         return payload
 
 
-class EventsDestroyPayloadCreator(BasePayloadCreator):
-    def __call__(self, *events: ScEvent):
-        if not all(isinstance(event, ScEvent) for event in events):
-            raise exceptions.InvalidTypeError("expected object types: ScEvent")
-        payload = {common.CommandTypes.DELETE: [event.id for event in events]}
+class DestroyEventSubscriptionsPayloadCreator(BasePayloadCreator):
+    def __call__(self, *events: ScEventSubscription):
+        if not all(isinstance(event, ScEventSubscription) for event in events):
+            raise exceptions.InvalidTypeError("expected object types: ScEventSubscription")
+        payload = {common.CommandTypes.ERASE: [event.id for event in events]}
         return payload
 
 
 class PayloadFactory:
     _payload_request_mapper = {
-        common.ClientCommand.CREATE_ELEMENTS: CreateElementsPayloadCreator(),
-        common.ClientCommand.CREATE_ELEMENTS_BY_SCS: CreateElementsBySCsPayloadCreator(),
-        common.ClientCommand.CHECK_ELEMENTS: CheckElementsPayloadCreator(),
-        common.ClientCommand.DELETE_ELEMENTS: DeleteElementsPayloadCreator(),
-        common.ClientCommand.KEYNODES: ResolveKeynodesPayloadCreator(),
-        common.ClientCommand.GET_LINK_CONTENT: GetLinkContentPayloadCreator(),
-        common.ClientCommand.GET_LINKS_BY_CONTENT: GetLinksByContentPayloadCreator(),
-        common.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringPayloadCreator(),
-        common.ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringPayloadCreator(),
+        common.ClientCommand.GENERATE_ELEMENTS: GenerateElementsPayloadCreator(),
+        common.ClientCommand.GENERATE_ELEMENTS_BY_SCS: GenerateElementsBySCsPayloadCreator(),
+        common.ClientCommand.GET_ELEMENT_TYPES: CheckElementsPayloadCreator(),
+        common.ClientCommand.ERASE_ELEMENTS: EraseElementsPayloadCreator(),
+        common.ClientCommand.SEARCH_KEYNODES: ResolveKeynodesPayloadCreator(),
         common.ClientCommand.SET_LINK_CONTENTS: SetLinkContentPayloadCreator(),
-        common.ClientCommand.EVENTS_CREATE: EventsCreatePayloadCreator(),
-        common.ClientCommand.EVENTS_DESTROY: EventsDestroyPayloadCreator(),
-        common.ClientCommand.GENERATE_TEMPLATE: TemplatePayloadCreator(),
-        common.ClientCommand.SEARCH_TEMPLATE: TemplatePayloadCreator(),
+        common.ClientCommand.GET_LINK_CONTENT: GetLinkContentPayloadCreator(),
+        common.ClientCommand.SEARCH_LINKS_BY_CONTENT: SearchLinksByContentPayloadCreator(),
+        common.ClientCommand.SEARCH_LINKS_BY_CONTENT_SUBSTRING: SearchLinksByContentSubstringPayloadCreator(),
+        common.ClientCommand.SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: SearchLinksByContentSubstringPayloadCreator(),
+        common.ClientCommand.CREATE_EVENT_SUBSCRIPTIONS: CreateEventSubscriptionsPayloadCreator(),
+        common.ClientCommand.DESTROY_EVENT_SUBSCRIPTIONS: DestroyEventSubscriptionsPayloadCreator(),
+        common.ClientCommand.GENERATE_BY_TEMPLATE: TemplatePayloadCreator(),
+        common.ClientCommand.SEARCH_BY_TEMPLATE: TemplatePayloadCreator(),
     }
 
     def run(self, request_type: common.ClientCommand, *args, **kwargs):

@@ -26,7 +26,7 @@ from sc_client.constants.numeric import (
     SERVER_RECONNECT_RETRIES,
     SERVER_RECONNECT_RETRY_DELAY,
 )
-from sc_client.models import Response, ScAddr, ScEvent
+from sc_client.models import Response, ScAddr, ScEventSubscription
 
 logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class _ScClientSession:
     is_open = False
     lock_instance = threading.Lock()
     responses_dict = {}
-    events_dict = {}
+    event_subscriptions_dict = {}
     command_id = 0
     executor = Executor()
     ws_app: websocket.WebSocketApp | None = None
@@ -58,7 +58,7 @@ class _ScClientSession:
     def clear(cls):
         cls.is_open = False
         cls.responses_dict = {}
-        cls.events_dict = {}
+        cls.event_subscriptions_dict = {}
         cls.command_id = 0
         cls.ws_app = None
         cls.error_handler = default_error_handler
@@ -81,7 +81,7 @@ def _on_message(_, response: str) -> None:
 
 
 def _emit_callback(event_id: int, elems: list[int]) -> None:
-    event = _ScClientSession.events_dict.get(event_id)
+    event = _ScClientSession.event_subscriptions_dict.get(event_id)
     if event:
         event.callback(*[ScAddr(addr) for addr in elems])
 
@@ -207,16 +207,16 @@ def send_message(request_type: common.ClientCommand, payload: Any) -> Response:
     return response
 
 
-def get_event(event_id: int) -> ScEvent | None:
-    return _ScClientSession.events_dict.get(event_id)
+def get_event_subscription(event_subscription_id: int) -> ScEventSubscription | None:
+    return _ScClientSession.event_subscriptions_dict.get(event_subscription_id)
 
 
-def drop_event(event_id: int):
-    del _ScClientSession.events_dict[event_id]
+def drop_event_subscription(event_subscription_id: int):
+    del _ScClientSession.event_subscriptions_dict[event_subscription_id]
 
 
-def set_event(sc_event: ScEvent) -> None:
-    _ScClientSession.events_dict[sc_event.id] = sc_event
+def set_event_subscription(event_subscription: ScEventSubscription) -> None:
+    _ScClientSession.event_subscriptions_dict[event_subscription.id] = event_subscription
 
 
 def execute(request_type: ClientCommand, *args):

@@ -7,7 +7,7 @@ from .sc_construction import (
     ScLinkContent,
     ScLinkContentType,
 )
-from .sc_event import ScEvent, ScEventCallbackFunc, ScEventParams
+from .sc_event_subscription import ScEventCallbackFunc, ScEventSubscription, ScEventSubscriptionParams
 from .sc_template import (
     ScTemplate,
     ScTemplateIdtf,

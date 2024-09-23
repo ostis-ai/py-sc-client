@@ -8,36 +8,36 @@ from enum import Enum, auto
 
 
 class RequestType(Enum):
-    CHECK_ELEMENTS = "check_elements"
-    CREATE_ELEMENTS = "create_elements"
-    CREATE_ELEMENTS_BY_SCS = "create_elements_by_scs"
-    DELETE_ELEMENTS = "delete_elements"
-    CONTENT = "content"
-    KEYNODES = "keynodes"
-    SEARCH_TEMPLATE = "search_template"
-    GENERATE_TEMPLATE = "generate_template"
-    EVENTS = "events"
+    GET_ELEMENT_TYPES = "check_elements"
+    GENERATE_ELEMENTS = "create_elements"
+    GENERATE_ELEMENTS_BY_SCS = "create_elements_by_scs"
+    ERASE_ELEMENTS = "delete_elements"
+    HANDLE_CONTENT = "content"
+    SEARCH_KEYNODES = "keynodes"
+    SEARCH_BY_TEMPLATE = "search_template"
+    GENERATE_BY_TEMPLATE = "generate_template"
+    HANDLE_EVENT_SUBSCRIPTIONS = "events"
 
 
 class ClientCommand(Enum):
-    CHECK_ELEMENTS = auto()
-    CREATE_ELEMENTS = auto()
-    CREATE_ELEMENTS_BY_SCS = auto()
-    DELETE_ELEMENTS = auto()
+    GET_ELEMENT_TYPES = auto()
+    GENERATE_ELEMENTS = auto()
+    GENERATE_ELEMENTS_BY_SCS = auto()
+    ERASE_ELEMENTS = auto()
     SET_LINK_CONTENTS = auto()
     GET_LINK_CONTENT = auto()
-    GET_LINKS_BY_CONTENT = auto()
-    GET_LINKS_BY_CONTENT_SUBSTRING = auto()
-    GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = auto()
-    KEYNODES = auto()
-    SEARCH_TEMPLATE = auto()
-    GENERATE_TEMPLATE = auto()
-    EVENTS_CREATE = auto()
-    EVENTS_DESTROY = auto()
+    SEARCH_LINKS_BY_CONTENT = auto()
+    SEARCH_LINKS_BY_CONTENT_SUBSTRING = auto()
+    SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = auto()
+    SEARCH_KEYNODES = auto()
+    SEARCH_BY_TEMPLATE = auto()
+    GENERATE_BY_TEMPLATE = auto()
+    CREATE_EVENT_SUBSCRIPTIONS = auto()
+    DESTROY_EVENT_SUBSCRIPTIONS = auto()
 
 
 SOURCE = "src"
-EDGE = "edge"
+CONNECTOR = "edge"
 TARGET = "trg"
 
 ID = "id"
@@ -64,7 +64,7 @@ OUTPUT_STRUCTURE = "output_structure"
 
 class Elements:
     NODE = "node"
-    EDGE = "edge"
+    CONNECTOR = "edge"
     LINK = "link"
 
 
@@ -86,11 +86,11 @@ class CommandTypes:
     SET = "set"
     GET = "get"
     RESOLVE = "resolve"
-    FIND = "find"
-    FIND_LINKS_BY_SUBSTRING = "find_links_by_substr"
-    FIND_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = "find_strings_by_substr"
-    CREATE = "create"
-    DELETE = "delete"
+    SEARCH = "find"
+    SEARCH_LINKS_BY_CONTENT_SUBSTRING = "find_links_by_substr"
+    SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING = "find_strings_by_substr"
+    GENERATE = "create"
+    ERASE = "delete"
 
 
 ELEMENT_TYPE = "elType"
@@ -102,9 +102,9 @@ IS_REQUIRED = "is_required"
 
 class ScEventType(Enum):
     UNKNOWN = "unknown"
-    ADD_OUTGOING_EDGE = "add_outgoing_edge"
-    ADD_INGOING_EDGE = "add_ingoing_edge"
-    REMOVE_OUTGOING_EDGE = "remove_outgoing_edge"
-    REMOVE_INGOING_EDGE = "remove_ingoing_edge"
-    REMOVE_ELEMENT = "delete_element"
-    CHANGE_CONTENT = "content_change"
+    AFTER_GENERATE_OUTGOING_ARC = "add_outgoing_edge"
+    AFTER_GENERATE_INCOMING_ARC = "add_ingoing_edge"
+    BEFORE_ERASE_OUTGOING_ARC = "remove_outgoing_edge"
+    BEFORE_ERASE_INCOMING_ARC = "remove_ingoing_edge"
+    BEFORE_ERASE_ELEMENT = "delete_element"
+    BEFORE_CHANGE_LINK_CONTENT = "content_change"
