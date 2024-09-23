@@ -4,6 +4,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Breaking changes
+ - This version is compatible with version of the sc-machine 0.10.0. All API methods were redesigned. Misleading ones were removed, new ones were added. See table below, to learn more about changes.
+   
+  | Deprecated method                       | Substitution method                        | 
+  |-----------------------------------------|--------------------------------------------|
+  | check_elements                          | get_element_types                          |
+  | create_elements                         | generate_elements                          |
+  | create_node                             | generate_node                              |
+  | create_link                             | generate_link                              |
+  | create_edge                             | generate_connector                         |
+  | create_elements_by_scs                  | generate_elements_by_scs                   | 
+  | delete_elements                         | erase_elements                             |
+  | get_links_by_contents                   | search_links_by_contents                   |
+  | get_links_by_content_substring          | search_links_by_content_substrings         |
+  | get_links_contents_by_content_substring | search_link_contents_by_content_substrings |
+  | template_search                         | search_by_template                         |
+  | template_generate                       | generate_by_template                       |
+  | triple_with_relation                    | quintuple                                  |
+  | events_create                           | create_elementary_event_subscriptions      |
+  | events_destroy                          | destroy_elementary_event_subscriptions     |
+  | is_event_valid                          | is_event_subscriptions_valid               |
+
+  `ScEvent` class was renamed to `ScEventSubscription` and `ScEventParams` class was renamed to `ScEventSubscriptionParams`. 
+
+### Added
+ - ScClient methods: `get_element_types`, `generate_elements`, `generate_node`, `generate_link`, `generate_connector`, `generate_elements_by_scs`, `erase_elements`, `search_links_by_contents`, `search_links_by_content_substrings`, `search_link_contents_by_content_substrings`, `search_by_template`, `generate_by_template`, `quintuple`, `create_elementary_event_subscriptions`, `destroy_elementary_event_subscriptions`, `is_event_subscriptions_valid`
+
+### Changed
+ - `ScEvent` class was renamed to `ScEventSubscription`
+ - `ScEventParams` class was renamed to `ScEventSubscriptionParams`
+
+### Deprecated
+ - ScClient methods: `check_elements`, `create_elements`, `create_node`, `create_link`, `create_edge`, `create_elements_by_scs`, `delete_elements`, `get_links_by_contents`, `get_links_by_content_substring`, `get_links_contents_by_content_substring`, `template_search`, `template_generate`, `triple_with_relation`, `events_create`, `events_destroy`, `is_event_valid`
+
+### Removed
+ - Deprecated ScTemplateResult `size` method
+ - Deprecated ScTemplateItem as list
+ - Deprecated ScTemplateResult `for_each_triple` method
+
 ## [0.3.1]
 ### Fixed
 - Undefined python interpreter version in CI

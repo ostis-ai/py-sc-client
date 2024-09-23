@@ -122,7 +122,7 @@ set_reconnect_handler(
 
 Minimum element of sc is ScAddr.
 It contains address of some element in sc-memory.
-Knowing it, you can find related elements, connect edges, check the type, and so on:
+Knowing it, you can find related elements, connect connectors, check the type, and so on:
 
 - *sc_client.models*.**ScAddr**
 
@@ -156,7 +156,7 @@ All common ScTypes like node const are already defined.
 
 Class with type of sc-element.
 It uses when new elements are created or if it's need to check right type.
-It contains methods to check if it is node, edge or link, const or var, and so on.
+It contains methods to check if it is node, connector or link, const or var, and so on.
 
 If you paid attention, the class is in constants submodule.
 They are already defined, and you can import them from file `sc_client.constants.sc_types`.
@@ -170,7 +170,7 @@ sc_type_struct = sc_types.NODE_CONST_STRUCT
 assert sc_type_struct.is_valid()
 
 assert sc_type_struct.is_node()
-assert not sc_type_struct.is_edge()
+assert not sc_type_struct.is_connector()
 assert not sc_type_struct.is_link()
 
 assert sc_type_struct.is_const()
@@ -184,45 +184,45 @@ assert not sc_type_struct.is_tuple()
 ## Structure classes
 
 Structure classes are using to work with set of sc-elements.
-ScConstruction uses individual elements like nodes and edges,
+ScConstruction uses individual elements like nodes and connectors,
 ScTemplate - triplets
 
 ### ScConstruction
 
 - *sc_client.models*.**ScConstruction**
 
-Class that allow to create single nodes, edges and links.
+Class that allow to create single nodes, connectors and links.
 You can use aliases to name nodes, and use one element several times in construction.
 
 Methods:
 
-1. *ScConstruction*.**create_node**(sc_type: ScType, alias: str = None)
-2. *ScConstruction*.**create_edge**(sc_type: ScType, src: str | ScAddr, trg: str | ScAddr, alias: str = None)
-3. *ScConstruction*.**create_link**(sc_type: ScType, content: ScLinkContent, alias: str = None)
+1. *ScConstruction*.**generate_node**(sc_type: ScType, alias: str = None)
+2. *ScConstruction*.**generate_connector**(sc_type: ScType, src: str | ScAddr, trg: str | ScAddr, alias: str = None)
+3. *ScConstruction*.**generate_link**(sc_type: ScType, content: ScLinkContent, alias: str = None)
 
 ScConstruction doesn't create elements. To do it use function:
 
-- *sc_client.client*.**create_elements**(constr: ScConstruction)
+- *sc_client.client*.**generate_elements**(constr: ScConstruction)
 
 It returns list of all elements by ScConstruction *constr*.
 
 ```python
-from sc_client.client import create_elements
+from sc_client.client import generate_elements
 from sc_client.constants import sc_types
 from sc_client.models import ScConstruction
 from sc_client.models import ScLinkContent, ScLinkContentType
 
 construction = ScConstruction()  # First you need initialize
 
-construction.create_node(sc_types.NODE_CONST, 'node')  # Create node const
+construction.generate_node(sc_types.NODE_CONST, 'node')  # Create node const
 
 link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)  # Create link content
-construction.create_link(sc_types.LINK_CONST, link_content, 'link')  # Create link with that content
+construction.generate_link(sc_types.LINK_CONST, link_content, 'link')  # Create link with that content
 
-construction.create_edge(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
-# Create unaliased edge between previous node
+construction.generate_connector(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
+# Create unaliased connector between previous node
 
-addrs = create_elements(construction)  # List of elements
+addrs = generate_elements(construction)  # List of elements
 assert len(addrs) == 3  # Assert that there is 3 elements as in the construction
 assert all(addrs)  # Assert that they are all valid
 ```
@@ -239,29 +239,28 @@ You can also use aliases to name nodes, and use one element several times in tem
 
 Methods:
 
-1. *ScTemplate*.**triple**(src, edge, trg)
+1. *ScTemplate*.**triple**(source, connector, target)
 
-   Template `src-edge-trg`
-2. *ScTemplate*.**triple_with_relation**(src, edge, trg, edge2, src2)
+   Template `source-connector-target`
+2. *ScTemplate*.**quintuple**(source, connector, target, attribute_connector, attribute)
 
-   Two triplets `src-edge-trg` and `src2-edge2-edge`
+   Two triplets `source-connector-target` and `attribute-attribute_connector-connector`
 
 To set aliases use syntax:
 
 - `element >> alias` Recommended
 - `(element, alias)`
-- `[element, alias]` Deprecated in version 0.3.0
 
 After setting alias you use it without element
 
 #### Search template
 
-- *sc_client.client*.**template_search**(template: ScTemplate, params: ScTemplateParams = None)
+- *sc_client.client*.**search_by_template**(template: ScTemplate, params: ScTemplateParams = None)
 
 Returns list of ScTemplateResult by *template*.
 
 ```python
-from sc_client.client import template_search
+from sc_client.client import search_by_template
 from sc_client.constants import sc_types
 from sc_client.models import ScTemplate, ScAddr
 
@@ -272,8 +271,8 @@ rrel_1: ScAddr
 
 template = ScTemplate()
 template.triple(question_node, sc_types.EDGE_ACCESS_VAR_POS_PERM, action_node >> "_action_node")
-# Triple `question_node-(*new)edge_access-(*aliased with "_action_node")action_node`
-template.triple_with_relation(
+# Triple `question_node-(*new)connector_access-(*aliased with "_action_node")action_node`
+template.quintuple(
     "_action_node",
     sc_types.EDGE_ACCESS_VAR_POS_TEMP,
     sc_types.NODE_VAR >> "_arg_node",
@@ -281,17 +280,17 @@ template.triple_with_relation(
     rrel_1,
 )
 
-search_results = template_search(template)
+search_results = search_by_template(template)
 ```
 
 Search by sc-template address.
 
 ```python
-from sc_client.client import template_search
+from sc_client.client import search_by_template
 from sc_client.models import ScAddr
 
 template: ScAddr  # Template from sc-memory
-search_results = template_search(template)
+search_results = search_by_template(template)
 search_result = search_results[0]
 ```
 
@@ -300,12 +299,12 @@ You can also use ScAddr templates:
 Search by sc-template system identifier.
 
 ```python
-from sc_client.client import template_search
+from sc_client.client import search_by_template
 from sc_client.models import ScAddr
 
 link_node: ScAddr
 search_params = {'_link': link_node, '_var_node': 'node_idtf'}
-search_results = template_search('my_template', search_params)
+search_results = search_by_template('my_template', search_params)
 search_result = search_results[0]
 
 ```
@@ -313,20 +312,20 @@ search_result = search_results[0]
 Search by scs sc-template.
 
 ```python
-from sc_client.client import template_search
+from sc_client.client import search_by_template
 
-search_results = template_search('class _-> _node;;')
+search_results = search_by_template('class _-> _node;;')
 search_result = search_results[0]
 ```
 
 #### Generate template
 
-- *sc_client.client*.**template_generate**(template: ScTemplate, params: ScTemplateParams = None)
+- *sc_client.client*.**generate_by_template**(template: ScTemplate, params: ScTemplateParams = None)
 
 Returns ScTemplateResult by *template*.
 
 ```python
-from sc_client.client import template_generate
+from sc_client.client import generate_by_template
 from sc_client.constants import sc_types
 from sc_client.models import ScTemplate, ScAddr
 
@@ -336,7 +335,7 @@ link_node: ScAddr
 # Some ScAddrs for example
 
 template = ScTemplate()
-template.triple_with_relation(
+template.quintuple(
     main_node >> '_main_node',
     sc_types.EDGE_D_COMMON_VAR,
     sc_types.LINK_VAR >> '_link',
@@ -349,7 +348,7 @@ template.triple(
     (sc_types.NODE_VAR, '_var_node')
 )
 gen_params = {'_link': link_node, '_var_node': 'node_idtf'}
-gen_result = template_generate(template, gen_params)
+gen_result = generate_by_template(template, gen_params)
 ```
 
 Also, you can generate a construction by template address or its system identifier or scs-template as well as search
@@ -379,10 +378,6 @@ Methods:
   Get ScAddr by alias or index
 - **iter**(*ScTemplateResult*), **next**(*ScTemplateResult*)
 
-  Iterate by triplets using `for`
-- *ScTemplateResult*.**for_each_triple**(func: Callable[[ScAddr, ScAddr, ScAddr], Enum])
-
-  Run function with each triple. Deprecated in version 0.3.0
 
 ```python
 from enum import Enum
@@ -396,85 +391,78 @@ first_element = template_result[0]  # get an element from the result by index (r
 template_result.get(0)  # get an element from the result by index
 arg_node = template_result.get("_arg_node")  # get an element from the result by alias
 
-for src, edge, trg in template_result:
+for src, connector, trg in template_result:
     ...
     # do smth with each triple in the result
-
-
-def triplets_function(src: ScAddr, edge: ScAddr, trg: ScAddr) -> Enum:
-    ...
-
-
-template_result.for_each_triple(triplets_function)  # to use function to each triple. Deprecated in 0.3.0
 ```
 
 ## Common functions
 
 ### Check element types
 
-- *sc_client.client*.**check_elements**(*addrs: ScAddr)
+- *sc_client.client*.**get_element_types**(*addrs: ScAddr)
 
 Returns list of ScTypes for given elements.
 
 ```python
-from sc_client.client import check_elements
+from sc_client.client import get_element_types
 
-from sc_client.client import create_elements
+from sc_client.client import generate_elements
 from sc_client.constants import sc_types
 from sc_client.models import ScConstruction
 
 construction = ScConstruction()  # Create elements for example
-construction.create_node(sc_types.NODE_CONST)
-construction.create_node(sc_types.NODE_VAR)
-elements = create_elements(construction)
+construction.generate_node(sc_types.NODE_CONST)
+construction.generate_node(sc_types.NODE_VAR)
+elements = generate_elements(construction)
 
-elements_types = check_elements(*elements)
+elements_types = get_element_types(*elements)
 assert elements_types[0].is_node()
-assert not elements_types[1].is_edge()
+assert not elements_types[1].is_connector()
 assert elements_types[1].is_var()
 ```
 
 ### Create elements by SCS
 
-- *sc_client.client*.**create_elements_by_scs**(texts: List[Union[str, SCs]])
+- *sc_client.client*.**generate_elements_by_scs**(texts: List[Union[str, SCs]])
 
 Create elements by scs texts in the KB memory,
 put them in structure and returns boolean statuses.
 
 ```python
-from sc_client.client import create_elements_by_scs
+from sc_client.client import generate_elements_by_scs
 
-results = create_elements_by_scs(["concept1 -> node1;;", "concept1 -> ;;"])
+results = generate_elements_by_scs(["concept1 -> node1;;", "concept1 -> ;;"])
 assert results == [True, False]  # Warning: it doesn't return False, it raised error
 ```
 
 ```python
-from sc_client.client import create_elements_by_scs, create_elements
+from sc_client.client import generate_elements_by_scs, generate_elements
 from sc_client.constants import sc_types
 from sc_client.models import SCs, ScConstruction
 
 construction = ScConstruction()  # Create output_struct for example
-construction.create_node(sc_types.NODE_CONST)
-output_struct = create_elements(construction)[0]
+construction.generate_node(sc_types.NODE_CONST)
+output_struct = generate_elements(construction)[0]
 
-results = create_elements_by_scs([SCs("concept1 -> node1;;", output_struct), "concept1 -> node2;;"])
+results = generate_elements_by_scs([SCs("concept1 -> node1;;", output_struct), "concept1 -> node2;;"])
 assert results == [True, True]
 ```
 
 ### Delete elements
 
-- *sc_client.client*.**delete_elements**(*addrs: ScAddr)
+- *sc_client.client*.**erase_elements**(*addrs: ScAddr)
 
 Delete *addrs* from the KB memory and returns boolean status.
 
 ```python
-from sc_client.client import create_elements, set_link_contents
+from sc_client.client import generate_elements, set_link_contents
 from sc_client.constants import sc_types
 from sc_client.models import ScConstruction, ScLinkContent, ScLinkContentType
 
 construction = ScConstruction()  # Create link for example
-construction.create_link(sc_types.LINK_CONST, ScLinkContent("One", ScLinkContentType.STRING))
-link = create_elements(construction)[0]
+construction.generate_link(sc_types.LINK_CONST, ScLinkContent("One", ScLinkContentType.STRING))
+link = generate_elements(construction)[0]
 
 link_content = ScLinkContent("Two", ScLinkContentType.STRING, link)
 status = set_link_contents(link_content)
@@ -540,14 +528,14 @@ deprecated_type = ScLinkContent("use enum without .value", ScLinkContentType.STR
 Set the new content to corresponding links and return boolean status.
 
 ```python
-from sc_client.client import set_link_contents, create_elements
+from sc_client.client import set_link_contents, generate_elements
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 construction = ScConstruction()  # Create link for example
 link_content1 = ScLinkContent("One", ScLinkContentType.STRING)
-construction.create_link(sc_types.LINK_CONST, link_content1)
-link = create_elements(construction)[0]
+construction.generate_link(sc_types.LINK_CONST, link_content1)
+link = generate_elements(construction)[0]
 
 link_content2 = ScLinkContent("Two", ScLinkContentType.STRING, link)
 status = set_link_contents(link_content2)
@@ -561,14 +549,14 @@ assert status
 Get list of contents of the given links.
 
 ```python
-from sc_client.client import create_elements, get_link_content
+from sc_client.client import generate_elements, get_link_content
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 construction = ScConstruction()  # Create link for example
 link_content1 = ScLinkContent("One", ScLinkContentType.STRING)
-construction.create_link(sc_types.LINK_CONST, link_content1)
-link = create_elements(construction)[0]
+construction.generate_link(sc_types.LINK_CONST, link_content1)
+link = generate_elements(construction)[0]
 
 link_content = get_link_content(link)[0]
 assert link_content.data == link_content1.data
@@ -576,12 +564,12 @@ assert link_content.data == link_content1.data
 
 ### Get links by content
 
-- *sc_client.client*.**get_links_by_content**(*contents: ScLinkContent | str | int)
+- *sc_client.client*.**search_links_by_content**(*contents: ScLinkContent | str | int)
 
 Get list of lists of links for every content.
 
 ```python
-from sc_client.client import create_elements, get_links_by_content
+from sc_client.client import generate_elements, search_links_by_content
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
@@ -589,21 +577,21 @@ search_string = "search string"
 
 construction = ScConstruction()  # Create link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
-construction.create_link(sc_types.LINK_CONST, link_content1)
-link = create_elements(construction)[0]
+construction.generate_link(sc_types.LINK_CONST, link_content1)
+link = generate_elements(construction)[0]
 
-links = get_links_by_content(search_string)[0]
+links = search_links_by_content(search_string)[0]
 assert link in links
 ```
 
 ### Get links by content substring
 
-- *sc_client.client*.**get_links_by_content_substring**(*contents: ScLinkContent | str | int)
+- *sc_client.client*.**search_links_by_content_substrings**(*contents: ScLinkContent | str | int)
 
 Get list of lists of links for every content substring.
 
 ```python
-from sc_client.client import create_elements, get_links_by_content_substring
+from sc_client.client import generate_elements, search_links_by_content_substrings
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
@@ -611,22 +599,22 @@ search_string = "substring1 substring2"
 
 construction = ScConstruction()  # Create link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
-construction.create_link(sc_types.LINK_CONST, link_content1)
-link = create_elements(construction)[0]
+construction.generate_link(sc_types.LINK_CONST, link_content1)
+link = generate_elements(construction)[0]
 
-links_list = get_links_by_content_substring(*search_string.split(" "))
+links_list = search_links_by_content_substrings(*search_string.split(" "))
 assert all(link in links for links in links_list)
 ```
 
 ### Get links contents by content substring
 
-- *sc_client.client*.**get_links_contents_by_content_substring**(*contents: ScLinkContent | str | int)
+- *sc_client.client*.**search_link_contents_by_content_substrings**(*contents: ScLinkContent | str | int)
 
 Get list of lists of contents of the given content substrings.
 ***Warning: it returns int addrs***
 
 ```python
-from sc_client.client import create_elements, get_links_contents_by_content_substring
+from sc_client.client import generate_elements, search_link_contents_by_content_substrings
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
@@ -634,66 +622,66 @@ search_string = "substring1 substring2"
 
 construction = ScConstruction()  # Create link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
-construction.create_link(sc_types.LINK_CONST, link_content1)
-link_addr = create_elements(construction)[0]
+construction.generate_link(sc_types.LINK_CONST, link_content1)
+link_addr = generate_elements(construction)[0]
 
-links_list = get_links_contents_by_content_substring(*search_string.split(" "))
+links_list = search_link_contents_by_content_substrings(*search_string.split(" "))
 assert all(link_addr.value in links for links in links_list)
 ```
 
 ## Events functions
 
-### Create events
+### Create event subscriptions
 
-- *sc_client.client*.**events_create**(*events: ScEventParams)
+- *sc_client.client*.**create_elementary_event_subscriptions**(*event_subscriptions: ScEventSubscriptionParams)
 
-Create an event in the KB memory by ScEventParams and return list of ScEvents.
+Create an event in the KB memory by ScEventSubscriptionParams and return list of ScEventSubscriptions.
 
 ```python
-from sc_client.client import events_create
+from sc_client.client import event_subscriptions_create
 from sc_client.constants.common import ScEventType
-from sc_client.models import ScEventParams, ScAddr
+from sc_client.models import ScEventSubscriptionParams, ScAddr
 
 
-def event_callback(src: ScAddr, edge: ScAddr, trg: ScAddr):
+def event_callback(src: ScAddr, connector: ScAddr, trg: ScAddr):
     ...
 
 
 bounded_elem_addr: ScAddr
-event_type = ScEventType.ADD_OUTGOING_EDGE
-event_params = ScEventParams(bounded_elem_addr, event_type, event_callback)
-sc_event = events_create(event_params)
+event_type = ScEventType.AFTER_GENERATE_OUTGOING_ARC
+event_subscription_params = ScEventSubscriptionParams(bounded_elem_addr, event_type, event_callback)
+sc_event = create_elementary_event_subscriptions(event_subscription_params)
 ```
 
 ### Check event validity
 
-- *sc_client.client*.**is_event_valid**(event: ScEvent)
+- *sc_client.client*.**is_event_subscription_valid**(event: ScEventSubscription)
 
 Return boolean status if *event* is active and or not.
 
-*Parameters*: An ScEvent class object.
+*Parameters*: An ScEventSubscription class object.
 *Returns*: The boolean value (true if an event is valid).
 
 ```python
-from sc_client.client import is_event_valid
-from sc_client.models import ScEvent
+from sc_client.client import is_event_subscription_valid
+from sc_client.models import ScEventSubscription
 
-sc_event: ScEvent
-status = is_event_valid(sc_event)
+sc_event: ScEventSubscription
+status = is_event_subscription_valid(sc_event)
 ```
 
-### Destroy events
+### Destroy event subscriptions
 
-- *sc_client.client*.**events_destroy**(*events: ScEvent)
+- *sc_client.client*.**destroy_elementary_event_subscriptions**(*event_subscriptions: ScEventSubscription)
 
-Destroy *events* in the KB memory and return boolean status.
+Destroy *event_subscriptions* in the KB memory and return boolean status.
 
 ```python
-from sc_client.client import events_destroy
-from sc_client.models import ScEvent
+from sc_client.client import destroy_elementary_event_subscriptions
+from sc_client.models import ScEventSubscription
 
-sc_event: ScEvent
-status = events_destroy(sc_event)
+sc_event: ScEventSubscription
+status = destroy_elementary_event_subscriptions(sc_event)
 ```
 
 ## Classes
@@ -705,8 +693,6 @@ The library contains the python implementation of useful classes and functions t
 There is a list of classes:
 
 - ScKeynodes
-- ScAgent
-- ScModule
 
 ### ScKeynodes
 
@@ -733,51 +719,14 @@ class CommonIdentifiers(Enum):
     RREL_TWO = "rrel_2"
 
 
-class QuestionStatus(Enum):
-    QUESTION_INITIATED = "question_initiated"
-    QUESTION_FINISHED = "question_finished"
-    QUESTION_FINISHED_SUCCESSFULLY = "question_finished_successfully"
-    QUESTION_FINISHED_UNSUCCESSFULLY = "question_finished_unsuccessfully"
+class ActionStatus(Enum):
+    ACTION_INITIATED = "action_initiated"
+    ACTION_FINISHED = "action_finished"
+    ACTION_FINISHED_SUCCESSFULLY = "action_finished_successfully"
+    ACTION_FINISHED_UNSUCCESSFULLY = "action_finished_unsuccessfully"
 
 
-keynodes.resolve_identifiers([QuestionStatus, CommonIdentifiers])
-```
-
-### ScAgent
-
-A class for handling a single ScEvent. Define your agents like this:
-
-```py
-class MyAgent(ScAgent):
-    action = "Identifier_of_action_class"
-
-    def register(self) -> ScEvent:
-        # override method, must return an ScEvent instance
-        params = [
-            MyAgent.keynodes["action_initiated"],
-            common.ScEventType.ADD_OUTGOING_EDGE,
-            MyAgent.run_impl
-        ]
-        event_params = ScEventParams(*params)
-        sc_event = client.events_create(event_params)
-        return sc_event[0]
-
-    @staticmethod
-    def run_impl(action_class: ScAddr, edge: ScAddr, action_node: ScAddr) -> None:
-        # override method, must have 3 args and be static
-        ...
-
-```
-
-### ScModule
-
-A class for handling a multiple ScAgent. Define your modules like this:
-
-```py
-class MyModule(ScModule):
-    def __init__(self) -> None:
-        agents_to_register = [MyAgent1, MyAgent2]  # list of agent classes
-        super().__init__(agents_to_register)
+keynodes.resolve_identifiers([ActionStatus, CommonIdentifiers])
 ```
 
 ## Logging
@@ -799,8 +748,8 @@ root_logger.addHandler(logging.StreamHandler())
 
 client.connect("ws://localhost:8090/ws_json")
 # Connected
-result = client.create_elements_by_scs([])
-# Send: {"id": 2, "type": "create_elements_by_scs", "payload": []}
+result = client.generate_elements_by_scs([])
+# Send: {"id": 2, "type": "generate_elements_by_scs", "payload": []}
 # Receive: {"errors":[],"event":0,"id":2,"payload":[],"status":1}
 client.disconnect()
 # Disconnected
