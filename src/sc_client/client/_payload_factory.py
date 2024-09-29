@@ -96,7 +96,7 @@ class GenerateElementsBySCsPayloadCreator(BasePayloadCreator):
         return payload
 
 
-class CheckElementsPayloadCreator(BasePayloadCreator):
+class GetElementsTypesPayloadCreator(BasePayloadCreator):
     def __call__(self, *addrs: ScAddr):
         if not all(isinstance(addr, ScAddr) for addr in addrs):
             raise exceptions.InvalidTypeError("expected object types: ScAddr")
@@ -246,19 +246,22 @@ class TemplatePayloadCreator(BasePayloadCreator):
 
 
 class CreateEventSubscriptionsPayloadCreator(BasePayloadCreator):
-    def __call__(self, *events: ScEventSubscriptionParams):
-        if not all(isinstance(event, ScEventSubscriptionParams) for event in events):
+    def __call__(self, *event_subscription_params: ScEventSubscriptionParams):
+        if not all(isinstance(params, ScEventSubscriptionParams) for params in event_subscription_params):
             raise exceptions.InvalidTypeError("expected object types: ScEventSubscriptionParams")
-        payload_generate = [{common.TYPE: event.event_type.value, common.ADDR: event.addr.value} for event in events]
+        payload_generate = [
+            {common.TYPE: params.event_type.value, common.ADDR: params.addr.value}
+            for params in event_subscription_params
+        ]
         payload = {common.CommandTypes.GENERATE: payload_generate}
         return payload
 
 
 class DestroyEventSubscriptionsPayloadCreator(BasePayloadCreator):
-    def __call__(self, *events: ScEventSubscription):
-        if not all(isinstance(event, ScEventSubscription) for event in events):
+    def __call__(self, *event_subscription_params: ScEventSubscription):
+        if not all(isinstance(params, ScEventSubscription) for params in event_subscription_params):
             raise exceptions.InvalidTypeError("expected object types: ScEventSubscription")
-        payload = {common.CommandTypes.ERASE: [event.id for event in events]}
+        payload = {common.CommandTypes.ERASE: [params.id for params in event_subscription_params]}
         return payload
 
 
@@ -266,14 +269,14 @@ class PayloadFactory:
     _payload_request_mapper = {
         common.ClientCommand.GENERATE_ELEMENTS: GenerateElementsPayloadCreator(),
         common.ClientCommand.GENERATE_ELEMENTS_BY_SCS: GenerateElementsBySCsPayloadCreator(),
-        common.ClientCommand.GET_ELEMENT_TYPES: CheckElementsPayloadCreator(),
+        common.ClientCommand.GET_ELEMENTS_TYPES: GetElementsTypesPayloadCreator(),
         common.ClientCommand.ERASE_ELEMENTS: EraseElementsPayloadCreator(),
         common.ClientCommand.SEARCH_KEYNODES: ResolveKeynodesPayloadCreator(),
         common.ClientCommand.SET_LINK_CONTENTS: SetLinkContentPayloadCreator(),
         common.ClientCommand.GET_LINK_CONTENT: GetLinkContentPayloadCreator(),
         common.ClientCommand.SEARCH_LINKS_BY_CONTENT: SearchLinksByContentPayloadCreator(),
         common.ClientCommand.SEARCH_LINKS_BY_CONTENT_SUBSTRING: SearchLinksByContentSubstringPayloadCreator(),
-        common.ClientCommand.SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: SearchLinksByContentSubstringPayloadCreator(),
+        common.ClientCommand.SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: SearchLinksContentsByContentSubstringPayloadCreator(),
         common.ClientCommand.CREATE_EVENT_SUBSCRIPTIONS: CreateEventSubscriptionsPayloadCreator(),
         common.ClientCommand.DESTROY_EVENT_SUBSCRIPTIONS: DestroyEventSubscriptionsPayloadCreator(),
         common.ClientCommand.GENERATE_BY_TEMPLATE: TemplatePayloadCreator(),

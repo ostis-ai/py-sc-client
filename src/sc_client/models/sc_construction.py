@@ -18,7 +18,7 @@ class ScConstruction:
 
     def create_node(self, sc_type: ScType, alias: str = None) -> None:
         warnings.warn(
-            "ScConstruction 'create_edge' method is deprecated. Use `generate_connector` method instead.",
+            "ScConstruction 'create_node' method is deprecated. Use `generate_node` method instead.",
             DeprecationWarning,
         )
         self.generate_node(sc_type, alias)

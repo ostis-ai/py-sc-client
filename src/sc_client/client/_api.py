@@ -53,15 +53,15 @@ def set_reconnect_handler(**reconnect_kwargs) -> None:
     )
 
 
-def get_element_types(*addrs: ScAddr) -> list[ScType]:
-    return session.execute(common.ClientCommand.GET_ELEMENT_TYPES, *addrs)
+def get_elements_types(*addrs: ScAddr) -> list[ScType]:
+    return session.execute(common.ClientCommand.GET_ELEMENTS_TYPES, *addrs)
 
 
 def check_elements(*addrs: ScAddr) -> list[ScType]:
     warnings.warn(
-        "ScClient 'check_elements' method is deprecated. Use `get_element_types` method instead.", DeprecationWarning
+        "ScClient 'check_elements' method is deprecated. Use `get_elements_types` method instead.", DeprecationWarning
     )
-    return get_element_types(*addrs)
+    return get_elements_types(*addrs)
 
 
 def generate_elements(constr: ScConstruction) -> list[ScAddr]:
@@ -106,27 +106,28 @@ def get_link_content(*addr: ScAddr) -> list[ScLinkContent]:
     return session.execute(common.ClientCommand.GET_LINK_CONTENT, *addr)
 
 
-def search_links_by_content(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
+def search_links_by_contents(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     return session.execute(common.ClientCommand.SEARCH_LINKS_BY_CONTENT, *contents)
 
 
 def get_links_by_content(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     warnings.warn(
-        "ScClient 'get_links_by_content' method is deprecated. Use `erase_elements` method instead.", DeprecationWarning
+        "ScClient 'get_links_by_content' method is deprecated. Use `search_links_by_contents` method instead.",
+        DeprecationWarning,
     )
-    return search_links_by_content(*contents)
+    return search_links_by_contents(*contents)
 
 
-def search_links_by_content_substrings(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
+def search_links_by_contents_substrings(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     return session.execute(common.ClientCommand.SEARCH_LINKS_BY_CONTENT_SUBSTRING, *contents)
 
 
 def get_links_by_content_substring(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:
     warnings.warn(
-        "ScClient 'get_links_by_content_substring' method is deprecated. Use `search_links_by_content_substrings` method instead.",
+        "ScClient 'get_links_by_content_substring' method is deprecated. Use `search_links_by_contents_substrings` method instead.",
         DeprecationWarning,
     )
-    return search_links_by_content_substrings(*contents)
+    return search_links_by_contents_substrings(*contents)
 
 
 def search_link_contents_by_content_substrings(*contents: ScLinkContent | ScLinkContentData) -> list[list[ScAddr]]:

@@ -182,27 +182,27 @@ class TestClientGenerateElementsBySCs(ScTest):
 
 
 class TestClientGetElementTypes(ScTest):
-    def test_get_element_types_incorrect_arguments(self):
+    def test_get_elements_types_incorrect_arguments(self):
         with pytest.raises(InvalidTypeError):
-            client.get_element_types("wrong type here")
+            client.get_elements_types("wrong type here")
 
     def test_get_node_type(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33]}')
         node_addr = ScAddr(0)
-        elem_types = client.get_element_types(node_addr)
+        elem_types = client.get_elements_types(node_addr)
         assert len(elem_types) == 1
         assert elem_types[0].is_node()
 
     def test_get_link_type(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [34]}')
         link_addr = ScAddr(0)
-        elem_type = client.get_element_types(link_addr)
+        elem_type = client.get_elements_types(link_addr)
         assert len(elem_type), 1
         assert elem_type[0].is_link()
 
-    def test_get_element_types_list(self):
+    def test_get_elements_types_list(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
-        elem_type_list = client.get_element_types(ScAddr(0), ScAddr(0), ScAddr(0))
+        elem_type_list = client.get_elements_types(ScAddr(0), ScAddr(0), ScAddr(0))
         assert len(elem_type_list) == 3
         assert elem_type_list[0].is_node()
         assert elem_type_list[1].is_link()
@@ -256,9 +256,9 @@ class TestClientHandleLinkContents(ScTest):
         with pytest.raises(InvalidTypeError):
             client.get_link_content("wrong type here")
 
-    def test_search_links_by_content_incorrect_arguments(self):
+    def test_search_links_by_contents_incorrect_arguments(self):
         with pytest.raises(InvalidTypeError):
-            client.search_links_by_content(["wrong type here"])
+            client.search_links_by_contents(["wrong type here"])
 
     def test_set_link_content(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [true]}')
@@ -285,7 +285,7 @@ class TestClientHandleLinkContents(ScTest):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [[]]}')
         test_str = "that line nor in KB"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING)
-        content = client.search_links_by_content(link_content)
+        content = client.search_links_by_contents(link_content)
         assert content == [[]]
 
     def test_search_link_by_content_casual(self):
@@ -293,7 +293,7 @@ class TestClientHandleLinkContents(ScTest):
         self.get_server_message(msg)
         test_str = "testing search by link content"
         link_content = ScLinkContent(test_str, ScLinkContentType.STRING)
-        content = client.search_links_by_content(link_content)
+        content = client.search_links_by_contents(link_content)
         assert content
         link_addr = ScAddr(46368)
         for item in zip([link_addr], content):
@@ -315,7 +315,7 @@ class TestClientHandleLinkContents(ScTest):
         msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}'
         self.get_server_message(msg)
         test_str = "testing search by link content as string"
-        content = client.search_links_by_content(test_str)
+        content = client.search_links_by_contents(test_str)
         assert content
         link_addr = ScAddr(1180550)
         for item in zip([link_addr], content):
@@ -327,7 +327,7 @@ class TestClientHandleLinkContents(ScTest):
         test_str_1 = "testing search by link content as string in multiple content"
         test_str_2 = "testing search by link content as casual in multiple content"
         link_content_2 = ScLinkContent(test_str_2, ScLinkContentType.STRING)
-        content = client.search_links_by_content(test_str_1, link_content_2)
+        content = client.search_links_by_contents(test_str_1, link_content_2)
         addr_list = [ScAddr(46368), ScAddr(46400)]
         assert content
         for item in zip(addr_list, content):
@@ -348,7 +348,7 @@ class TestClientHandleLinkContents(ScTest):
         msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [[1179649, 1180550, 1181798]]}'
         self.get_server_message(msg)
         test_str = "testing search by"
-        content = client.search_links_by_content_substrings(test_str)
+        content = client.search_links_by_contents_substrings(test_str)
         assert content
         link_addr = ScAddr(1180550)
         for item in zip([link_addr], content):

@@ -9,7 +9,7 @@ class Executor:
     _executor_mapper = {
         ClientCommand.GENERATE_ELEMENTS: RequestType.GENERATE_ELEMENTS,
         ClientCommand.GENERATE_ELEMENTS_BY_SCS: RequestType.GENERATE_ELEMENTS_BY_SCS,
-        ClientCommand.GET_ELEMENT_TYPES: RequestType.GET_ELEMENT_TYPES,
+        ClientCommand.GET_ELEMENTS_TYPES: RequestType.GET_ELEMENTS_TYPES,
         ClientCommand.ERASE_ELEMENTS: RequestType.ERASE_ELEMENTS,
         ClientCommand.SEARCH_KEYNODES: RequestType.SEARCH_KEYNODES,
         ClientCommand.GET_LINK_CONTENT: RequestType.HANDLE_CONTENT,

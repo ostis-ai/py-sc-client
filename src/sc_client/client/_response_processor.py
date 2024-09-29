@@ -3,7 +3,15 @@ from __future__ import annotations
 from sc_client import session
 from sc_client.constants import common as c
 from sc_client.constants.sc_types import ScType
-from sc_client.models import Response, ScAddr, ScEventSubscription, ScLinkContent, ScLinkContentType, ScTemplateResult
+from sc_client.models import (
+    Response,
+    ScAddr,
+    ScEventSubscription,
+    ScEventSubscriptionParams,
+    ScLinkContent,
+    ScLinkContentType,
+    ScTemplateResult,
+)
 
 
 class BaseResponseProcessor:
@@ -24,7 +32,7 @@ class GenerateElementsBySCsResponseProcessor(BaseResponseProcessor):
         return [bool(result) for result in response.get(c.PAYLOAD)]
 
 
-class CheckElementsResponseProcessor(BaseResponseProcessor):
+class GetElementsTypesResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[ScType]:
         return [ScType(type_value) for type_value in response.get(c.PAYLOAD)]
 
@@ -101,20 +109,24 @@ class GenerateByTemplateResponseProcessor(BaseResponseProcessor):
 
 
 class CreateEventSubscriptionsResponseProcessor(BaseResponseProcessor):
-    def __call__(self, response: Response, *events: ScEventSubscription) -> list[ScEventSubscription]:
+    def __call__(
+        self, response: Response, *event_subscriptions_params: ScEventSubscriptionParams
+    ) -> list[ScEventSubscription]:
         result = []
-        for count, event in enumerate(events):
+        for count, event_subscription_param in enumerate(event_subscriptions_params):
             command_id = response.get(c.PAYLOAD)[count]
-            sc_event = ScEventSubscription(command_id, event.event_type, event.callback)
-            session.set_event_subscription(sc_event)
-            result.append(sc_event)
+            event_subscription = ScEventSubscription(
+                command_id, event_subscription_param.event_type, event_subscription_param.callback
+            )
+            session.set_event_subscription(event_subscription)
+            result.append(event_subscription)
         return result
 
 
 class DestroyEventSubscriptionsResponseProcessor(BaseResponseProcessor):
-    def __call__(self, response: Response, *events: ScEventSubscription) -> bool:
-        for event in events:
-            session.drop_event_subscription(event.id)
+    def __call__(self, response: Response, *event_subscriptions: ScEventSubscription) -> bool:
+        for event_subscription in event_subscriptions:
+            session.drop_event_subscription(event_subscription.id)
         return response.get(c.STATUS)
 
 
@@ -122,7 +134,7 @@ class ResponseProcessor:
     _response_request_mapper = {
         c.ClientCommand.GENERATE_ELEMENTS: GenerateElementsResponseProcessor(),
         c.ClientCommand.GENERATE_ELEMENTS_BY_SCS: GenerateElementsBySCsResponseProcessor(),
-        c.ClientCommand.GET_ELEMENT_TYPES: CheckElementsResponseProcessor(),
+        c.ClientCommand.GET_ELEMENTS_TYPES: GetElementsTypesResponseProcessor(),
         c.ClientCommand.ERASE_ELEMENTS: EraseElementsResponseProcessor(),
         c.ClientCommand.SEARCH_KEYNODES: ResolveKeynodesResponseProcessor(),
         c.ClientCommand.GET_LINK_CONTENT: GetLinkContentResponseProcessor(),

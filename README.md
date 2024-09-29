@@ -21,8 +21,6 @@ High-level functionality implemented in **[py-sc-kpm](https://github.com/ostis-a
 - ScModule
 - ScServer
 
-*Warning: there are some of these classes in **py-sc-client** (deprecated)*
-
 ## Installation py-sc-client
 
 py-sc-client is available on [PyPI](https://pypi.org/project/py-sc-client/):
@@ -253,7 +251,7 @@ To set aliases use syntax:
 
 After setting alias you use it without element
 
-#### Search template
+#### Search by template
 
 - *sc_client.client*.**search_by_template**(template: ScTemplate, params: ScTemplateParams = None)
 
@@ -265,13 +263,13 @@ from sc_client.constants import sc_types
 from sc_client.models import ScTemplate, ScAddr
 
 action_node: ScAddr
-question_node: ScAddr
+action_node: ScAddr
 rrel_1: ScAddr
 # Some ScAddrs for example
 
 template = ScTemplate()
-template.triple(question_node, sc_types.EDGE_ACCESS_VAR_POS_PERM, action_node >> "_action_node")
-# Triple `question_node-(*new)connector_access-(*aliased with "_action_node")action_node`
+template.triple(action_node, sc_types.EDGE_ACCESS_VAR_POS_PERM, action_node >> "_action_node")
+# Triple `action_node-(*new)membership-arc-(*aliased with "_action_node")action_node`
 template.quintuple(
     "_action_node",
     sc_types.EDGE_ACCESS_VAR_POS_TEMP,
@@ -318,7 +316,7 @@ search_results = search_by_template('class _-> _node;;')
 search_result = search_results[0]
 ```
 
-#### Generate template
+#### Generate by template
 
 - *sc_client.client*.**generate_by_template**(template: ScTemplate, params: ScTemplateParams = None)
 
@@ -369,9 +367,6 @@ Methods:
   Get count of elements
 - *ScTemplateResult*.**size**()
 
-  The same, deprecated in version 0.3.0
-- *ScTemplateResult*[i: int]
-
   Get ScAddr by index
 - *ScTemplateResult*.**get**(alias_or_index: str | int)
 
@@ -386,7 +381,6 @@ from sc_client.models import ScTemplateResult, ScAddr
 
 template_result: ScTemplateResult
 length = len(template_result)  # in the resulting construction
-template_result.size()  # deprecated count of elements, will be removed in version 0.3.0
 first_element = template_result[0]  # get an element from the result by index (recommended)
 template_result.get(0)  # get an element from the result by index
 arg_node = template_result.get("_arg_node")  # get an element from the result by alias
@@ -398,14 +392,14 @@ for src, connector, trg in template_result:
 
 ## Common functions
 
-### Check element types
+### Get elements types
 
-- *sc_client.client*.**get_element_types**(*addrs: ScAddr)
+- *sc_client.client*.**get_elements_types**(*addrs: ScAddr)
 
 Returns list of ScTypes for given elements.
 
 ```python
-from sc_client.client import get_element_types
+from sc_client.client import get_elements_types
 
 from sc_client.client import generate_elements
 from sc_client.constants import sc_types
@@ -416,13 +410,13 @@ construction.generate_node(sc_types.NODE_CONST)
 construction.generate_node(sc_types.NODE_VAR)
 elements = generate_elements(construction)
 
-elements_types = get_element_types(*elements)
+elements_types = get_elements_types(*elements)
 assert elements_types[0].is_node()
 assert not elements_types[1].is_connector()
 assert elements_types[1].is_var()
 ```
 
-### Create elements by SCS
+### Generate elements by SCs
 
 - *sc_client.client*.**generate_elements_by_scs**(texts: List[Union[str, SCs]])
 
@@ -449,7 +443,7 @@ results = generate_elements_by_scs([SCs("concept1 -> node1;;", output_struct), "
 assert results == [True, True]
 ```
 
-### Delete elements
+### Erase elements
 
 - *sc_client.client*.**erase_elements**(*addrs: ScAddr)
 
@@ -518,7 +512,6 @@ link_addr: ScAddr  # ScAddr of existed link
 link_content = ScLinkContent(12, ScLinkContentType.INT, link_addr)
 
 deprecated_type = ScLinkContent("use enum without .value", ScLinkContentType.STRING.value)
-# Value type is deprecated and will be removed in version 0.3.0
 ```
 
 ### Set links content
@@ -562,14 +555,14 @@ link_content = get_link_content(link)[0]
 assert link_content.data == link_content1.data
 ```
 
-### Get links by content
+### Search links by contents
 
-- *sc_client.client*.**search_links_by_content**(*contents: ScLinkContent | str | int)
+- *sc_client.client*.**search_links_by_contents**(*contents: ScLinkContent | str | int)
 
-Get list of lists of links for every content.
+Returns list of lists of links for every content.
 
 ```python
-from sc_client.client import generate_elements, search_links_by_content
+from sc_client.client import generate_elements, search_links_by_contents
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
@@ -580,18 +573,18 @@ link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
 construction.generate_link(sc_types.LINK_CONST, link_content1)
 link = generate_elements(construction)[0]
 
-links = search_links_by_content(search_string)[0]
+links = search_links_by_contents(search_string)[0]
 assert link in links
 ```
 
-### Get links by content substring
+### Search links by content substring
 
-- *sc_client.client*.**search_links_by_content_substrings**(*contents: ScLinkContent | str | int)
+- *sc_client.client*.**search_links_by_contents_substrings**(*contents: ScLinkContent | str | int)
 
-Get list of lists of links for every content substring.
+Returns list of lists of links for every content substring.
 
 ```python
-from sc_client.client import generate_elements, search_links_by_content_substrings
+from sc_client.client import generate_elements, search_links_by_contents_substrings
 from sc_client.constants import sc_types
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
@@ -602,15 +595,15 @@ link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
 construction.generate_link(sc_types.LINK_CONST, link_content1)
 link = generate_elements(construction)[0]
 
-links_list = search_links_by_content_substrings(*search_string.split(" "))
+links_list = search_links_by_contents_substrings(*search_string.split(" "))
 assert all(link in links for links in links_list)
 ```
 
-### Get links contents by content substring
+### Search links contents by content substrings
 
 - *sc_client.client*.**search_link_contents_by_content_substrings**(*contents: ScLinkContent | str | int)
 
-Get list of lists of contents of the given content substrings.
+Returns list of lists of contents of the given content substrings.
 ***Warning: it returns int addrs***
 
 ```python
@@ -650,7 +643,7 @@ def event_callback(src: ScAddr, connector: ScAddr, trg: ScAddr):
 bounded_elem_addr: ScAddr
 event_type = ScEventType.AFTER_GENERATE_OUTGOING_ARC
 event_subscription_params = ScEventSubscriptionParams(bounded_elem_addr, event_type, event_callback)
-sc_event = create_elementary_event_subscriptions(event_subscription_params)
+event_subscription = create_elementary_event_subscriptions(event_subscription_params)
 ```
 
 ### Check event validity
@@ -666,8 +659,8 @@ Return boolean status if *event* is active and or not.
 from sc_client.client import is_event_subscription_valid
 from sc_client.models import ScEventSubscription
 
-sc_event: ScEventSubscription
-status = is_event_subscription_valid(sc_event)
+event_subscription: ScEventSubscription
+status = is_event_subscription_valid(event_subscription)
 ```
 
 ### Destroy event subscriptions
@@ -680,8 +673,8 @@ Destroy *event_subscriptions* in the KB memory and return boolean status.
 from sc_client.client import destroy_elementary_event_subscriptions
 from sc_client.models import ScEventSubscription
 
-sc_event: ScEventSubscription
-status = destroy_elementary_event_subscriptions(sc_event)
+event_subscription: ScEventSubscription
+status = destroy_elementary_event_subscriptions(event_subscription)
 ```
 
 ## Classes

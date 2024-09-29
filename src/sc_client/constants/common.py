@@ -8,7 +8,7 @@ from enum import Enum, auto
 
 
 class RequestType(Enum):
-    GET_ELEMENT_TYPES = "check_elements"
+    GET_ELEMENTS_TYPES = "check_elements"
     GENERATE_ELEMENTS = "create_elements"
     GENERATE_ELEMENTS_BY_SCS = "create_elements_by_scs"
     ERASE_ELEMENTS = "delete_elements"
@@ -20,7 +20,7 @@ class RequestType(Enum):
 
 
 class ClientCommand(Enum):
-    GET_ELEMENT_TYPES = auto()
+    GET_ELEMENTS_TYPES = auto()
     GENERATE_ELEMENTS = auto()
     GENERATE_ELEMENTS_BY_SCS = auto()
     ERASE_ELEMENTS = auto()
