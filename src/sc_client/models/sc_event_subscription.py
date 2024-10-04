@@ -9,14 +9,14 @@ ScEventCallbackFunc = Callable[[ScAddr, ScAddr, ScAddr], Enum]
 
 
 @dataclass
-class ScEventParams:
+class ScEventSubscriptionParams:
     addr: ScAddr
     event_type: ScEventType
     callback: ScEventCallbackFunc
 
 
 @dataclass
-class ScEvent:
+class ScEventSubscription:
     id: int = 0
     event_type: ScEventType = None
     callback: ScEventCallbackFunc = None

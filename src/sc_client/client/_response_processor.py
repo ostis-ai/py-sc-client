@@ -3,7 +3,15 @@ from __future__ import annotations
 from sc_client import session
 from sc_client.constants import common as c
 from sc_client.constants.sc_types import ScType
-from sc_client.models import Response, ScAddr, ScEvent, ScLinkContent, ScLinkContentType, ScTemplateResult
+from sc_client.models import (
+    Response,
+    ScAddr,
+    ScEventSubscription,
+    ScEventSubscriptionParams,
+    ScLinkContent,
+    ScLinkContentType,
+    ScTemplateResult,
+)
 
 
 class BaseResponseProcessor:
@@ -14,22 +22,22 @@ class BaseResponseProcessor:
         raise NotImplementedError
 
 
-class CreateElementsResponseProcessor(BaseResponseProcessor):
+class GenerateElementsResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[ScAddr]:
         return [ScAddr(addr_value) for addr_value in response.get(c.PAYLOAD)]
 
 
-class CreateElementsBySCsResponseProcessor(BaseResponseProcessor):
+class GenerateElementsBySCsResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[bool]:
         return [bool(result) for result in response.get(c.PAYLOAD)]
 
 
-class CheckElementsResponseProcessor(BaseResponseProcessor):
+class GetElementsTypesResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[ScType]:
         return [ScType(type_value) for type_value in response.get(c.PAYLOAD)]
 
 
-class DeleteElementsResponseProcessor(BaseResponseProcessor):
+class EraseElementsResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> bool:
         return response.get(c.STATUS)
 
@@ -49,7 +57,7 @@ class GetLinkContentResponseProcessor(BaseResponseProcessor):
         return result
 
 
-class GetLinksByContentResponseProcessor(BaseResponseProcessor):
+class SearchLinksByContentResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[list[ScAddr]]:
         response_payload = response.get(c.PAYLOAD)
         if response_payload:
@@ -57,11 +65,11 @@ class GetLinksByContentResponseProcessor(BaseResponseProcessor):
         return response_payload
 
 
-class GetLinksByContentSubstringResponseProcessor(GetLinksByContentResponseProcessor):
+class SearchLinksByContentSubstringResponseProcessor(SearchLinksByContentResponseProcessor):
     pass
 
 
-class GetLinksContentsByContentSubstringResponseProcessor(BaseResponseProcessor):
+class SearchLinksContentsByContentSubstringResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[list[ScAddr]]:
         response_payload = response.get(c.PAYLOAD)
         return response_payload
@@ -75,7 +83,7 @@ class ResolveKeynodesResponseProcessor(BaseResponseProcessor):
         return response
 
 
-class TemplateSearchResponseProcessor(BaseResponseProcessor):
+class SearchByTemplateResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> list[ScTemplateResult]:
         result = []
         if response.get(c.STATUS):
@@ -88,7 +96,7 @@ class TemplateSearchResponseProcessor(BaseResponseProcessor):
         return result
 
 
-class TemplateGenerateResponseProcessor(BaseResponseProcessor):
+class GenerateByTemplateResponseProcessor(BaseResponseProcessor):
     def __call__(self, response: Response, *_) -> ScTemplateResult:
         result = None
         if response.get(c.STATUS):
@@ -100,40 +108,44 @@ class TemplateGenerateResponseProcessor(BaseResponseProcessor):
         return result
 
 
-class EventsCreateResponseProcessor(BaseResponseProcessor):
-    def __call__(self, response: Response, *events: ScEvent) -> list[ScEvent]:
+class CreateEventSubscriptionsResponseProcessor(BaseResponseProcessor):
+    def __call__(
+        self, response: Response, *event_subscriptions_params: ScEventSubscriptionParams
+    ) -> list[ScEventSubscription]:
         result = []
-        for count, event in enumerate(events):
+        for count, event_subscription_param in enumerate(event_subscriptions_params):
             command_id = response.get(c.PAYLOAD)[count]
-            sc_event = ScEvent(command_id, event.event_type, event.callback)
-            session.set_event(sc_event)
-            result.append(sc_event)
+            event_subscription = ScEventSubscription(
+                command_id, event_subscription_param.event_type, event_subscription_param.callback
+            )
+            session.set_event_subscription(event_subscription)
+            result.append(event_subscription)
         return result
 
 
-class EventsDestroyResponseProcessor(BaseResponseProcessor):
-    def __call__(self, response: Response, *events: ScEvent) -> bool:
-        for event in events:
-            session.drop_event(event.id)
+class DestroyEventSubscriptionsResponseProcessor(BaseResponseProcessor):
+    def __call__(self, response: Response, *event_subscriptions: ScEventSubscription) -> bool:
+        for event_subscription in event_subscriptions:
+            session.drop_event_subscription(event_subscription.id)
         return response.get(c.STATUS)
 
 
 class ResponseProcessor:
     _response_request_mapper = {
-        c.ClientCommand.CREATE_ELEMENTS: CreateElementsResponseProcessor(),
-        c.ClientCommand.CREATE_ELEMENTS_BY_SCS: CreateElementsBySCsResponseProcessor(),
-        c.ClientCommand.CHECK_ELEMENTS: CheckElementsResponseProcessor(),
-        c.ClientCommand.DELETE_ELEMENTS: DeleteElementsResponseProcessor(),
-        c.ClientCommand.KEYNODES: ResolveKeynodesResponseProcessor(),
+        c.ClientCommand.GENERATE_ELEMENTS: GenerateElementsResponseProcessor(),
+        c.ClientCommand.GENERATE_ELEMENTS_BY_SCS: GenerateElementsBySCsResponseProcessor(),
+        c.ClientCommand.GET_ELEMENTS_TYPES: GetElementsTypesResponseProcessor(),
+        c.ClientCommand.ERASE_ELEMENTS: EraseElementsResponseProcessor(),
+        c.ClientCommand.SEARCH_KEYNODES: ResolveKeynodesResponseProcessor(),
         c.ClientCommand.GET_LINK_CONTENT: GetLinkContentResponseProcessor(),
-        c.ClientCommand.GET_LINKS_BY_CONTENT: GetLinksByContentResponseProcessor(),
-        c.ClientCommand.GET_LINKS_BY_CONTENT_SUBSTRING: GetLinksByContentSubstringResponseProcessor(),
-        c.ClientCommand.GET_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: GetLinksContentsByContentSubstringResponseProcessor(),
+        c.ClientCommand.SEARCH_LINKS_BY_CONTENT: SearchLinksByContentResponseProcessor(),
+        c.ClientCommand.SEARCH_LINKS_BY_CONTENT_SUBSTRING: SearchLinksByContentSubstringResponseProcessor(),
+        c.ClientCommand.SEARCH_LINKS_CONTENTS_BY_CONTENT_SUBSTRING: SearchLinksContentsByContentSubstringResponseProcessor(),
         c.ClientCommand.SET_LINK_CONTENTS: SetLinkContentResponseProcessor(),
-        c.ClientCommand.EVENTS_CREATE: EventsCreateResponseProcessor(),
-        c.ClientCommand.EVENTS_DESTROY: EventsDestroyResponseProcessor(),
-        c.ClientCommand.GENERATE_TEMPLATE: TemplateGenerateResponseProcessor(),
-        c.ClientCommand.SEARCH_TEMPLATE: TemplateSearchResponseProcessor(),
+        c.ClientCommand.CREATE_EVENT_SUBSCRIPTIONS: CreateEventSubscriptionsResponseProcessor(),
+        c.ClientCommand.DESTROY_EVENT_SUBSCRIPTIONS: DestroyEventSubscriptionsResponseProcessor(),
+        c.ClientCommand.GENERATE_BY_TEMPLATE: GenerateByTemplateResponseProcessor(),
+        c.ClientCommand.SEARCH_BY_TEMPLATE: SearchByTemplateResponseProcessor(),
     }
 
     def run(self, request_type: c.ClientCommand, *args, **kwargs):
