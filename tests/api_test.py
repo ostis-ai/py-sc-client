@@ -11,7 +11,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from sc_client import client, session
-from sc_client.constants import common, sc_types
+from sc_client.constants import common, sc_type, sc_types
 from sc_client.constants.exceptions import (
     CommonErrorMessages,
     InvalidTypeError,
@@ -84,7 +84,7 @@ class TestClientGenerateElements(ScTest):
     def test_generate_node(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [59154]}')
         const = ScConstruction()
-        const.generate_node(sc_types.NODE_CONST)
+        const.generate_node(sc_type.CONST_NODE)
         addr = client.generate_elements(const)
         assert len(addr) == 1
 
@@ -92,7 +92,7 @@ class TestClientGenerateElements(ScTest):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1182470]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         const = ScConstruction()
-        const.generate_link(sc_types.LINK_CONST, link_content)
+        const.generate_link(sc_type.CONST_NODE_LINK, link_content)
         addr = client.generate_elements(const)
         assert len(addr) == 1
 
@@ -100,7 +100,7 @@ class TestClientGenerateElements(ScTest):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [123211]}')
         link_content = ScLinkContent("World!", ScLinkContentType.STRING.value)
         const = ScConstruction()
-        const.generate_link(sc_types.LINK_CONST, link_content)
+        const.generate_link(sc_type.CONST_NODE_LINK, link_content)
         addr_list = client.generate_elements(const)
         assert len(addr_list) == 1
 
@@ -108,9 +108,9 @@ class TestClientGenerateElements(ScTest):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
         link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)
         const = ScConstruction()
-        const.generate_node(sc_types.NODE_CONST, "node")
-        const.generate_link(sc_types.LINK_CONST, link_content, "link")
-        const.generate_connector(sc_types.EDGE_ACCESS_CONST_POS_PERM, "node", "link")
+        const.generate_node(sc_type.CONST_NODE, "node")
+        const.generate_link(sc_type.CONST_NODE_LINK, link_content, "link")
+        const.generate_connector(sc_type.CONST_PERM_POS_ARC, "node", "link")
         addr_list = client.generate_elements(const)
         assert len(addr_list) == 3
 
@@ -194,23 +194,23 @@ class TestClientGetElementTypes(ScTest):
         assert elem_types[0].is_node()
 
     def test_get_link_type(self):
-        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [34]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [35]}')
         link_addr = ScAddr(0)
         elem_type = client.get_elements_types(link_addr)
         assert len(elem_type), 1
         assert elem_type[0].is_link()
 
     def test_get_elements_types_list(self):
-        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 35, 55472]}')
         elem_type_list = client.get_elements_types(ScAddr(0), ScAddr(0), ScAddr(0))
         assert len(elem_type_list) == 3
         assert elem_type_list[0].is_node()
         assert elem_type_list[1].is_link()
-        assert elem_type_list[2].is_edge()
+        assert elem_type_list[2].is_connector()
 
     @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_check_elements_list(self):
-        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 34, 2224]}')
+        self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [33, 35, 55472]}')
         elem_type_list = client.check_elements(ScAddr(0), ScAddr(0), ScAddr(0))
         assert len(elem_type_list) == 3
         assert elem_type_list[0].is_node()
@@ -390,13 +390,13 @@ class TestClientResolveElements(ScTest):
 
     def test_resolve_keynode_not_exist(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
-        params = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
+        params = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_type.CONST_NODE)
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
     def test_resolve_keynode_exist(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [337259]}')
-        params = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_types.NODE_CONST)
+        params = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_type.CONST_NODE)
         addr = client.resolve_keynodes(params)
         assert addr[0].value != 0
 
@@ -421,8 +421,8 @@ class TestClientResolveElements(ScTest):
     def test_resolve_keynodes_list(self):
         msg = '{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238, 337259, 0]}'
         self.get_server_message(msg)
-        param1 = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_types.NODE_CONST)
-        param2 = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_types.NODE_CONST)
+        param1 = ScIdtfResolveParams(idtf="my_new_keynode_that_not_exist", type=sc_type.CONST_NODE)
+        param2 = ScIdtfResolveParams(idtf="technology_OSTIS", type=sc_type.CONST_NODE)
         param3 = ScIdtfResolveParams(idtf="my_another_keynode_that_not_exist", type=None)
         addrs = client.resolve_keynodes(param1, param2, param3)
         assert len(addrs) == 3
@@ -435,13 +435,13 @@ class TestClientResolveKeynodes(ScTest):
     def test_resolve_keynode_not_exist_node(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
         keynodes = ScKeynodes()
-        mega_new_keynode = keynodes['mega_new_keynode', sc_types.NODE_CONST]
+        mega_new_keynode = keynodes['mega_new_keynode', sc_type.CONST_NODE]
         assert mega_new_keynode.value != 0
 
     def test_resolve_keynode_not_exist_link(self):
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": [1183238]}')
         keynodes = ScKeynodes()
-        mega_new_keynode = keynodes['mega_new_keynode', sc_types.LINK_CONST]
+        mega_new_keynode = keynodes['mega_new_keynode', sc_type.CONST_NODE_LINK]
         assert mega_new_keynode.value != 0
 
     def test_resolve_keynode_not_exist_without_type(self):
@@ -622,19 +622,19 @@ class TestClientHandleTemplates(ScTest):
     def test_wrong_template(self):
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
-            templ.triple(ScAddr(0), sc_types.EDGE_ACCESS_CONST_POS_PERM, ScAddr(0))
+            templ.triple(ScAddr(0), sc_type.CONST_PERM_POS_ARC, ScAddr(0))
 
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
-            templ.triple((ScAddr(0), "_class_node"), ScAddr(0), (sc_types.LINK_CONST, "_const_link"))
+            templ.triple((ScAddr(0), "_class_node"), ScAddr(0), (sc_type.CONST_NODE_LINK, "_const_link"))
 
         with pytest.raises(InvalidTypeError):
             templ = ScTemplate()
             templ.quintuple(
                 ScAddr(0) >> "_main_node",
-                sc_types.EDGE_D_COMMON_CONST >> "_const_edge",
-                sc_types.LINK_VAR >> "_link",
-                sc_types.EDGE_ACCESS_VAR_POS_PERM,
+                sc_type.CONST_COMMON_ARC >> "_const_edge",
+                sc_type.VAR_NODE_LINK >> "_link",
+                sc_type.VAR_PERM_POS_ARC,
                 ScAddr(0),
             )
         
@@ -645,10 +645,10 @@ class TestClientHandleTemplates(ScTest):
         )
         self.get_server_message('{"errors": [], "id": 1, "event": false, "status": true, "payload": ' + payload + "}")
         templ = ScTemplate()
-        templ.triple((ScAddr(0), "_class_node"), sc_types.EDGE_ACCESS_VAR_POS_PERM, ScAddr(0))
-        templ.triple("_class_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, ScAddr(0))
-        templ.triple("_class_node", ScAddr(0), sc_types.NODE_VAR)
-        templ.triple(ScAddr(0), ScAddr(0), sc_types.NODE_VAR)
+        templ.triple((ScAddr(0), "_class_node"), sc_type.VAR_PERM_POS_ARC, ScAddr(0))
+        templ.triple("_class_node", sc_type.VAR_TEMP_POS_ARC, ScAddr(0))
+        templ.triple("_class_node", ScAddr(0), sc_type.VAR_NODE)
+        templ.triple(ScAddr(0), ScAddr(0), sc_type.VAR_NODE)
         search_result_list = client.search_by_template(templ, {})
 
         assert len(search_result_list) != 0
@@ -717,12 +717,12 @@ class TestClientHandleTemplates(ScTest):
         templ = ScTemplate()
         templ.quintuple(
             (ScAddr(0), "_main_node"),
-            sc_types.EDGE_D_COMMON_VAR,
-            (sc_types.LINK_VAR, "_link"),
-            sc_types.EDGE_ACCESS_VAR_POS_PERM,
+            sc_type.VAR_COMMON_ARC,
+            (sc_type.VAR_NODE_LINK, "_link"),
+            sc_type.VAR_PERM_POS_ARC,
             ScAddr(0),
         )
-        templ.triple("_main_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, (sc_types.NODE_VAR, "_var_node"))
+        templ.triple("_main_node", sc_type.VAR_TEMP_POS_ARC, (sc_type.VAR_NODE, "_var_node"))
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.generate_by_template(templ, gen_params)
@@ -739,12 +739,12 @@ class TestClientHandleTemplates(ScTest):
         templ = ScTemplate()
         templ.quintuple(
             (ScAddr(0), "_main_node"),
-            sc_types.EDGE_D_COMMON_VAR,
-            (sc_types.LINK_VAR, "_link"),
-            sc_types.EDGE_ACCESS_VAR_POS_PERM,
+            sc_type.VAR_COMMON_ARC,
+            (sc_type.VAR_NODE_LINK, "_link"),
+            sc_type.VAR_PERM_POS_ARC,
             ScAddr(0),
         )
-        templ.triple("_main_node", sc_types.EDGE_ACCESS_VAR_POS_TEMP, (sc_types.NODE_VAR, "_var_node"))
+        templ.triple("_main_node", sc_type.VAR_TEMP_POS_ARC, (sc_type.VAR_NODE, "_var_node"))
 
         gen_params = {"_link": ScAddr(0), "_var_node": ScAddr(0)}
         gen_result = client.template_generate(templ, gen_params)

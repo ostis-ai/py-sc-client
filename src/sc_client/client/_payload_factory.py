@@ -43,7 +43,7 @@ class GenerateElementsPayloadCreator(BasePayloadCreator):
                 }
                 payload.append(payload_part)
 
-            elif command.el_type.is_edge():
+            elif command.el_type.is_connector():
 
                 def solve_adj(obj: ScAddr | str):
                     if isinstance(obj, ScAddr):

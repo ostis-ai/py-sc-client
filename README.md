@@ -5,7 +5,7 @@
 
 The python implementation of the client for communication with
 [the OSTIS Technology web-oriented platform](https://github.com/ostis-ai/ostis-web-platform/blob/develop/docs/main.pdf).
-This library is compatible with `0.9.0` version of [sc-machine](https://github.com/ostis-ai/sc-machine).
+This library is compatible with `0.10.0` version of [sc-machine](https://github.com/ostis-ai/sc-machine).
 
 Low-level functionality implemented in **[py-sc-client](https://github.com/ostis-ai/py-sc-client)**:
 
@@ -157,25 +157,25 @@ It uses when new elements are created or if it's need to check right type.
 It contains methods to check if it is node, connector or link, const or var, and so on.
 
 If you paid attention, the class is in constants submodule.
-They are already defined, and you can import them from file `sc_client.constants.sc_types`.
-If you need bitmasks, they are in `sc_client.constants.sc_types.bitmasks`.
+They are already defined, and you can import them from file `sc_client.constants.sc_type`.
+If you need bitmasks, they are in `sc_client.constants.sc_type.bitmasks`.
 
 ```python
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 
-sc_type_struct = sc_types.NODE_CONST_STRUCT
+sc_type_structure = sc_type.CONST_NODE_STRUCTURE
 
-assert sc_type_struct.is_valid()
+assert sc_type_structure.is_valid()
 
-assert sc_type_struct.is_node()
-assert not sc_type_struct.is_connector()
-assert not sc_type_struct.is_link()
+assert sc_type_structure.is_node()
+assert not sc_type_structure.is_connector()
+assert not sc_type_structure.is_link()
 
-assert sc_type_struct.is_const()
-assert not sc_type_struct.is_var()
+assert sc_type_structure.is_const()
+assert not sc_type_structure.is_var()
 
-assert sc_type_struct.is_struct()
-assert not sc_type_struct.is_tuple()
+assert sc_type_structure.is_structure()
+assert not sc_type_structure.is_tuple()
 # And many more
 ```
 
@@ -206,18 +206,18 @@ It returns list of all elements by ScConstruction *constr*.
 
 ```python
 from sc_client.client import generate_elements
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScConstruction
 from sc_client.models import ScLinkContent, ScLinkContentType
 
 construction = ScConstruction()  # First you need initialize
 
-construction.generate_node(sc_types.NODE_CONST, 'node')  # Create node const
+construction.generate_node(sc_type.CONST_NODE, 'node')  # Create node const
 
 link_content = ScLinkContent("Hello!", ScLinkContentType.STRING)  # Create link content
-construction.generate_link(sc_types.LINK_CONST, link_content, 'link')  # Create link with that content
+construction.generate_link(sc_type.CONST_NODE_LINK, link_content, 'link')  # Create link with that content
 
-construction.generate_connector(sc_types.EDGE_ACCESS_CONST_POS_PERM, 'node', 'link')
+construction.generate_connector(sc_type.CONST_PERM_POS_ARC, 'node', 'link')
 # Create unaliased connector between previous node
 
 addrs = generate_elements(construction)  # List of elements
@@ -259,7 +259,7 @@ Returns list of ScTemplateResult by *template*.
 
 ```python
 from sc_client.client import search_by_template
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScTemplate, ScAddr
 
 action_node: ScAddr
@@ -268,13 +268,13 @@ rrel_1: ScAddr
 # Some ScAddrs for example
 
 template = ScTemplate()
-template.triple(action_node, sc_types.EDGE_ACCESS_VAR_POS_PERM, action_node >> "_action_node")
+template.triple(action_node, sc_type.VAR_PERM_POS_ARC, action_node >> "_action_node")
 # Triple `action_node-(*new)membership-arc-(*aliased with "_action_node")action_node`
 template.quintuple(
     "_action_node",
-    sc_types.EDGE_ACCESS_VAR_POS_TEMP,
-    sc_types.NODE_VAR >> "_arg_node",
-    sc_types.EDGE_ACCESS_VAR_POS_TEMP,
+    sc_type.VAR_TEMP_POS_ARC,
+    sc_type.VAR_NODE >> "_arg_node",
+    sc_type.VAR_TEMP_POS_ARC,
     rrel_1,
 )
 
@@ -324,7 +324,7 @@ Returns ScTemplateResult by *template*.
 
 ```python
 from sc_client.client import generate_by_template
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScTemplate, ScAddr
 
 main_node: ScAddr
@@ -335,15 +335,15 @@ link_node: ScAddr
 template = ScTemplate()
 template.quintuple(
     main_node >> '_main_node',
-    sc_types.EDGE_D_COMMON_VAR,
-    sc_types.LINK_VAR >> '_link',
-    sc_types.EDGE_ACCESS_VAR_POS_PERM,
+    sc_type.VAR_COMMON_ARC,
+    sc_type.VAR_NODE_LINK >> '_link',
+    sc_type.VAR_PERM_POS_ARC,
     relation_node,
 )
 template.triple(
     '_main_node',
-    sc_types.EDGE_ACCESS_VAR_POS_TEMP,
-    (sc_types.NODE_VAR, '_var_node')
+    sc_type.VAR_TEMP_POS_ARC,
+    (sc_type.VAR_NODE, '_var_node')
 )
 gen_params = {'_link': link_node, '_var_node': 'node_idtf'}
 gen_result = generate_by_template(template, gen_params)
@@ -402,12 +402,12 @@ Returns list of ScTypes for given elements.
 from sc_client.client import get_elements_types
 
 from sc_client.client import generate_elements
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScConstruction
 
 construction = ScConstruction()  # Create elements for example
-construction.generate_node(sc_types.NODE_CONST)
-construction.generate_node(sc_types.NODE_VAR)
+construction.generate_node(sc_type.CONST_NODE)
+construction.generate_node(sc_type.VAR_NODE)
 elements = generate_elements(construction)
 
 elements_types = get_elements_types(*elements)
@@ -432,11 +432,11 @@ assert results == [True, False]  # Warning: it doesn't return False, it raised e
 
 ```python
 from sc_client.client import generate_elements_by_scs, generate_elements
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import SCs, ScConstruction
 
 construction = ScConstruction()  # Create output_struct for example
-construction.generate_node(sc_types.NODE_CONST)
+construction.generate_node(sc_type.CONST_NODE)
 output_struct = generate_elements(construction)[0]
 
 results = generate_elements_by_scs([SCs("concept1 -> node1;;", output_struct), "concept1 -> node2;;"])
@@ -451,11 +451,11 @@ Delete *addrs* from the KB memory and returns boolean status.
 
 ```python
 from sc_client.client import generate_elements, set_link_contents
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScConstruction, ScLinkContent, ScLinkContentType
 
 construction = ScConstruction()  # Create link for example
-construction.generate_link(sc_types.LINK_CONST, ScLinkContent("One", ScLinkContentType.STRING))
+construction.generate_link(sc_type.CONST_NODE_LINK, ScLinkContent("One", ScLinkContentType.STRING))
 link = generate_elements(construction)[0]
 
 link_content = ScLinkContent("Two", ScLinkContentType.STRING, link)
@@ -478,10 +478,10 @@ Typed-dict class that contains *idtf* and optional *type*
 
 ```python
 from sc_client.client import resolve_keynodes
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScIdtfResolveParams
 
-params = ScIdtfResolveParams(idtf='new_keynode_that_doesnt_exist', type=sc_types.NODE_CONST)
+params = ScIdtfResolveParams(idtf='new_keynode_that_doesnt_exist', type=sc_type.CONST_NODE)
 addrs = resolve_keynodes(params)  # list with 1 new keynode addr
 
 params = ScIdtfResolveParams(idtf='keynode_that_have_to_exist_but_doesnt', type=None)
@@ -522,12 +522,12 @@ Set the new content to corresponding links and return boolean status.
 
 ```python
 from sc_client.client import set_link_contents, generate_elements
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 construction = ScConstruction()  # Create link for example
 link_content1 = ScLinkContent("One", ScLinkContentType.STRING)
-construction.generate_link(sc_types.LINK_CONST, link_content1)
+construction.generate_link(sc_type.CONST_NODE_LINK, link_content1)
 link = generate_elements(construction)[0]
 
 link_content2 = ScLinkContent("Two", ScLinkContentType.STRING, link)
@@ -543,12 +543,12 @@ Get list of contents of the given links.
 
 ```python
 from sc_client.client import generate_elements, get_link_content
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 construction = ScConstruction()  # Create link for example
 link_content1 = ScLinkContent("One", ScLinkContentType.STRING)
-construction.generate_link(sc_types.LINK_CONST, link_content1)
+construction.generate_link(sc_type.CONST_NODE_LINK, link_content1)
 link = generate_elements(construction)[0]
 
 link_content = get_link_content(link)[0]
@@ -563,14 +563,14 @@ Returns list of lists of links for every content.
 
 ```python
 from sc_client.client import generate_elements, search_links_by_contents
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 search_string = "search string"
 
 construction = ScConstruction()  # Create link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
-construction.generate_link(sc_types.LINK_CONST, link_content1)
+construction.generate_link(sc_type.CONST_NODE_LINK, link_content1)
 link = generate_elements(construction)[0]
 
 links = search_links_by_contents(search_string)[0]
@@ -585,14 +585,14 @@ Returns list of lists of links for every content substring.
 
 ```python
 from sc_client.client import generate_elements, search_links_by_contents_substrings
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 search_string = "substring1 substring2"
 
 construction = ScConstruction()  # Create link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
-construction.generate_link(sc_types.LINK_CONST, link_content1)
+construction.generate_link(sc_type.CONST_NODE_LINK, link_content1)
 link = generate_elements(construction)[0]
 
 links_list = search_links_by_contents_substrings(*search_string.split(" "))
@@ -608,14 +608,14 @@ Returns list of lists of contents of the given content substrings.
 
 ```python
 from sc_client.client import generate_elements, search_link_contents_by_content_substrings
-from sc_client.constants import sc_types
+from sc_client.constants import sc_type
 from sc_client.models import ScLinkContent, ScLinkContentType, ScConstruction
 
 search_string = "substring1 substring2"
 
 construction = ScConstruction()  # Create link with search string
 link_content1 = ScLinkContent(search_string, ScLinkContentType.STRING)
-construction.generate_link(sc_types.LINK_CONST, link_content1)
+construction.generate_link(sc_type.CONST_NODE_LINK, link_content1)
 link_addr = generate_elements(construction)[0]
 
 links_list = search_link_contents_by_content_substrings(*search_string.split(" "))
