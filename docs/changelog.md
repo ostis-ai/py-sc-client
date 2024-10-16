@@ -102,6 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - `ScEventParams` class was renamed to `ScEventSubscriptionParams`
 
 ### Fixed
+ - Checking of all syntactic and semantic subtypes for types in ScType `merge` method.
  - Now sc-link is sc-node
 
 ### Deprecated
