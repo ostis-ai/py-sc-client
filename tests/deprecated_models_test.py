@@ -137,6 +137,7 @@ class TestScType(unittest.TestCase):
         for sc_type in self.types.difference(node_types):
             assert sc_type.is_node() is False
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_is_edge(self):
         edge_types = {
             t.EDGE_U_COMMON,
@@ -296,6 +297,7 @@ class TestScType(unittest.TestCase):
         for sc_type in self.types.difference(tuple_types):
             assert sc_type.is_tuple() is False
 
+    @pytest.mark.filterwarnings("ignore::DeprecationWarning")
     def test_is_struct(self):
         struct_types = {t.NODE_STRUCT, t.NODE_CONST_STRUCT, t.NODE_VAR_STRUCT}
         for sc_type in struct_types:
