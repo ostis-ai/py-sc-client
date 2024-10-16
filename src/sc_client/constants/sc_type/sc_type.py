@@ -47,6 +47,9 @@ class ScType:
     def is_common_edge(self) -> bool:
         return (self.value & bitmasks.SC_TYPE_COMMON_EDGE) != 0
 
+    def is_arc(self) -> bool:
+        return (self.value & bitmasks.SC_TYPE_ARC) != 0
+
     def is_common_arc(self) -> bool:
         return (self.value & bitmasks.SC_TYPE_COMMON_ARC) != 0
 
@@ -117,12 +120,77 @@ class ScType:
 
     def is_equal(self, other: ScType) -> bool:
         return self.__eq__(other)
+    
+    def _is_not_compatible_by_mask(self, new_type: ScType, mask):
+        subtype = self.value & mask
+        new_subtype = new_type.value & mask
+        return subtype != bitmasks.SC_TYPE_UNKNOWN and subtype != new_subtype
+    
+    def _is_expendable_to(self, new_type: ScType): # it is equal to `sc_storage_is_type_expendable_to` in the sc-machine
+        self_value = self.value
+        new_value = new_type.value
+
+        if self._is_not_compatible_by_mask(new_type, bitmasks.SC_TYPE_ELEMENT_MASK):
+            return False
+        if self._is_not_compatible_by_mask(new_type, bitmasks.SC_TYPE_CONSTANCY_MASK):
+            return False
+
+        if self.is_link():
+            if not new_type.is_link():
+                return False
+
+            self_value = ScType(self_value & ~bitmasks.SC_TYPE_NODE_LINK)
+            new_value = ScType(new_value & ~bitmasks.SC_TYPE_NODE_LINK)
+
+            if self_value._is_not_compatible_by_mask(new_value, bitmasks.SC_TYPE_NODE_LINK_MASK):
+                return False
+
+        elif self.is_node():
+            if not new_type.is_node():
+                return False
+
+            self_value = ScType(self_value & ~bitmasks.SC_TYPE_NODE)
+            new_value = ScType(new_value & ~bitmasks.SC_TYPE_NODE)
+
+            if self_value._is_not_compatible_by_mask(new_value, bitmasks.SC_TYPE_NODE_MASK):
+                return False
+
+        elif self.is_connector():
+            if not new_type.is_connector():
+                return False
+
+            if self._is_not_compatible_by_mask(new_type, bitmasks.SC_TYPE_CONNECTOR_MASK):
+                if self.is_common_edge():
+                    if not new_type.is_common_edge():
+                        return False
+                elif self.is_arc():
+                    if not new_type.is_arc():
+                        return False
+
+                    if self.is_common_arc():
+                        if not new_type.is_common_arc():
+                            return False
+                    elif self.is_membership_arc():
+                        if not new_type.is_membership_arc():
+                            return False
+
+            self_value = ScType(self_value & ~bitmasks.SC_TYPE_CONNECTOR_MASK)
+            new_value = ScType(new_value & ~bitmasks.SC_TYPE_CONNECTOR_MASK)
+
+            if self_value._is_not_compatible_by_mask(new_value, bitmasks.SC_TYPE_ACTUALITY_MASK):
+                return False
+
+            if self_value._is_not_compatible_by_mask(new_value, bitmasks.SC_TYPE_PERMANENCY_MASK):
+                return False
+
+            if self_value._is_not_compatible_by_mask(new_value, bitmasks.SC_TYPE_POSITIVITY_MASK):
+                return False
+
+        return True
 
     def merge(self, other: ScType) -> ScType:
-        t1 = self.value & bitmasks.SC_TYPE_ELEMENT_MASK
-        t2 = other.value & bitmasks.SC_TYPE_ELEMENT_MASK
-        if (t1 != 0 or t2 != 0) and (t1 != t2):
-            raise InvalidTypeError()
+        if not self._is_expendable_to(other):
+            raise InvalidTypeError(f"Type `{self}` can not be expended to `{other}`.")
         return ScType(self.value | other.value)
 
     def change_const(self, is_const: bool) -> ScType:

@@ -621,9 +621,16 @@ class TestScType(unittest.TestCase):
         assert t.CONST.change_const(False).is_var()
 
     def test_merge(self):
-        assert t.CONST_NODE.merge(t.NODE_CLASS) == t.CONST_NODE_CLASS
+        assert t.UNKNOWN.merge(t.NODE) == t.NODE
+        assert t.NODE.merge(t.CONST_NODE) == t.CONST_NODE
+        assert t.CONST_NODE.merge(t.CONST_NODE_CLASS) == t.CONST_NODE_CLASS
+        assert t.NODE.merge(t.NODE_LINK_CLASS) == t.NODE_LINK_CLASS
+        assert t.CONNECTOR.merge(t.CONST_MEMBERSHIP_ARC) == t.CONST_MEMBERSHIP_ARC
         with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
-            assert t.CONST.merge(t.NODE) == t.CONST_NODE
+            t.CONST.merge(t.NODE)
+            t.CONNECTOR.merge(t.NODE)
+            t.COMMON_EDGE.merge(t.COMMON_ARC)
+            t.COMMON_ARC.merge(t.MEMBERSHIP_ARC)
 
     def test_has_constancy(self):
         assert t.CONST_NODE.has_constancy()

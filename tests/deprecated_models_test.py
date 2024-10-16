@@ -345,7 +345,7 @@ class TestScType(unittest.TestCase):
         assert t.CONST.change_const(False).is_var()
 
     def test_merge(self):
-        assert t.NODE_CONST.merge(t.NODE_CLASS) == t.NODE_CONST_CLASS
+        assert t.NODE_CONST.merge(t.NODE_CONST_CLASS) == t.NODE_CONST_CLASS
         with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
             assert t.CONST.merge(t.NODE) == t.NODE_CONST
 
