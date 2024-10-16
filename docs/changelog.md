@@ -88,7 +88,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   From now on, all sc-links are sc-nodes. Types of actual and inactual temporal membership sc-arc were added.
   Module `sc_types` is deprecated, use `sc_type` instead.
 
+- Type `ScType.NodeAbstract` was removed.
+
 ### Added
+ - ScType methods: `is_connector`, `is_structure`, `is_no_role`, `is_actual`, `is_inactual`, `is_superclass`
  - All possible combinations of subtypes into sc-types
  - Type `sc_type.NODE_SUPERCLASS`
  - Types: `sc_type.CONNECTOR`, `sc_type.ARC`
@@ -106,12 +109,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - Now sc-link is sc-node
 
 ### Deprecated
+ - ScType methods: `is_edge`, `is_struct`, `is_norole`
  - Module `sc_types`
  - sc-types: `sc_types.EDGE_U_COMMON`, `sc_types.EDGE_D_COMMON`, `sc_types.EDGE_U_COMMON_CONST`, `sc_types.EDGE_D_COMMON_CONST`, `sc_types.EDGE_ACCESS`, `sc_types.EDGE_ACCESS_CONST_POS_PERM`, `sc_types.EDGE_ACCESS_CONST_NEG_PERM`, `sc_types.EDGE_ACCESS_CONST_FUZ_PERM`, `sc_types.EDGE_ACCESS_CONST_POS_TEMP`, `sc_types.EDGE_ACCESS_CONST_NEG_TEMP`, `sc_types.EDGE_ACCESS_CONST_FUZ_TEMP`, `sc_types.EDGE_U_COMMON_VAR`, `sc_types.EDGE_D_COMMON_VAR`, `sc_types.EDGE_ACCESS_VAR_POS_PERM`, `sc_types.EDGE_ACCESS_VAR_NEG_PERM`, `sc_types.EDGE_ACCESS_VAR_FUZ_PERM`, `sc_types.EDGE_ACCESS_VAR_POS_TEMP`, `sc_types.EDGE_ACCESS_VAR_NEG_TEMP`, `sc_types.EDGE_ACCESS_VAR_FUZ_TEMP`, `sc_types.NODE_CONST`, `sc_types.NODE_VAR`, `sc_types.LINK`, `sc_types.LINK_CLASS`, `sc_types.NODE_STRUCT`, `sc_types.LINK_CONST`, `sc_types.LINK_CONST_CLASS`, `sc_types.NODE_CONST_TUPLE`, `sc_types.NODE_CONST_STRUCT`, `sc_types.NODE_CONST_ROLE`, `sc_types.NODE_CONST_NO_ROLE`, `sc_types.NODE_CONST_CLASS`, `sc_types.NODE_CONST_MATERIAL`, `sc_types.LINK_VAR`, `sc_types.LINK_VAR_CLASS`, `sc_types.NODE_VAR_STRUCT`, `sc_types.NODE_VAR_TUPLE`, `sc_types.NODE_VAR_ROLE`, `sc_types.NODE_VAR_NO_ROLE`, `sc_types.NODE_VAR_CLASS`, `sc_types.NODE_VAR_MATERIAL`
  - ScClient methods: `check_elements`, `create_elements`, `create_node`, `create_link`, `create_edge`, `create_elements_by_scs`, `delete_elements`, `get_links_by_contents`, `get_links_by_content_substring`, `get_links_contents_by_content_substring`, `template_search`, `template_generate`, `events_create`, `events_destroy`, `is_event_valid`
  - ScTemplate methods: `triple_with_relation`
 
 ### Removed
+ - ScType method: `is_abstract`
  - sc-type `sc_types.NODE_ABSTRACT`
  - sc-event types: `ADD_OUTGOING_EDGE`, `ADD_INGOING_EDGE`, `REMOVE_OUTGOING_EDGE`, `REMOVE_INGOING_EDGE`, `REMOVE_ELEMENT`, `CONTENT_CHANGE`
  - Deprecated ScTemplateResult `size` method
