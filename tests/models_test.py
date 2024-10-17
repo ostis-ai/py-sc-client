@@ -514,16 +514,6 @@ class TestScType(unittest.TestCase):
 
     def test_is_actual(self):
         actual_types = {
-            t.PERM_ARC,
-            t.PERM_POS_ARC,
-            t.PERM_NEG_ARC,
-            t.CONST_PERM_ARC,
-            t.CONST_PERM_POS_ARC,
-            t.CONST_PERM_NEG_ARC,
-            t.VAR_PERM_ARC,
-            t.VAR_PERM_POS_ARC,
-            t.VAR_PERM_NEG_ARC,
-
             t.ACTUAL_TEMP_ARC,
             t.CONST_ACTUAL_TEMP_ARC,
             t.VAR_ACTUAL_TEMP_ARC,
@@ -628,8 +618,11 @@ class TestScType(unittest.TestCase):
         assert t.CONNECTOR.merge(t.CONST_MEMBERSHIP_ARC) == t.CONST_MEMBERSHIP_ARC
         with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
             t.CONST.merge(t.NODE)
+        with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
             t.CONNECTOR.merge(t.NODE)
+        with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
             t.COMMON_EDGE.merge(t.COMMON_ARC)
+        with pytest.raises(InvalidTypeError, match=CommonErrorMessages.INVALID_TYPE.value):
             t.COMMON_ARC.merge(t.MEMBERSHIP_ARC)
 
     def test_has_constancy(self):

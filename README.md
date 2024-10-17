@@ -262,14 +262,14 @@ from sc_client.client import search_by_template
 from sc_client.constants import sc_type
 from sc_client.models import ScTemplate, ScAddr
 
-action_node: ScAddr
+action_class_node: ScAddr
 action_node: ScAddr
 rrel_1: ScAddr
 # Some ScAddrs for example
 
 template = ScTemplate()
-template.triple(action_node, sc_type.VAR_PERM_POS_ARC, action_node >> "_action_node")
-# Triple `action_node-(*new)membership-arc-(*aliased with "_action_node")action_node`
+template.triple(action_class_node, sc_type.VAR_PERM_POS_ARC, action_node >> "_action_node")
+# Triple `action_class_node-(*new)membership-arc-(*aliased with "_action_node")action_node`
 template.quintuple(
     "_action_node",
     sc_type.VAR_TEMP_POS_ARC,
@@ -343,7 +343,7 @@ template.quintuple(
 template.triple(
     '_main_node',
     sc_type.VAR_TEMP_POS_ARC,
-    (sc_type.VAR_NODE, '_var_node')
+    sc_type.VAR_NODE >> '_var_node'
 )
 gen_params = {'_link': link_node, '_var_node': 'node_idtf'}
 gen_result = generate_by_template(template, gen_params)
@@ -447,7 +447,7 @@ assert results == [True, True]
 
 - *sc_client.client*.**erase_elements**(*addrs: ScAddr)
 
-Delete *addrs* from the KB memory and returns boolean status.
+Erase *addrs* from the KB memory and returns boolean status.
 
 ```python
 from sc_client.client import generate_elements, set_link_contents
@@ -455,12 +455,12 @@ from sc_client.constants import sc_type
 from sc_client.models import ScConstruction, ScLinkContent, ScLinkContentType
 
 construction = ScConstruction()  # Create link for example
-construction.generate_link(sc_type.CONST_NODE_LINK, ScLinkContent("One", ScLinkContentType.STRING))
-link = generate_elements(construction)[0]
+construction.generate_node(sc_types.CONST_NODE, "node1")
+construction.generate_node(sc_types.CONST_NODE, "node2")
+construction.generate_node(sc_types.CONST_POS_PERM_ARC, "node1", "node2")
+elements = generate_elements(construction)
 
-link_content = ScLinkContent("Two", ScLinkContentType.STRING, link)
-status = set_link_contents(link_content)
-assert status
+erase_elements(*elements)
 ```
 
 ### Resolve keynodes
