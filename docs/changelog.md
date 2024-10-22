@@ -17,8 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | create_edge                             | generate_connector                         |
   | create_elements_by_scs                  | generate_elements_by_scs                   | 
   | delete_elements                         | erase_elements                             |
-  | get_links_by_contents                   | search_links_by_contentss                   |
-  | get_links_by_content_substring          | search_links_by_contents_substrings         |
+  | get_links_by_contents                   | search_links_by_contents                   |
+  | get_links_by_content_substring          | search_links_by_contents_substrings        |
   | get_links_contents_by_content_substring | search_link_contents_by_content_substrings |
   | template_search                         | search_by_template                         |
   | template_generate                       | generate_by_template                       |
