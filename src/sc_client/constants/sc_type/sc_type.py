@@ -102,12 +102,12 @@ class ScType:
     def is_role(self) -> bool:
         return self._has_subtype(bitmasks.SC_TYPE_NODE_ROLE)
 
-    def is_no_role(self) -> bool:
-        return self._has_subtype(bitmasks.SC_TYPE_NODE_NO_ROLE)
+    def is_non_role(self) -> bool:
+        return self._has_subtype(bitmasks.SC_TYPE_NODE_NON_ROLE)
 
     def is_norole(self) -> bool:
-        warnings.warn("ScType `is_norole` method is deprecated. Use `is_no_role` method instead.", DeprecationWarning)
-        return self.is_no_role()
+        warnings.warn("ScType `is_norole` method is deprecated. Use `is_non_role` method instead.", DeprecationWarning)
+        return self.is_non_role()
 
     def is_class(self) -> bool:
         return self._has_subtype(bitmasks.SC_TYPE_NODE_CLASS)

@@ -134,7 +134,7 @@ class TestScType(unittest.TestCase):
             t.NODE_TUPLE,
             t.NODE_STRUCTURE,
             t.NODE_ROLE,
-            t.NODE_NO_ROLE,
+            t.NODE_NON_ROLE,
             t.NODE_CLASS, 
             t.NODE_SUPERCLASS, 
             t.NODE_MATERIAL,
@@ -144,7 +144,7 @@ class TestScType(unittest.TestCase):
             t.CONST_NODE_TUPLE, 
             t.CONST_NODE_STRUCTURE, 
             t.CONST_NODE_ROLE, 
-            t.CONST_NODE_NO_ROLE, 
+            t.CONST_NODE_NON_ROLE, 
             t.CONST_NODE_CLASS, 
             t.CONST_NODE_SUPERCLASS, 
             t.CONST_NODE_MATERIAL,
@@ -154,7 +154,7 @@ class TestScType(unittest.TestCase):
             t.VAR_NODE_TUPLE, 
             t.VAR_NODE_STRUCTURE, 
             t.VAR_NODE_ROLE, 
-            t.VAR_NODE_NO_ROLE, 
+            t.VAR_NODE_NON_ROLE, 
             t.VAR_NODE_CLASS, 
             t.VAR_NODE_SUPERCLASS, 
             t.VAR_NODE_MATERIAL
@@ -177,7 +177,7 @@ class TestScType(unittest.TestCase):
             t.NODE_TUPLE,
             t.NODE_STRUCTURE,
             t.NODE_ROLE,
-            t.NODE_NO_ROLE,
+            t.NODE_NON_ROLE,
             t.NODE_CLASS, 
             t.NODE_SUPERCLASS, 
             t.NODE_MATERIAL,
@@ -188,7 +188,7 @@ class TestScType(unittest.TestCase):
             t.CONST_NODE_TUPLE, 
             t.CONST_NODE_STRUCTURE, 
             t.CONST_NODE_ROLE, 
-            t.CONST_NODE_NO_ROLE, 
+            t.CONST_NODE_NON_ROLE, 
             t.CONST_NODE_CLASS, 
             t.CONST_NODE_SUPERCLASS, 
             t.CONST_NODE_MATERIAL,
@@ -199,7 +199,7 @@ class TestScType(unittest.TestCase):
             t.VAR_NODE_TUPLE, 
             t.VAR_NODE_STRUCTURE, 
             t.VAR_NODE_ROLE, 
-            t.VAR_NODE_NO_ROLE, 
+            t.VAR_NODE_NON_ROLE, 
             t.VAR_NODE_CLASS, 
             t.VAR_NODE_SUPERCLASS, 
             t.VAR_NODE_MATERIAL
@@ -338,7 +338,7 @@ class TestScType(unittest.TestCase):
             t.CONST_NODE_TUPLE, 
             t.CONST_NODE_STRUCTURE, 
             t.CONST_NODE_ROLE, 
-            t.CONST_NODE_NO_ROLE, 
+            t.CONST_NODE_NON_ROLE, 
             t.CONST_NODE_CLASS, 
             t.CONST_NODE_SUPERCLASS, 
             t.CONST_NODE_MATERIAL,
@@ -387,7 +387,7 @@ class TestScType(unittest.TestCase):
             t.VAR_NODE_TUPLE, 
             t.VAR_NODE_STRUCTURE, 
             t.VAR_NODE_ROLE, 
-            t.VAR_NODE_NO_ROLE, 
+            t.VAR_NODE_NON_ROLE, 
             t.VAR_NODE_CLASS, 
             t.VAR_NODE_SUPERCLASS, 
             t.VAR_NODE_MATERIAL,
@@ -572,13 +572,13 @@ class TestScType(unittest.TestCase):
         for sc_type in self.types.difference(role_types):
             assert sc_type.is_role() is False
 
-    def test_is_no_role(self):
-        no_role_types = {t.NODE_NO_ROLE, t.CONST_NODE_NO_ROLE, t.VAR_NODE_NO_ROLE}
-        for sc_type in no_role_types:
-            assert sc_type.is_no_role()
+    def test_is_non_role(self):
+        non_role_types = {t.NODE_NON_ROLE, t.CONST_NODE_NON_ROLE, t.VAR_NODE_NON_ROLE}
+        for sc_type in non_role_types:
+            assert sc_type.is_non_role()
 
-        for sc_type in self.types.difference(no_role_types):
-            assert sc_type.is_no_role() is False
+        for sc_type in self.types.difference(non_role_types):
+            assert sc_type.is_non_role() is False
 
     def test_is_class(self):
         class_types = {t.NODE_CLASS, t.CONST_NODE_CLASS, t.VAR_NODE_CLASS}

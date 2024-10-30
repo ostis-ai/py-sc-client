@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | sc_types.NODE_CONST_TUPLE           | sc_type.CONST_NODE_TUPLE      |
   | sc_types.NODE_CONST_STRUCT          | sc_type.CONST_NODE_STRUCTURE  |
   | sc_types.NODE_CONST_ROLE            | sc_type.CONST_NODE_ROLE       |
-  | sc_types.NODE_CONST_NO_ROLE         | sc_type.CONST_NODE_NO_ROLE    |
+  | sc_types.NODE_CONST_NO_ROLE         | sc_type.CONST_NODE_NON_ROLE   |
   | sc_types.NODE_CONST_CLASS           | sc_type.CONST_NODE_CLASS      |
   | sc_types.NODE_CONST_MATERIAL        | sc_type.CONST_NODE_MATERIAL   |
   | sc_types.LINK_VAR                   | sc_type.VAR_NODE_LINK         |
@@ -81,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | sc_types.NODE_VAR_STRUCT            | sc_type.VAR_NODE_STRUCTURE    |
   | sc_types.NODE_VAR_TUPLE             | sc_type.VAR_NODE_TUPLE        |
   | sc_types.NODE_VAR_ROLE              | sc_type.VAR_NODE_ROLE         |
-  | sc_types.NODE_VAR_NO_ROLE           | sc_type.VAR_NODE_NO_ROLE      |
+  | sc_types.NODE_VAR_NO_ROLE           | sc_type.VAR_NODE_NON_ROLE      |
   | sc_types.NODE_VAR_CLASS             | sc_type.VAR_NODE_CLASS        |
   | sc_types.NODE_VAR_MATERIAL          | sc_type.VAR_NODE_MATERIAL     | 
   
@@ -91,7 +91,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Type `ScType.NodeAbstract` was removed.
 
 ### Added
- - ScType methods: `is_connector`, `is_structure`, `is_no_role`, `is_actual`, `is_inactual`, `is_superclass`
+ - ScType methods: `is_connector`, `is_structure`, `is_non_role`, `is_actual`, `is_inactual`, `is_superclass`
  - All possible combinations of subtypes into `sc-type` module
  - Type `sc_type.NODE_SUPERCLASS`
  - Types: `sc_type.CONNECTOR`, `sc_type.ARC`
