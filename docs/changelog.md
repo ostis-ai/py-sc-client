@@ -10,15 +10,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    
   | Deprecated method                       | Substitution method                        | 
   |-----------------------------------------|--------------------------------------------|
-  | check_elements                          | get_elements_types                          |
+  | check_elements                          | get_elements_types                         |
   | create_elements                         | generate_elements                          |
   | create_node                             | generate_node                              |
   | create_link                             | generate_link                              |
   | create_edge                             | generate_connector                         |
   | create_elements_by_scs                  | generate_elements_by_scs                   | 
   | delete_elements                         | erase_elements                             |
-  | get_links_by_contents                   | search_links_by_contentss                   |
-  | get_links_by_content_substring          | search_links_by_contents_substrings         |
+  | get_links_by_contents                   | search_links_by_contents                   |
+  | get_links_by_content_substring          | search_links_by_contents_substrings        |
   | get_links_contents_by_content_substring | search_link_contents_by_content_substrings |
   | template_search                         | search_by_template                         |
   | template_generate                       | generate_by_template                       |
@@ -32,9 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | Removed sc-event type  | Substitution sc-event type  |
   |------------------------|-----------------------------|
   | ADD_OUTGOING_EDGE      | AFTER_GENERATE_OUTGOING_ARC |
-  | ADD_INGOING_EDGE       | AFTER_GENERATE_INCOMING_ARC  |
+  | ADD_INGOING_EDGE       | AFTER_GENERATE_INCOMING_ARC |
   | REMOVE_OUTGOING_EDGE   | BEFORE_ERASE_OUTGOING_ARC   |
-  | REMOVE_INGOING_EDGE    | BEFORE_ERASE_INCOMING_ARC    |
+  | REMOVE_INGOING_EDGE    | BEFORE_ERASE_INCOMING_ARC   |
   | REMOVE_ELEMENT         | BEFORE_ERASE_ELEMENT        |
   | CONTENT_CHANGE         | BEFORE_CHANGE_LINK_CONTENT  |
 
@@ -81,7 +81,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | sc_types.NODE_VAR_STRUCT            | sc_type.VAR_NODE_STRUCTURE    |
   | sc_types.NODE_VAR_TUPLE             | sc_type.VAR_NODE_TUPLE        |
   | sc_types.NODE_VAR_ROLE              | sc_type.VAR_NODE_ROLE         |
-  | sc_types.NODE_VAR_NO_ROLE           | sc_type.VAR_NODE_NON_ROLE      |
+  | sc_types.NODE_VAR_NO_ROLE           | sc_type.VAR_NODE_NON_ROLE     |
   | sc_types.NODE_VAR_CLASS             | sc_type.VAR_NODE_CLASS        |
   | sc_types.NODE_VAR_MATERIAL          | sc_type.VAR_NODE_MATERIAL     | 
   
