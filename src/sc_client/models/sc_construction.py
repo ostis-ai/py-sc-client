@@ -51,7 +51,7 @@ class ScConstruction:
         target: str | ScAddr,
         alias: str = None,
     ) -> None:
-        if not sc_type.is_edge():
+        if not sc_type.is_connector():
             raise InvalidTypeError("You should pass the connector type here")
         cmd = ScConstructionCommand(sc_type, {common.SOURCE: source, common.TARGET: target})
         if alias:

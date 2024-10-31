@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
    
   | Deprecated method                       | Substitution method                        | 
   |-----------------------------------------|--------------------------------------------|
-  | check_elements                          | get_elements_types                          |
+  | check_elements                          | get_elements_types                         |
   | create_elements                         | generate_elements                          |
   | create_node                             | generate_node                              |
   | create_link                             | generate_link                              |
@@ -32,15 +32,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   | Removed sc-event type  | Substitution sc-event type  |
   |------------------------|-----------------------------|
   | ADD_OUTGOING_EDGE      | AFTER_GENERATE_OUTGOING_ARC |
-  | ADD_INGOING_EDGE       | AFTER_GENERATE_INCOMING_ARC  |
+  | ADD_INGOING_EDGE       | AFTER_GENERATE_INCOMING_ARC |
   | REMOVE_OUTGOING_EDGE   | BEFORE_ERASE_OUTGOING_ARC   |
-  | REMOVE_INGOING_EDGE    | BEFORE_ERASE_INCOMING_ARC    |
+  | REMOVE_INGOING_EDGE    | BEFORE_ERASE_INCOMING_ARC   |
   | REMOVE_ELEMENT         | BEFORE_ERASE_ELEMENT        |
   | CONTENT_CHANGE         | BEFORE_CHANGE_LINK_CONTENT  |
 
   New sc-event types: `AFTER_GENERATE_CONNECTOR`, `AFTER_GENERATE_EDGE`, `BEFORE_ERASE_CONNECTOR`, `BEFORE_ERASE_EDGE` were added.
 
+ - All sc-types were redesigned to a common style. They were deprecated, new ones were added. See changes in the table below.
+
+  | Deprecated                          | Substitution                  |
+  |-------------------------------------|-------------------------------|
+  | sc_types.EDGE_U_COMMON              | sc_type.COMMON_EDGE           |
+  | sc_types.EDGE_D_COMMON              | sc_type.COMMON_ARC            |
+  | sc_types.EDGE_U_COMMON_CONST        | sc_type.CONST_COMMON_EDGE     |
+  | sc_types.EDGE_D_COMMON_CONST        | sc_type.CONST_COMMON_ARC      |
+  | sc_types.EDGE_ACCESS                | sc_type.MEMBERSHIP_ARC        |
+  | sc_types.EDGE_ACCESS_CONST_POS_PERM | sc_type.CONST_PERM_POS_ARC    |
+  | sc_types.EDGE_ACCESS_CONST_NEG_PERM | sc_type.CONST_PERM_NEG_ARC    |
+  | sc_types.EDGE_ACCESS_CONST_FUZ_PERM | sc_type.CONST_FUZ_ARC         |
+  | sc_types.EDGE_ACCESS_CONST_POS_TEMP | sc_type.CONST_TEMP_POS_ARC    |
+  | sc_types.EDGE_ACCESS_CONST_NEG_TEMP | sc_type.CONST_TEMP_NEG_ARC    |
+  | sc_types.EDGE_ACCESS_CONST_FUZ_TEMP | sc_type.CONST_FUZ_ARC         |
+  | sc_types.EDGE_U_COMMON_VAR          | sc_type.VAR_COMMON_EDGE       |
+  | sc_types.EDGE_D_COMMON_VAR          | sc_type.VAR_COMMON_ARC        |
+  | sc_types.EDGE_ACCESS_VAR_POS_PERM   | sc_type.VAR_PERM_POS_ARC      |
+  | sc_types.EDGE_ACCESS_VAR_NEG_PERM   | sc_type.VAR_PERM_NEG_ARC      |
+  | sc_types.EDGE_ACCESS_VAR_FUZ_PERM   | sc_type.VAR_FUZ_ARC           |
+  | sc_types.EDGE_ACCESS_VAR_POS_TEMP   | sc_type.VAR_TEMP_POS_ARC      |
+  | sc_types.EDGE_ACCESS_VAR_NEG_TEMP   | sc_type.VAR_TEMP_NEG_ARC      |
+  | sc_types.EDGE_ACCESS_VAR_FUZ_TEMP   | sc_type.VAR_FUZ_ARC           |
+  | sc_types.NODE_CONST                 | sc_type.CONST_NODE            |
+  | sc_types.NODE_VAR                   | sc_type.VAR_NODE              |
+  | sc_types.LINK                       | sc_type.NODE_LINK             |
+  | sc_types.LINK_CLASS                 | sc_type.NODE_LINK_CLASS       |
+  | sc_types.NODE_STRUCT                | sc_type.NODE_STRUCTURE        |
+  | sc_types.LINK_CONST                 | sc_type.CONST_NODE_LINK       |
+  | sc_types.LINK_CONST_CLASS           | sc_type.CONST_NODE_LINK_CLASS |
+  | sc_types.NODE_CONST_TUPLE           | sc_type.CONST_NODE_TUPLE      |
+  | sc_types.NODE_CONST_STRUCT          | sc_type.CONST_NODE_STRUCTURE  |
+  | sc_types.NODE_CONST_ROLE            | sc_type.CONST_NODE_ROLE       |
+  | sc_types.NODE_CONST_NO_ROLE         | sc_type.CONST_NODE_NON_ROLE   |
+  | sc_types.NODE_CONST_CLASS           | sc_type.CONST_NODE_CLASS      |
+  | sc_types.NODE_CONST_MATERIAL        | sc_type.CONST_NODE_MATERIAL   |
+  | sc_types.LINK_VAR                   | sc_type.VAR_NODE_LINK         |
+  | sc_types.LINK_VAR_CLASS             | sc_type.VAR_NODE_LINK_CLASS   |
+  | sc_types.NODE_VAR_STRUCT            | sc_type.VAR_NODE_STRUCTURE    |
+  | sc_types.NODE_VAR_TUPLE             | sc_type.VAR_NODE_TUPLE        |
+  | sc_types.NODE_VAR_ROLE              | sc_type.VAR_NODE_ROLE         |
+  | sc_types.NODE_VAR_NO_ROLE           | sc_type.VAR_NODE_NON_ROLE     |
+  | sc_types.NODE_VAR_CLASS             | sc_type.VAR_NODE_CLASS        |
+  | sc_types.NODE_VAR_MATERIAL          | sc_type.VAR_NODE_MATERIAL     | 
+  
+- All sc-links are sc-nodes.
+- Types of actual and inactual temporal membership sc-arc were added.
+- Module `sc_types` is deprecated, use `sc_type` instead.
+- Type `ScType.NodeAbstract` was removed.
+
 ### Added
+ - ScType methods: `is_connector`, `is_structure`, `is_non_role`, `is_actual`, `is_inactual`, `is_superclass`
+ - All possible combinations of subtypes into `sc-type` module
+ - Type `sc_type.NODE_SUPERCLASS`
+ - Types: `sc_type.CONNECTOR`, `sc_type.ARC`
+ - Types of actual and inactual temporal sc-arcs
  - sc-event types: `AFTER_GENERATE_CONNECTOR`, `AFTER_GENERATE_OUTGOING_ARC`, `AFTER_GENERATE_INCOMING_ARC`, `AFTER_GENERATE_EDGE`, `BEFORE_ERASE_CONNECTOR`, `BEFORE_ERASE_OUTGOING_ARC`, `BEFORE_ERASE_INCOMING_ARC`,  `BEFORE_ERASE_EDGE`, `BEFORE_ERASE_ELEMENT`, `BEFORE_CHANGE_LINK_CONTENT`
  - ScClient methods: `get_elements_types`, `generate_elements`, `generate_node`, `generate_link`, `generate_connector`, `generate_elements_by_scs`, `erase_elements`, `search_links_by_contentss`, `search_links_by_contents_substrings`, `search_link_contents_by_content_substrings`, `search_by_template`, `generate_by_template`, `create_elementary_event_subscriptions`, `destroy_elementary_event_subscriptions`, `is_event_subscriptions_valid`
  - ScTemplate methods: `quintuple`
@@ -49,11 +104,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
  - `ScEvent` class was renamed to `ScEventSubscription`
  - `ScEventParams` class was renamed to `ScEventSubscriptionParams`
 
+### Fixed
+ - Checking of all syntactic and semantic subtypes for types in ScType `merge` method.
+ - Now sc-link is sc-node
+
 ### Deprecated
+ - ScType methods: `is_edge`, `is_struct`, `is_norole`
+ - Module `sc_types`
+ - sc-types: `sc_types.EDGE_U_COMMON`, `sc_types.EDGE_D_COMMON`, `sc_types.EDGE_U_COMMON_CONST`, `sc_types.EDGE_D_COMMON_CONST`, `sc_types.EDGE_ACCESS`, `sc_types.EDGE_ACCESS_CONST_POS_PERM`, `sc_types.EDGE_ACCESS_CONST_NEG_PERM`, `sc_types.EDGE_ACCESS_CONST_FUZ_PERM`, `sc_types.EDGE_ACCESS_CONST_POS_TEMP`, `sc_types.EDGE_ACCESS_CONST_NEG_TEMP`, `sc_types.EDGE_ACCESS_CONST_FUZ_TEMP`, `sc_types.EDGE_U_COMMON_VAR`, `sc_types.EDGE_D_COMMON_VAR`, `sc_types.EDGE_ACCESS_VAR_POS_PERM`, `sc_types.EDGE_ACCESS_VAR_NEG_PERM`, `sc_types.EDGE_ACCESS_VAR_FUZ_PERM`, `sc_types.EDGE_ACCESS_VAR_POS_TEMP`, `sc_types.EDGE_ACCESS_VAR_NEG_TEMP`, `sc_types.EDGE_ACCESS_VAR_FUZ_TEMP`, `sc_types.NODE_CONST`, `sc_types.NODE_VAR`, `sc_types.LINK`, `sc_types.LINK_CLASS`, `sc_types.NODE_STRUCT`, `sc_types.LINK_CONST`, `sc_types.LINK_CONST_CLASS`, `sc_types.NODE_CONST_TUPLE`, `sc_types.NODE_CONST_STRUCT`, `sc_types.NODE_CONST_ROLE`, `sc_types.NODE_CONST_NO_ROLE`, `sc_types.NODE_CONST_CLASS`, `sc_types.NODE_CONST_MATERIAL`, `sc_types.LINK_VAR`, `sc_types.LINK_VAR_CLASS`, `sc_types.NODE_VAR_STRUCT`, `sc_types.NODE_VAR_TUPLE`, `sc_types.NODE_VAR_ROLE`, `sc_types.NODE_VAR_NO_ROLE`, `sc_types.NODE_VAR_CLASS`, `sc_types.NODE_VAR_MATERIAL`
  - ScClient methods: `check_elements`, `create_elements`, `create_node`, `create_link`, `create_edge`, `create_elements_by_scs`, `delete_elements`, `get_links_by_contents`, `get_links_by_content_substring`, `get_links_contents_by_content_substring`, `template_search`, `template_generate`, `events_create`, `events_destroy`, `is_event_valid`
  - ScTemplate methods: `triple_with_relation`
 
 ### Removed
+ - ScType method: `is_abstract`
+ - sc-type `sc_types.NODE_ABSTRACT`
  - sc-event types: `ADD_OUTGOING_EDGE`, `ADD_INGOING_EDGE`, `REMOVE_OUTGOING_EDGE`, `REMOVE_INGOING_EDGE`, `REMOVE_ELEMENT`, `CONTENT_CHANGE`
  - Deprecated ScTemplateResult `size` method
  - Deprecated ScTemplateItem as list

@@ -36,14 +36,23 @@ class GenerateElementsPayloadCreator(BasePayloadCreator):
             raise exceptions.InvalidTypeError("expected object types: ScConstruction")
         payload = []
         for command in constr.commands:
-            if command.el_type.is_node():
+            if command.el_type.is_link():
+                payload_part = {
+                    common.ELEMENT: common.Elements.LINK,
+                    common.TYPE: command.el_type.value,
+                    common.CONTENT: command.data.get(common.CONTENT),
+                    common.CONTENT_TYPE: command.data.get(common.TYPE),
+                }
+                payload.append(payload_part)
+
+            elif command.el_type.is_node():
                 payload_part = {
                     common.ELEMENT: common.Elements.NODE,
                     common.TYPE: command.el_type.value,
                 }
                 payload.append(payload_part)
 
-            elif command.el_type.is_edge():
+            elif command.el_type.is_connector():
 
                 def solve_adj(obj: ScAddr | str):
                     if isinstance(obj, ScAddr):
@@ -58,15 +67,6 @@ class GenerateElementsPayloadCreator(BasePayloadCreator):
                     common.TYPE: command.el_type.value,
                     common.SOURCE: solve_adj(command.data.get(common.SOURCE)),
                     common.TARGET: solve_adj(command.data.get(common.TARGET)),
-                }
-                payload.append(payload_part)
-
-            elif command.el_type.is_link():
-                payload_part = {
-                    common.ELEMENT: common.Elements.LINK,
-                    common.TYPE: command.el_type.value,
-                    common.CONTENT: command.data.get(common.CONTENT),
-                    common.CONTENT_TYPE: command.data.get(common.TYPE),
                 }
                 payload.append(payload_part)
         return payload
