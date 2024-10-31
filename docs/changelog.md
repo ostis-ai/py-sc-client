@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.0]
 ### Breaking changes
  - This version is compatible with version of the sc-machine 0.10.0. All API methods were redesigned. Incorrect ones were removed, new ones were added. See table below, to learn more about changes.
    
